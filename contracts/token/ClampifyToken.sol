@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 /**
  * @title ClampifyToken
  * @dev ERC20 token with minting and burning capabilities
+ * Specifically designed to work with the Clampify Launchpad for supply locking
  */
 contract ClampifyToken is ERC20, ERC20Burnable, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -20,13 +21,13 @@ contract ClampifyToken is ERC20, ERC20Burnable, AccessControl {
      * @param _name Token name
      * @param _symbol Token symbol
      * @param _initialSupply Initial supply of tokens
-     * @param _launchpad Address of the launchpad
+     * @param _launchpad Launchpad address
      */
     constructor(
         string memory _name,
         string memory _symbol,
         uint256 _initialSupply,
-        address _launchpad // End of Selection
+        address _launchpad
     ) ERC20(_name, _symbol) {
         require(_launchpad != address(0), "Clampify: Launchpad cannot be zero address");
         
