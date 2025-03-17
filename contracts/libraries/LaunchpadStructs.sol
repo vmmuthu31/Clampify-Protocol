@@ -3,7 +3,9 @@ pragma solidity ^0.8.19;
 
 /**
  * @title LaunchpadStructs
- * @dev Library containing structs used by the ClampifyLaunchpad contract
+ * @dev Library containing structs used by the Clampify platform
+ * @author vmmuthu31
+ * @notice Last updated: 2025-03-17 14:51:42
  */
 library LaunchpadStructs {
     // Token Registry
