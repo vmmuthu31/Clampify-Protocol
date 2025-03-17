@@ -11,8 +11,6 @@ import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.so
 /**
  * @title ClampifyGovernance
  * @dev Governance contract for the Clampify platform
- * @author vmmuthu31
- * @notice Last modified: 2025-03-17 18:23:29
  */
 contract ClampifyGovernance is
     Governor,

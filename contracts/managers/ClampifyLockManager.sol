@@ -13,8 +13,6 @@ import "../tokens/ClampifyToken.sol";
 /**
  * @title ClampifyLockManager
  * @dev Manages token supply locking and liquidity locking
- * @author vmmuthu31
- * @notice Last modified: 2025-03-17 17:52:32
  */
 contract ClampifyLockManager is IClampifyLockManager, AccessControl, ReentrancyGuard {
     using SafeMath for uint256;

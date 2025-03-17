@@ -9,8 +9,6 @@ import "../interfaces/IClampifyLaunchpad.sol";
 /**
  * @title ClampifyLaunchpadProxy
  * @dev Main entry point for Clampify platform - simplified non-upgradeable version
- * @author vmmuthu31
- * @notice Last modified: 2025-03-17 14:55:34
  */
 contract ClampifyLaunchpadProxy is 
     AccessControl,

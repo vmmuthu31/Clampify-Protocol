@@ -15,8 +15,6 @@ import "../tokens/ClampifyToken.sol";
 /**
  * @title ClampifyStabilityManager
  * @dev Manages token price stability mechanisms
- * @author vmmuthu31
- * @notice Last modified: 2025-03-17 15:03:18
  */
 contract ClampifyStabilityManager is IClampifyStabilityManager, AccessControl, ReentrancyGuard {
     using SafeMath for uint256;

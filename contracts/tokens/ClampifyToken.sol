@@ -10,8 +10,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
  * @title ClampifyToken
  * @dev ERC20 token with minting and burning capabilities
  * Specifically designed to work with the Clampify Launchpad for supply locking
- * @author vmmuthu31
- * @notice Created: 2025-03-17 14:49:51
  */
 contract ClampifyToken is ERC20, ERC20Burnable, AccessControl {
     using SafeMath for uint256;

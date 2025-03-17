@@ -15,8 +15,6 @@ import "../libraries/LaunchpadStructs.sol";
 /**
  * @title ClampifyImplementation
  * @dev Core implementation for ClampifyLaunchpad
- * @author vmmuthu31
- * @notice Last modified: 2025-03-17 18:33:40
  */
 contract ClampifyImplementation {
     using SafeMath for uint256;
@@ -56,111 +54,136 @@ contract ClampifyImplementation {
         uint256 _initialPrice,
         bool _enableStability
     ) external returns (address) {
-        // Access state from proxy's storage since this is called via delegatecall
-        ClampifyLaunchpadProxy proxy = ClampifyLaunchpadProxy(address(this));
-        address platformToken = proxy.platformToken();
-        address feeCollector = proxy.feeCollector();
-        address tokenFactory = proxy.tokenFactory();
-        address lockManager = proxy.lockManager();
-        uint256 tokenCreationFee = proxy.tokenCreationFee();
-        uint256 minCreatorLockPeriod = proxy.minCreatorLockPeriod();
+    // Access state from proxy's storage since this is called via delegatecall
+    ClampifyLaunchpadProxy proxy = ClampifyLaunchpadProxy(address(this));
+    address platformToken = proxy.platformToken();
+    address feeCollector = proxy.feeCollector();
+    address tokenFactory = proxy.tokenFactory();
+    address lockManager = proxy.lockManager();
+    address bondingCurve = proxy.bondingCurve();
+    uint256 tokenCreationFee = proxy.tokenCreationFee();
+    uint256 minCreatorLockPeriod = proxy.minCreatorLockPeriod();
+    
+    // Validate inputs
+    require(_totalSupply > 0, "Clampify: Total supply must be greater than 0");
+    require(_creatorLockPercentage > 0, "Clampify: Creator lock percentage must be greater than 0");
+    require(_creatorLockPercentage <= 10000, "Clampify: Creator lock percentage must be <= 100%");
+    require(_creatorLockDuration >= minCreatorLockPeriod, "Clampify: Lock duration too short");
+    require(_initialLiquidityAmount > 0, "Clampify: Initial liquidity must be greater than 0");
+    require(_initialLiquidityAmount < _totalSupply, "Clampify: Liquidity exceeds total supply");
+    
+    // Collect creation fee
+    uint256 creationFee = _totalSupply.mul(tokenCreationFee).div(MAX_BPS);
+    IERC20(platformToken).safeTransferFrom(msg.sender, feeCollector, creationFee);
+    
+    // Update fees collected - using state variable in implementation
+    totalFeesCollected += creationFee;
+    
+    // Create new token through factory
+    address tokenAddress = IClampifyTokenFactory(tokenFactory).createToken(
+        _name,
+        _symbol,
+        _totalSupply,
+        address(this)
+    );
+    
+    // Calculate token distributions
+    uint256 creatorLockAmount = _totalSupply.mul(_creatorLockPercentage).div(MAX_BPS);
+    uint256 creatorLockEndTime = block.timestamp.add(_creatorLockDuration);
+    uint256 remainingAfterLock = _totalSupply.sub(creatorLockAmount);
+    uint256 creatorAmount = remainingAfterLock.sub(_initialLiquidityAmount);
+    
+    // Setup token in registry
+    IClampifyTokenFactory(tokenFactory).setupToken(
+        tokenAddress,
+        msg.sender,
+        _totalSupply,
+        _initialPrice,
+        creatorLockAmount,
+        creatorLockEndTime,
+        _enableStability
+    );
+    
+    // Store token info in registry
+    LaunchpadStructs.TokenInfo storage tokenInfo = tokenRegistry[tokenAddress];
+    tokenInfo.tokenAddress = tokenAddress;
+    tokenInfo.creator = msg.sender;
+    tokenInfo.creationTime = block.timestamp;
+    tokenInfo.totalSupply = _totalSupply;
+    tokenInfo.initialPrice = _initialPrice;
+    tokenInfo.creatorLockAmount = creatorLockAmount;
+    tokenInfo.creatorLockEndTime = creatorLockEndTime;
+    tokenInfo.isStabilityEnabled = _enableStability;
+    
+    // Configure stability mechanism if enabled
+    if (_enableStability) {
+        LaunchpadStructs.StabilityConfig storage stability = tokenInfo.stabilityConfig;
+        stability.enableAutoStabilize = true;
+        stability.upperPriceThreshold = 2000; // 20% price increase
+        stability.lowerPriceThreshold = 1500; // 15% price decrease
+        stability.maxStabilizationAmount = 500; // 5% of supply
+        stability.cooldownPeriod = 1 days;
+        stability.lastStabilizationTime = block.timestamp;
+    }
+    
+    // Transfer unlocked tokens to creator
+    IERC20(tokenAddress).transfer(msg.sender, creatorAmount);
+    
+    // Lock creator's tokens
+    IClampifyLockManager(lockManager).lockSupply(
+        tokenAddress,
+        msg.sender,
+        creatorLockAmount,
+        creatorLockEndTime,
+        false, // not vesting
+        0,
+        0
+    );
+    
+    // Setup initial liquidity
+    (address lpToken, uint256 liquidity) = IClampifyTokenFactory(tokenFactory).setupInitialLiquidity(
+        tokenAddress,
+        _initialLiquidityAmount,
+        _initialPrice
+    );
+    
+    // Update token info with liquidity lock data
+    tokenInfo.hasLiquidityLocked = true;
+    tokenInfo.liquidityLockEndTime = block.timestamp + proxy.minLiquidityLockPeriod();
+    tokenInfo.lpToken = lpToken;
+    
+    // Update statistics using implementation state variables
+    totalTokensCreated += 1;
+    totalLiquidityLocked += liquidity;
+    
+    // Initialize bonding curve for token pricing
+    if (bondingCurve != address(0)) {
+        // Calculate initial reserve based on initial price and token amount
+        uint256 initialReserve = _initialLiquidityAmount.mul(_initialPrice).div(1e18);
         
-        // Validate inputs
-        require(_totalSupply > 0, "Clampify: Total supply must be greater than 0");
-        require(_creatorLockPercentage > 0, "Clampify: Creator lock percentage must be greater than 0");
-        require(_creatorLockPercentage <= 10000, "Clampify: Creator lock percentage must be <= 100%");
-        require(_creatorLockDuration >= minCreatorLockPeriod, "Clampify: Lock duration too short");
-        require(_initialLiquidityAmount > 0, "Clampify: Initial liquidity must be greater than 0");
-        require(_initialLiquidityAmount < _totalSupply, "Clampify: Liquidity exceeds total supply");
-        
-        // Collect creation fee
-        uint256 creationFee = _totalSupply.mul(tokenCreationFee).div(MAX_BPS);
-        IERC20(platformToken).safeTransferFrom(msg.sender, feeCollector, creationFee);
-        
-        // Update fees collected - using state variable in implementation
-        totalFeesCollected += creationFee;
-        
-        // Create new token through factory
-        address tokenAddress = IClampifyTokenFactory(tokenFactory).createToken(
-            _name,
-            _symbol,
-            _totalSupply,
-            address(this)
+        // Call initializeToken on the bonding curve contract
+        // This sets up the bonding curve parameters for this token
+        (bool success, ) = bondingCurve.call(
+            abi.encodeWithSignature(
+                "initializeToken(address,uint256,uint256)",
+                tokenAddress,
+                _totalSupply,
+                initialReserve
+            )
         );
         
-        // Calculate token distributions
-        uint256 creatorLockAmount = _totalSupply.mul(_creatorLockPercentage).div(MAX_BPS);
-        uint256 creatorLockEndTime = block.timestamp.add(_creatorLockDuration);
-        uint256 remainingAfterLock = _totalSupply.sub(creatorLockAmount);
-        uint256 creatorAmount = remainingAfterLock.sub(_initialLiquidityAmount);
-        
-        // Setup token in registry
-        IClampifyTokenFactory(tokenFactory).setupToken(
-            tokenAddress,
-            msg.sender,
-            _totalSupply,
-            _initialPrice,
-            creatorLockAmount,
-            creatorLockEndTime,
-            _enableStability
-        );
-        
-        // Store token info in registry
-        LaunchpadStructs.TokenInfo storage tokenInfo = tokenRegistry[tokenAddress];
-        tokenInfo.tokenAddress = tokenAddress;
-        tokenInfo.creator = msg.sender;
-        tokenInfo.creationTime = block.timestamp;
-        tokenInfo.totalSupply = _totalSupply;
-        tokenInfo.initialPrice = _initialPrice;
-        tokenInfo.creatorLockAmount = creatorLockAmount;
-        tokenInfo.creatorLockEndTime = creatorLockEndTime;
-        tokenInfo.isStabilityEnabled = _enableStability;
-        
-        // Configure stability mechanism if enabled
-        if (_enableStability) {
-            LaunchpadStructs.StabilityConfig storage stability = tokenInfo.stabilityConfig;
-            stability.enableAutoStabilize = true;
-            stability.upperPriceThreshold = 2000; // 20% price increase
-            stability.lowerPriceThreshold = 1500; // 15% price decrease
-            stability.maxStabilizationAmount = 500; // 5% of supply
-            stability.cooldownPeriod = 1 days;
-            stability.lastStabilizationTime = block.timestamp;
+        // If bonding curve initialization fails, log but continue
+        // This ensures token creation doesn't fail entirely if bonding curve has issues
+        if (!success) {
+            // We don't revert here to ensure token creation can still succeed
+            // Even without bonding curve initialization
         }
-        
-        // Transfer unlocked tokens to creator
-        IERC20(tokenAddress).transfer(msg.sender, creatorAmount);
-        
-        // Lock creator's tokens
-        IClampifyLockManager(lockManager).lockSupply(
-            tokenAddress,
-            msg.sender,
-            creatorLockAmount,
-            creatorLockEndTime,
-            false, // not vesting
-            0,
-            0
-        );
-        
-        // Setup initial liquidity
-        (address lpToken, uint256 liquidity) = IClampifyTokenFactory(tokenFactory).setupInitialLiquidity(
-            tokenAddress,
-            _initialLiquidityAmount,
-            _initialPrice
-        );
-        
-        // Update token info with liquidity lock data
-        tokenInfo.hasLiquidityLocked = true;
-        tokenInfo.liquidityLockEndTime = block.timestamp + proxy.minLiquidityLockPeriod();
-        tokenInfo.lpToken = lpToken;
-        
-        // Update statistics using implementation state variables
-        totalTokensCreated += 1;
-        totalLiquidityLocked += liquidity;
-        
-        // Emit event directly from the implementation
-        emit TokenCreated(tokenAddress, msg.sender, _totalSupply, _initialPrice);
-        
-        return tokenAddress;
+    }
+    
+    // Emit event directly from the implementation
+    emit TokenCreated(tokenAddress, msg.sender, _totalSupply, _initialPrice);
+    
+    return tokenAddress;
     }
     
     /**
