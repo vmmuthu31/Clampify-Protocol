@@ -6,7 +6,7 @@ ClampFi is an innovative meme token launchpad built on Core blockchain that intr
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Built on Core](https://img.shields.io/badge/Built%20on-Core-blue)](https://coredao.org/)
-[![Anti-Rug](https://img.shields.io/badge/Anti-Rug-green)](https://github.com/clampfi/protocol)
+[![Anti-Rug](https://img.shields.io/badge/Anti-Rug-green)](https://github.com/vmmuthu31/Clampify-Protocol)
 
 ## 🔒 What is Supply Clamping?
 
@@ -105,11 +105,13 @@ yarn deploy:local
 
 ## 📝 Contract Addresses (Core Mainnet)
 
-| Contract           | Address |
-| ------------------ | ------- |
-| ClampFi Protocol   | `0x...` |
-| ClampFi Governance | `0x...` |
-| Platform Token     | `0x...` |
+| Contract                  | Address                                      |
+| ------------------------- | -------------------------------------------- |
+| ClampFi Protocol          | `0x86E47CBf56d01C842AC036A56C8ea2fE0168a2D1` |
+| ClampFi Governance        | `0x14b1c5415C1164fB09450c9e46a00D5C39e52644` |
+| Platform Token            | `0x2B65Eba61bac37Ae872bEFf9d1932129B0ed24ee` |
+| Bonding Curve             | `0xc6C9FE196408c0Ade5F394d930cF90Ebab66511e` |
+| DEX Router (IceCreamSwap) | `0x6c31acd41ff0d0cc33a243eafbc5b22de10733ad` |
 
 ## 🔧 Developer Resources
 
@@ -175,6 +177,38 @@ function createProposal(
 ) external;
 ```
 
+## Initial Setup Instructions
+
+After deployment, follow these steps to set up the protocol:
+
+1. Connect Governance to Clampify:
+
+   ```
+   # Call from your address to Clampify Contract
+   setGovernanceContract(0x14b1c5415C1164fB09450c9e46a00D5C39e52644)
+   ```
+
+2. Approve Platform Token for Clampify:
+
+   ```
+   # Call from your address to Platform Token Contract
+   approve(0x86E47CBf56d01C842AC036A56C8ea2fE0168a2D1, [large amount])
+   ```
+
+3. Update DEX Router:
+
+   ```
+   # Call from your address to Clampify Contract
+   updateDexRouter(0x6c31acd41ff0d0cc33a243eafbc5b22de10733ad)
+   ```
+
+4. Set Platform Parameters:
+   ```
+   # Call from your address to Clampify Contract
+   setPlatformFee(200)  # 2% fee
+   setTradingFee(50)    # 0.5% fee
+   ```
+
 ## 📈 Use Cases
 
 ### For Token Creators
@@ -210,10 +244,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🔗 Links
 
 - [Website](https://clampfi.xyz)
-<!-- - [Documentation](https://docs.clampfi.finance)
-- [Twitter](https://twitter.com/clampfi)
-- [Discord](https://discord.gg/clampfi)
-- [Medium](https://medium.com/@clampfi) -->
+- [Documentation](https://docs.clampfi.xyz)
+- [Twitter](https://twitter.com/clampfiprotocol)
+- [Telegram](https://t.me/clampfiprotocol)
 
 ## 🙏 Acknowledgements
 
