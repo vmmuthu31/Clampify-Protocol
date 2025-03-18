@@ -1,58 +1,132 @@
-# Clampify: Anti-Rug Pull Meme Token Platform with Bonding Curve
+# ClampFi Protocol
 
-**Author:** vmmuthu31
+![ClampFi Logo](https://example.com/clampfi-logo.png)
 
-## Overview
+## The First Supply-Clamping Meme Token Launchpad
 
-Clampify is a revolutionary meme token creation platform built on Core blockchain that offers built-in safeguards against rug pulls while providing a pump.fun style bonding curve mechanism for fair and transparent token pricing. The platform combines creator flexibility with investor protection through automatic liquidity locking, creator token vesting, and algorithmic price stabilization.
+ClampFi is an innovative meme token launchpad built on Core blockchain that introduces revolutionary supply clamping technology to make rug pulls mathematically impossible while preserving the fun and creativity of meme tokens.
 
-## Key Features
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Built on Core](https://img.shields.io/badge/Built%20on-Core-blue)](https://coredao.org/)
+[![Anti-Rug](https://img.shields.io/badge/Anti-Rug-green)](https://github.com/clampfi/protocol)
 
-- 🔒 **Anti-Rug Pull Mechanisms**: Mandatory liquidity locking and creator token vesting
-- 📈 **Bonding Curve**: Pump.fun style mathematical pricing model
-- 💰 **Price Stabilization**: Automatic and configurable price stability mechanisms
-- ✅ **Governance**: Token verification and platform parameter management
-- 💸 **Sustainable Revenue Model**: Multiple fee streams for platform sustainability
+## 🔒 What is Supply Clamping?
 
-## Contract Architecture
+Supply clamping is a breakthrough security approach that limits token holders' ability to dump large amounts of tokens at once by implementing:
 
+1. **Time-Based Locking**: Tokens are locked for specific time periods
+2. **Graduated Release**: Vested tokens unlock gradually, not all at once
+3. **Maximum Daily Limits**: Holders can only sell a percentage of their holdings per day
+4. **Dynamic Adjustments**: Sell limits adapt based on market conditions
+
+## 🛡️ Key Security Features
+
+### Anti-Rug Pull Mechanics
+
+- Mandatory creator token locking (minimum 30 days)
+- Required liquidity locking (minimum 180 days)
+- Maximum sell limits of 3% per wallet per day
+- Bonding curve option that makes liquidity rug pulls impossible
+
+### Stability Mechanisms
+
+- Price stability through automatic mint/burn functions
+- Configurable price thresholds for intervention
+- Market stress detection for additional protection
+- Bonding curve option for algorithmic price stability
+
+### Community Governance
+
+- On-chain governance through token-weighted voting
+- Community control of platform parameters
+- Democratic proposal and execution system
+- Transparent, immutable rules
+
+## 📊 How It Works
+
+### Token Creation
+
+Creating tokens through ClampFi requires:
+
+- Creator token locking (minimum 20% of supply)
+- Liquidity provision with time lock
+- Compliance with minimum security standards
+
+### Token Trading
+
+ClampFi offers two trading models:
+
+1. **Traditional DEX Trading** - With enhanced security layers
+2. **Bonding Curve** - Algorithmic pricing that prevents rug pulls
+
+### Supply Locks
+
+Tokens are subject to:
+
+- Time-based release schedules
+- Maximum daily selling limits
+- Vesting options for gradual distribution
+- Transparent on-chain lock tracking
+
+### Governance
+
+Platform parameters are controlled by:
+
+- Token-weighted voting by the community
+- Formal proposal process
+- Transparent execution of approved changes
+- Role-based access control
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js v16+
+- Yarn or npm
+- MetaMask or Web3 wallet
+
+### Installation for Local Development
+
+```bash
+# Clone the repository
+git clone https://github.com/vmmuthu31/Clampify-Protocol
+cd protocol
+
+# Install dependencies
+yarn install
+
+# Compile contracts
+yarn compile
+
+# Run tests
+yarn test
+
+# Deploy to local network
+yarn deploy:local
 ```
-clampify
-└─ contracts
-   ├─ core
-   │  └─ ClampifyImplementation.sol        # Core platform logic
-   ├─ factory
-   │  └─ ClampifyTokenFactory.sol          # Token creation factory
-   ├─ governance
-   │  └─ ClampifyGovernance.sol            # Platform governance
-   ├─ interfaces
-   │  ├─ IClampifyLaunchpad.sol            # Main platform interface
-   │  ├─ IClampifyLockManager.sol          # Lock mechanism interface
-   │  ├─ IClampifyStabilityManager.sol     # Price stability interface
-   │  ├─ IClampifyTokenFactory.sol         # Factory interface
-   │  ├─ IDEXFactory.sol                   # DEX integration interface
-   │  ├─ IDEXRouter.sol                    # DEX router interface
-   │  └─ IPriceOracle.sol                  # Price oracle interface
-   ├─ libraries
-   │  └─ LaunchpadStructs.sol              # Data structures
-   ├─ managers
-   │  ├─ ClampifyLockManager.sol           # Token & liquidity locking
-   │  └─ ClampifyStabilityManager.sol      # Price stabilization
-   ├─ pricing
-   │  └─ ClampifyBondingCurve.sol          # Bonding curve mechanism
-   ├─ proxy
-   │  └─ ClampifyLaunchpadProxy.sol        # Platform entry point
-   └─ tokens
-      └─ ClampifyToken.sol                 # ERC20 token with protections
-```
 
-## Contract Details
+## 📝 Contract Addresses (Core Mainnet)
 
-### ClampifyLaunchpadProxy.sol
+| Contract           | Address |
+| ------------------ | ------- |
+| ClampFi Protocol   | `0x...` |
+| ClampFi Governance | `0x...` |
+| Platform Token     | `0x...` |
 
-The main entry point for the platform that coordinates all modules.
+## 🔧 Developer Resources
 
-**Key Functions:**
+### Smart Contract Architecture
+
+The protocol consists of four main contracts:
+
+1. `Clampify.sol` - Core protocol handling token creation and security
+2. `ClampifyToken.sol` - Token implementation with special security features
+3. `ClampifyGovernance.sol` - On-chain governance system
+4. `BondingCurve.sol` - Algorithmic price discovery implementation
+
+### Key Functions
+
+#### Token Creation
 
 ```solidity
 function createMemeToken(
@@ -63,172 +137,94 @@ function createMemeToken(
     uint256 _creatorLockDuration,
     uint256 _initialLiquidityAmount,
     uint256 _initialPrice,
-    bool _enableStability
-) external returns (address);
-
-function getTokenInfo(address _token) external view returns (...);
-function updateBondingCurve(address _newBondingCurve) external;
-function setFeeParameters(...) external;
+    bool _enableStability,
+    bool _useBondingCurve
+) external payable returns (address);
 ```
 
-### ClampifyImplementation.sol
-
-Contains the core logic for token creation and management.
-
-**Key Functions:**
+#### Supply Locking
 
 ```solidity
-function createMemeToken(...) external returns (address);
-function getTokenInfo(address _token) external view returns (...);
-function verifyToken(address _token, bool _isVerified) external;
+function lockSupply(
+    address _token,
+    address _holder,
+    uint256 _amount,
+    uint256 _releaseTime,
+    bool _isVesting,
+    uint256 _vestingStart,
+    uint256 _vestingDuration
+) external;
 ```
 
-### ClampifyTokenFactory.sol
-
-Creates tokens and sets up initial liquidity pools.
-
-**Key Functions:**
+#### Trading via Bonding Curve
 
 ```solidity
-function createToken(string memory _name, string memory _symbol, uint256 _totalSupply, address _owner) external returns (address);
-function setupInitialLiquidity(address _tokenAddress, uint256 _liquidityAmount, uint256 _initialPrice) external returns (address, uint256);
+function buyFromBondingCurve(address _token, uint256 _platformAmount)
+    external returns (uint256 _returnAmount);
+
+function sellToBondingCurve(address _token, uint256 _tokenAmount)
+    external returns (uint256 _returnAmount);
 ```
 
-### ClampifyToken.sol
-
-ERC20 token with built-in transfer limits and rug-pull protection.
-
-**Key Functions:**
+#### Governance Actions
 
 ```solidity
-function mint(address _to, uint256 _amount) external;
-function burn(uint256 _amount) external;
-function setMaxTransferAmount(uint256 _maxAmount) external;
+function createProposal(
+    string memory _description,
+    address _targetContract,
+    bytes memory _callData,
+    uint256 _votingPeriod
+) external;
 ```
 
-### ClampifyLockManager.sol
+## 📈 Use Cases
 
-Manages token locking for creators and liquidity.
+### For Token Creators
 
-**Key Functions:**
+- Create meme tokens with built-in security features
+- Earn ongoing rewards from successful tokens
+- Build community trust through verifiable security
 
-```solidity
-function lockSupply(address _token, address _holder, uint256 _amount, uint256 _releaseTime, bool _isVesting, uint256 _vestingStart, uint256 _vestingDuration) external;
-function unlockTokens(address _token, uint256 _lockIndex) external;
-```
+### For Investors
 
-### ClampifyStabilityManager.sol
+- Trade meme tokens with protection against rug pulls
+- Participate in governance decisions
+- Enjoy more stable token economics
 
-Automatically stabilizes token prices based on configurable parameters.
+### For Developers
 
-**Key Functions:**
+- Build on top of the protocol with our SDK
+- Create custom security features
+- Integrate with existing DeFi applications
 
-```solidity
-function checkStabilization(address _token) external view returns (bool, bool, uint256);
-function triggerStabilization(address _token) external;
-```
+## 🤝 Contributing
 
-### ClampifyBondingCurve.sol
+We welcome contributions to the ClampFi Protocol! Please see our [contribution guidelines](CONTRIBUTING.md) for details.
 
-Implements the pump.fun style bonding curve mechanism for token pricing.
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
 
-**Key Functions:**
+## 📜 License
 
-```solidity
-function initializeToken(address _token, uint256 _initialSupply, uint256 _initialReserve) external;
-function calculateCurrentPrice(address _token) public view returns (uint256);
-function handleMint(address _token, uint256 _reserveAmount) external returns (uint256);
-function handleBurn(address _token, uint256 _tokenAmount) external returns (uint256);
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Deployment Order
+## 🔗 Links
 
-1. ClampifyToken.sol (Platform token)
-2. ClampifyBondingCurve.sol
-3. ClampifyTokenFactory.sol
-4. ClampifyLockManager.sol
-5. ClampifyStabilityManager.sol
-6. ClampifyImplementation.sol
-7. ClampifyLaunchpadProxy.sol
-8. ClampifyGovernance.sol
+- [Website](https://clampfi.xyz)
+<!-- - [Documentation](https://docs.clampfi.finance)
+- [Twitter](https://twitter.com/clampfi)
+- [Discord](https://discord.gg/clampfi)
+- [Medium](https://medium.com/@clampfi) -->
 
-## Bonding Curve Mechanism
+## 🙏 Acknowledgements
 
-Our bonding curve implementation uses a 50% reserve ratio with a mathematical relationship between token supply and price:
-
-- **Purchase Formula**: `supply * ((1 + deposit/reserve)^(reserveRatio) - 1)`
-- **Sale Formula**: `reserve * (1 - (1 - tokenAmount/supply)^(1/reserveRatio))`
-- **Price Calculation**: `reserve * reserveRatio / supply`
-
-The bonding curve creates a transparent and predictable token pricing model that rewards early adopters while maintaining liquidity for all participants.
-
-## Revenue Model
-
-The platform generates revenue through multiple streams:
-
-1. **Token Creation Fee**: 2% of token supply
-2. **Trading Fee**: 0.5% of trade value
-3. **Liquidity Lock Fee**: 0.1% of locked liquidity
-4. **Bonding Curve Fee**: 0.25% of bonding curve transactions
-
-These fees are configurable by governance and can be directed to the platform treasury, used for buybacks, or distributed to governance token stakers.
-
-## Security Features
-
-- **Mandatory Liquidity Locking**: Initial liquidity is locked for a minimum of 180 days
-- **Creator Token Vesting**: Portions of creator tokens are locked for a minimum of 30 days
-- **Transfer Limits**: Configurable maximum transfer amounts to prevent dumps
-- **Price Stabilization**: Automatic mint/burn mechanisms to maintain price stability
-- **Role-Based Access**: Granular permission system for platform management
-
-## Example: Token Creation
-
-```javascript
-// Connect to platform
-const clampify = await ethers.getContractAt(
-  "ClampifyLaunchpadProxy",
-  PROXY_ADDRESS
-);
-
-// Approve platform to spend platform tokens for creation fee
-const platformToken = await ethers.getContractAt(
-  "IERC20",
-  PLATFORM_TOKEN_ADDRESS
-);
-await platformToken.approve(PROXY_ADDRESS, ethers.utils.parseEther("1000"));
-
-// Create new token
-const tx = await clampify.createMemeToken(
-  "Awesome Meme Token", // name
-  "AMT", // symbol
-  ethers.utils.parseEther("1000000"), // totalSupply
-  2000, // creatorLockPercentage (20%)
-  60 * 60 * 24 * 90, // creatorLockDuration (90 days)
-  ethers.utils.parseEther("100000"), // initialLiquidityAmount
-  ethers.utils.parseEther("0.001"), // initialPrice
-  true // enableStability
-);
-
-// Get created token address
-const receipt = await tx.wait();
-const event = receipt.events.find((e) => e.event === "TokenCreated");
-const tokenAddress = event.args.token;
-```
-
-## Contributing
-
-We welcome contributions to the Clampify platform! Please see our [Contribution Guidelines](https://clampify.xyz/contributing) for more information.
-
-## License
-
-Clampify is released under the MIT License.
-
-## Contact
-
-- Website: [https://clampify.xyz](https://clampify.xyz)
-- Twitter: [@ClampifyProject](https://twitter.com/ClampifyProject)
-- GitHub: [github.com/vmmuthu31/clampify](https://github.com/vmmuthu31/Clampify-Protocol)
+- Core blockchain for providing the foundation
+- OpenZeppelin for secure contract libraries
+- Our community for continuous feedback and support
 
 ---
 
-Built with ❤️ on Core blockchain by vmmuthu31 and the Clampify team.
+## Security Disclaimer
+
+ClampFi Protocol is built with security as a priority, but please use at your own risk. Always do your own research and consider the risks of blockchain and smart contract interactions.
