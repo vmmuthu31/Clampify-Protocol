@@ -1,13 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { Lock } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import WalletButton from "./WalletButton";
 
 export function Navbar() {
-  const [isConnected, setIsConnected] = useState(false);
   const pathname = usePathname();
 
   const navItems = [
@@ -26,8 +25,8 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href}>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className={`text-white/70 hover:text-white ${
                     pathname === item.href ? "bg-white/10" : ""
                   }`}
@@ -38,21 +37,18 @@ export function Navbar() {
             ))}
           </div>
         </div>
-        
+
         <div className="flex items-center gap-4">
-          <Button variant="outline" className="hidden sm:flex items-center gap-2 border-white/10 bg-black/20">
+          <Button
+            variant="outline"
+            className="hidden sm:flex items-center gap-2 border-white/10 bg-black/20"
+          >
             <Lock className="w-4 h-4 text-green-400" />
             <span className="text-white/70">CoreDAO Network</span>
           </Button>
-          <Button 
-            variant="default"
-            onClick={() => setIsConnected(!isConnected)}
-            className="bg-gradient-to-r from-orange-500 to-pink-500 hover:opacity-90"
-          >
-            {isConnected ? "0x1234...5678" : "Connect Wallet"}
-          </Button>
+          <WalletButton />
         </div>
       </div>
     </nav>
   );
-} 
+}
