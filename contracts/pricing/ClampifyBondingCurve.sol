@@ -3,10 +3,13 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title ClampifyBondingCurve
- * @dev Implements pump.fun style bonding curve for token pricing
+ * @dev Implements pump.fun style bonding curve for token pricing with platform revenue share
+ * @author vmmuthu31
+ * @notice Last modified: 2025-03-17 19:10:45
  */
 contract ClampifyBondingCurve is AccessControl {
     using SafeMath for uint256;
@@ -16,8 +19,14 @@ contract ClampifyBondingCurve is AccessControl {
     uint256 public constant PPM = 1000000;          // Parts per million
     uint256 public constant INITIAL_PRICE = 1e15;   // 0.001 ETH initial price
     
-    // Role identifier
+    // Role identifiers
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant FEE_MANAGER_ROLE = keccak256("FEE_MANAGER_ROLE");
+    
+    // Platform fee configuration
+    uint256 public platformFeePercentage = 25;      // 0.25% default fee
+    address public feeCollector;
+    address public platformToken;
     
     // Curve state variables
     mapping(address => uint256) public connectorBalances;  // Platform token reserve per meme token
@@ -26,13 +35,39 @@ contract ClampifyBondingCurve is AccessControl {
     // Events
     event TokensIssued(address indexed token, uint256 supply, uint256 price);
     event TokensRedeemed(address indexed token, uint256 supply, uint256 price);
+    event FeeCollected(address indexed token, uint256 amount, address collector);
+    event FeeParametersUpdated(uint256 newPercentage, address newCollector);
     
     /**
      * @dev Constructor sets up roles
+     * @param _platformToken The address of the platform token used as reserve
+     * @param _feeCollector The address that will receive fees
      */
-    constructor() {
+    constructor(address _platformToken, address _feeCollector) {
+        require(_platformToken != address(0), "Platform token cannot be zero address");
+        require(_feeCollector != address(0), "Fee collector cannot be zero address");
+        
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(ADMIN_ROLE, msg.sender);
+        _grantRole(FEE_MANAGER_ROLE, msg.sender);
+        
+        platformToken = _platformToken;
+        feeCollector = _feeCollector;
+    }
+    
+    /**
+     * @dev Set platform fee percentage and collector
+     * @param _feePercentage New fee percentage (in basis points, 25 = 0.25%)
+     * @param _feeCollector New fee collector address
+     */
+    function setPlatformFeeParameters(uint256 _feePercentage, address _feeCollector) external onlyRole(FEE_MANAGER_ROLE) {
+        require(_feePercentage <= 100, "Fee cannot exceed 1%");  // Max 1% fee
+        require(_feeCollector != address(0), "Fee collector cannot be zero address");
+        
+        platformFeePercentage = _feePercentage;
+        feeCollector = _feeCollector;
+        
+        emit FeeParametersUpdated(_feePercentage, _feeCollector);
     }
     
     /**
@@ -64,10 +99,14 @@ contract ClampifyBondingCurve is AccessControl {
         // Return 0 if token not initialized or no deposit
         if (supply == 0 || reserve == 0 || _reserveAmount == 0) return 0;
         
+        // Adjust for platform fee
+        uint256 feeAmount = _reserveAmount.mul(platformFeePercentage).div(10000);
+        uint256 effectiveDeposit = _reserveAmount.sub(feeAmount);
+        
         // Formula: supply * ((1 + deposit/reserve)^(reserveRatio) - 1)
         // For 50% reserve ratio this simplifies to a square root formula
         
-        uint256 newReserve = reserve.add(_reserveAmount);
+        uint256 newReserve = reserve.add(effectiveDeposit);
         uint256 ratio = newReserve.mul(PPM).div(reserve);
         
         // When RESERVE_RATIO is 50%, we can use sqrt approximation
@@ -106,12 +145,19 @@ contract ClampifyBondingCurve is AccessControl {
         if (RESERVE_RATIO == 500000) {
             // Calculate reserve * (1 - ratio^2)
             uint256 ratioSquared = ratio.mul(ratio).div(PPM);
-            return reserve.mul(PPM.sub(ratioSquared)).div(PPM);
+            uint256 rawReturn = reserve.mul(PPM.sub(ratioSquared)).div(PPM);
+            
+            // Apply platform fee
+            uint256 feeAmount = rawReturn.mul(platformFeePercentage).div(10000);
+            return rawReturn.sub(feeAmount);
         } else {
             // For other reserve ratios, use an approximation
             uint256 exponent = PPM.div(RESERVE_RATIO);
-            uint256 result = reserve.mul(PPM.sub(pow(ratio, exponent))).div(PPM);
-            return result;
+            uint256 rawReturn = reserve.mul(PPM.sub(pow(ratio, exponent))).div(PPM);
+            
+            // Apply platform fee
+            uint256 feeAmount = rawReturn.mul(platformFeePercentage).div(10000);
+            return rawReturn.sub(feeAmount);
         }
     }
     
@@ -151,11 +197,24 @@ contract ClampifyBondingCurve is AccessControl {
      * @return Amount of tokens to mint
      */
     function handleMint(address _token, uint256 _reserveAmount) external onlyRole(ADMIN_ROLE) returns (uint256) {
-        uint256 tokensToMint = calculatePurchaseReturn(_token, _reserveAmount);
+        require(_reserveAmount > 0, "Reserve deposit must be positive");
+        
+        // Calculate platform fee
+        uint256 platformFee = _reserveAmount.mul(platformFeePercentage).div(10000);
+        uint256 effectiveDeposit = _reserveAmount.sub(platformFee);
+        
+        // Calculate tokens to mint based on effective deposit
+        uint256 tokensToMint = calculatePurchaseReturn(_token, effectiveDeposit);
         require(tokensToMint > 0, "Invalid mint amount");
         
-        // Update state
-        connectorBalances[_token] = connectorBalances[_token].add(_reserveAmount);
+        // Transfer platform fee to fee collector
+        if (platformFee > 0) {
+            IERC20(platformToken).transfer(feeCollector, platformFee);
+            emit FeeCollected(_token, platformFee, feeCollector);
+        }
+        
+        // Update state with effective deposit
+        connectorBalances[_token] = connectorBalances[_token].add(effectiveDeposit);
         tokenSupplies[_token] = tokenSupplies[_token].add(tokensToMint);
         
         emit TokensIssued(_token, tokensToMint, calculateCurrentPrice(_token));
@@ -170,16 +229,29 @@ contract ClampifyBondingCurve is AccessControl {
      * @return Amount of reserve tokens to return
      */
     function handleBurn(address _token, uint256 _tokenAmount) external onlyRole(ADMIN_ROLE) returns (uint256) {
-        uint256 reserveReturn = calculateSaleReturn(_token, _tokenAmount);
-        require(reserveReturn > 0, "Invalid burn amount");
+        require(_tokenAmount > 0, "Token amount must be positive");
         
-        // Update state
-        connectorBalances[_token] = connectorBalances[_token].sub(reserveReturn);
+        // Calculate raw reserve return
+        uint256 rawReserveReturn = calculateSaleReturn(_token, _tokenAmount);
+        require(rawReserveReturn > 0, "Invalid burn amount");
+        
+        // Calculate platform fee
+        uint256 platformFee = rawReserveReturn.mul(platformFeePercentage).div(10000);
+        uint256 effectiveReturn = rawReserveReturn.sub(platformFee);
+        
+        // Transfer platform fee to fee collector
+        if (platformFee > 0) {
+            IERC20(platformToken).transfer(feeCollector, platformFee);
+            emit FeeCollected(_token, platformFee, feeCollector);
+        }
+        
+        // Update state with full reserve change
+        connectorBalances[_token] = connectorBalances[_token].sub(rawReserveReturn);
         tokenSupplies[_token] = tokenSupplies[_token].sub(_tokenAmount);
         
         emit TokensRedeemed(_token, _tokenAmount, calculateCurrentPrice(_token));
         
-        return reserveReturn;
+        return effectiveReturn;
     }
     
     /**
