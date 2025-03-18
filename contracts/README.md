@@ -1,7 +1,5 @@
 # ClampFi Protocol
 
-![ClampFi Logo](https://example.com/clampfi-logo.png)
-
 ## The First Supply-Clamping Meme Token Launchpad
 
 ClampFi is an innovative meme token launchpad built on Core blockchain that introduces revolutionary supply clamping technology to make rug pulls mathematically impossible while preserving the fun and creativity of meme tokens.
