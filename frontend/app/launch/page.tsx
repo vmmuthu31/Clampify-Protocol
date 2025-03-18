@@ -1,82 +1,123 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Lock, Shield, Timer, Info } from "lucide-react";
+import { Lock, Shield, Timer } from "lucide-react";
 
 export default function LaunchPage() {
   return (
-    <div className="container mx-auto px-4 py-24">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl font-bold gradient-text mb-6">Launch Your Token</h1>
-        
-        {/* Token Creation Form */}
-        <div className="glass rounded-xl p-8 space-y-8">
-          {/* Basic Info */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-white">Token Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm text-white/70">Token Name</label>
-                <Input placeholder="e.g. My Awesome Token" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm text-white/70">Token Symbol</label>
-                <Input placeholder="e.g. $AWESOME" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm text-white/70">Total Supply</label>
-              <Input type="number" placeholder="1,000,000" />
-            </div>
-          </div>
-
-          {/* Security Settings */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-white">Security Settings</h2>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="bg-white/5 rounded-lg p-4 flex items-start gap-4">
-                <Lock className="w-5 h-5 text-green-400 mt-1" />
-                <div>
-                  <h3 className="font-medium text-white">Creator Token Lock</h3>
-                  <p className="text-sm text-white/70 mb-3">Minimum 30 days lock period required</p>
-                  <Input type="number" placeholder="Lock period in days (min 30)" />
+    <main className="min-h-screen relative overflow-hidden bg-[#0A041A]">
+      <div className="container mx-auto px-4 pt-20">
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Left Column - Token Info */}
+          <div className="rounded-[24px] bg-gradient-to-b from-[#FF3B691A] to-[#FF3B6900] p-[1px]">
+            <div className="rounded-[24px] bg-[#130B1D] p-8">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 rounded-2xl bg-[#FF3B69] flex items-center justify-center text-xl font-bold">
+                  1
                 </div>
+                <h2 className="text-[#FF3B69] text-2xl font-bold">Token Details</h2>
               </div>
-              
-              <div className="bg-white/5 rounded-lg p-4 flex items-start gap-4">
-                <Shield className="w-5 h-5 text-blue-400 mt-1" />
+              <div className="space-y-6">
                 <div>
-                  <h3 className="font-medium text-white">Maximum Sell Limit</h3>
-                  <p className="text-sm text-white/70 mb-3">Maximum tokens that can be sold per day</p>
-                  <Input type="number" placeholder="Max sell % per wallet per day" />
+                  <label className="text-[#FF3B69] text-base mb-3 block">Token Name</label>
+                  <Input 
+                    placeholder="e.g. COSMIC PEPE" 
+                    className="h-[52px] bg-[#0A041A] border-[#ffffff1a] focus:border-[#FF3B69] text-white placeholder:text-white/20 rounded-xl" 
+                  />
                 </div>
-              </div>
-
-              <div className="bg-white/5 rounded-lg p-4 flex items-start gap-4">
-                <Timer className="w-5 h-5 text-purple-400 mt-1" />
                 <div>
-                  <h3 className="font-medium text-white">Liquidity Lock</h3>
-                  <p className="text-sm text-white/70 mb-3">Minimum 180 days liquidity lock required</p>
-                  <Input type="number" placeholder="Lock period in days (min 180)" />
+                  <label className="text-[#FF3B69] text-base mb-3 block">Token Symbol</label>
+                  <Input 
+                    placeholder="e.g. $CPEPE" 
+                    className="h-[52px] bg-[#0A041A] border-[#ffffff1a] focus:border-[#FF3B69] text-white placeholder:text-white/20 rounded-xl" 
+                  />
+                </div>
+                <div>
+                  <label className="text-[#FF3B69] text-base mb-3 block">Total Supply</label>
+                  <Input 
+                    type="number" 
+                    placeholder="1,000,000,000,000" 
+                    className="h-[52px] bg-[#0A041A] border-[#ffffff1a] focus:border-[#FF3B69] text-white placeholder:text-white/20 rounded-xl" 
+                  />
                 </div>
               </div>
             </div>
           </div>
 
-          <Button 
-            size="lg" 
-            className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:opacity-90 h-14 text-lg"
-          >
-            Create Token
-          </Button>
+          {/* Right Column - Security Settings */}
+          <div className="rounded-[24px] bg-gradient-to-b from-[#FF3B691A] to-[#FF3B6900] p-[1px]">
+            <div className="rounded-[24px] bg-[#130B1D] p-8">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 rounded-2xl bg-[#FF3B69] flex items-center justify-center text-xl font-bold">
+                  2
+                </div>
+                <h2 className="text-[#FF3B69] text-2xl font-bold">Security</h2>
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-3 rounded-xl bg-[#1C3B38]">
+                      <Lock className="w-6 h-6 text-[#00FFA3]" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium">Creator Lock</h3>
+                      <p className="text-[#FF3B69]">Lock period (min 30 days)</p>
+                    </div>
+                  </div>
+                  <Input 
+                    type="number"
+                    placeholder="30"
+                    className="h-[52px] bg-[#0A041A] border-[#ffffff1a] focus:border-[#FF3B69] text-white placeholder:text-white/20 rounded-xl"
+                  />
+                </div>
 
-          <div className="bg-white/5 rounded-lg p-4 flex items-start gap-4">
-            <Info className="w-5 h-5 text-orange-400 mt-1" />
-            <div className="text-sm text-white/70">
-              By creating a token, you agree to lock the specified amount of creator tokens and provide liquidity that will be locked for the specified period.
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-3 rounded-xl bg-[#1C1A45]">
+                      <Shield className="w-6 h-6 text-[#618AFF]" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium">Max Sell</h3>
+                      <p className="text-[#FF3B69]">Max sell % per day</p>
+                    </div>
+                  </div>
+                  <Input 
+                    type="number"
+                    placeholder="3"
+                    className="h-[52px] bg-[#0A041A] border-[#ffffff1a] focus:border-[#FF3B69] text-white placeholder:text-white/20 rounded-xl"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-3 rounded-xl bg-[#2E1C3B]">
+                      <Timer className="w-6 h-6 text-[#FF3B69]" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium">Liquidity Lock</h3>
+                      <p className="text-[#FF3B69]">Lock period (min 180 days)</p>
+                    </div>
+                  </div>
+                  <Input 
+                    type="number"
+                    placeholder="180"
+                    className="h-[52px] bg-[#0A041A] border-[#ffffff1a] focus:border-[#FF3B69] text-white placeholder:text-white/20 rounded-xl"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Launch Button */}
+        <div className="flex justify-center mt-8">
+          <Button 
+            className="h-14 px-16 bg-gradient-to-r from-[#FF3B69] to-[#FF3E9C] 
+              hover:opacity-90 rounded-xl text-lg font-semibold"
+          >
+            Launch Token
+          </Button>
+        </div>
       </div>
-    </div>
+    </main>
   );
 } 
