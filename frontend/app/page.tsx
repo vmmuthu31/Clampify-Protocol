@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   X,
 } from "lucide-react";
+import { Navbar } from "@/components/navbar";
 
 export default function HomePage() {
   // Client-side state
@@ -69,7 +70,7 @@ export default function HomePage() {
           ease: "easeInOut",
         }}
       />
-
+      <Navbar />
       {/* Content */}
       <div className="container mx-auto px-4 pt-20">
         {/* Hero Section */}

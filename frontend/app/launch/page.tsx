@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Mint } from "./integration";
 
 // Define form field types
 interface TokenForm {
@@ -43,10 +44,10 @@ export default function LaunchPage() {
   const [tokenForm, setTokenForm] = useState<TokenForm>({
     name: "",
     symbol: "",
-    initialSupply: "1000000000",
+    initialSupply: "1000",
     decimals: "18",
     supplyLock: "70",
-    liquidityAmount: "5",
+    liquidityAmount: "0.001",
   });
 
   // Validation
@@ -92,9 +93,26 @@ export default function LaunchPage() {
   const handleLaunch = () => {
     if (!validateForm()) return;
 
-    setIsLaunching(true);
+    setIsLaunching(true); 
+    
+    // Use minimal values for testing
+    Mint(
+        tokenForm.name,
+        tokenForm.symbol,
+        "10", // Very small supply
+        "70", // 70% lock
+        30 * 24 * 60 * 60, // 30 days
+        "0.001", // Minimal liquidity
+        "0.000001", // Very small initial price
+        true,
+        true
+    ).catch(error => {
+        console.error('Error creating token:', error);
+        setIsLaunching(false);
+    });
 
     // Simulate token creation
+    return
     setTimeout(() => {
       setIsLaunching(false);
       setLaunchSuccess(true);
@@ -223,7 +241,7 @@ export default function LaunchPage() {
                   errors.initialSupply ? "border-red-500" : ""
                 }`}
                 type="number"
-                placeholder="e.g. 1000000000"
+                placeholder="e.g. 1000"
                 value={tokenForm.initialSupply}
                 onChange={(e) =>
                   handleFormChange("initialSupply", e.target.value)
@@ -269,7 +287,7 @@ export default function LaunchPage() {
                   errors.liquidityAmount ? "border-red-500" : ""
                 }`}
                 type="number"
-                placeholder="e.g. 5"
+                placeholder="e.g. 0.001"
                 value={tokenForm.liquidityAmount}
                 onChange={(e) =>
                   handleFormChange("liquidityAmount", e.target.value)
