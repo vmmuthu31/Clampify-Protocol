@@ -62,9 +62,9 @@ function Footer() {
               <h4 className="text-white font-medium mb-3">Resources</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="#" className="text-white/60 hover:text-white">
+                  <Link href="/docs" className="text-white/60 hover:text-white">
                     Documentation
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a href="#" className="text-white/60 hover:text-white">
