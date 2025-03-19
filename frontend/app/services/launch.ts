@@ -8,6 +8,9 @@ const { ethereum } = isBrowser() ? window : { ethereum: null };
 
 const contract_address: string = "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67"; // Clampify Factory Contract Address
 
+// Add RPC URL for the network you're using (Core DAO testnet)
+const RPC_URL = "https://rpc.test2.btcs.network/";
+
 export const Mint = async (
   name: string,
   symbol: string,
@@ -22,7 +25,7 @@ export const Mint = async (
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider();
+        : new ethers.providers.JsonRpcProvider(RPC_URL);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
