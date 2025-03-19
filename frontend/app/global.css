@@ -7,13 +7,13 @@
     /* Dark theme by default */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
-    
+
     /* Vibrant accent colors */
     --primary: 20 100% 50%; /* Vibrant Orange */
     --primary-glow: 20 100% 50%;
     --secondary: 280 100% 50%; /* Electric Purple */
     --accent: 130 100% 50%; /* Neon Green */
-    
+
     /* UI Colors */
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;
@@ -24,25 +24,49 @@
 
 /* Animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { 
+  0%,
+  100% {
     opacity: 0.5;
     transform: scale(1);
   }
-  50% { 
+  50% {
     opacity: 1;
     transform: scale(1.05);
   }
 }
 
 @keyframes gradient-flow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+body {
+  background: #0d0b15;
+  color: white;
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #6c5ce7, #4834d4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Custom Classes */
@@ -55,19 +79,27 @@
 }
 
 .bg-mesh {
-  background: 
-    radial-gradient(at 0% 0%, hsla(20,100%,50%,0.2) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(280,100%,50%,0.2) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(130,100%,50%,0.2) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(210,100%,50%,0.2) 0px, transparent 50%);
+  background: radial-gradient(
+      at 0% 0%,
+      hsla(20, 100%, 50%, 0.2) 0px,
+      transparent 50%
+    ),
+    radial-gradient(at 100% 0%, hsla(280, 100%, 50%, 0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(130, 100%, 50%, 0.2) 0px, transparent 50%),
+    radial-gradient(
+      at 100% 100%,
+      hsla(210, 100%, 50%, 0.2) 0px,
+      transparent 50%
+    );
   background-color: hsl(240 10% 3.9%);
 }
 
 .gradient-border {
   position: relative;
-  background: linear-gradient(to right, 
-    hsl(20 100% 50%), 
-    hsl(280 100% 50%), 
+  background: linear-gradient(
+    to right,
+    hsl(20 100% 50%),
+    hsl(280 100% 50%),
     hsl(130 100% 50%)
   );
   background-size: 200% 200%;
@@ -86,14 +118,14 @@
 }
 
 .neon-glow {
-  box-shadow: 
-    0 0 5px theme('colors.primary.DEFAULT'),
-    0 0 20px theme('colors.primary.DEFAULT'),
-    0 0 40px theme('colors.primary.DEFAULT');
+  box-shadow: 0 0 5px theme("colors.primary.DEFAULT"),
+    0 0 20px theme("colors.primary.DEFAULT"),
+    0 0 40px theme("colors.primary.DEFAULT");
 }
 
 .gradient-text {
-  background: linear-gradient(to right,
+  background: linear-gradient(
+    to right,
     hsl(20 100% 50%),
     hsl(280 100% 50%),
     hsl(130 100% 50%)
@@ -131,6 +163,11 @@
 }
 
 @keyframes glow {
-  0%, 100% { text-shadow: 0 0 50px rgba(255,94,0,0.5); }
-  50% { text-shadow: 0 0 30px rgba(255,94,0,0.8); }
+  0%,
+  100% {
+    text-shadow: 0 0 50px rgba(255, 94, 0, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(255, 94, 0, 0.8);
+  }
 }
