@@ -73,7 +73,6 @@ function WalletButton() {
     );
   }
 
-  // Authenticated - Wallet info and dropdown
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -88,7 +87,7 @@ function WalletButton() {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-56 bg-black/20">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm text-gray-500">Connected Wallet</p>
