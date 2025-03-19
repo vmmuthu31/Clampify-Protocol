@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Mint } from "./integration";
+import { Mint } from "../services/launch";
 import { useRouter } from 'next/navigation';
 
 // Define form field types
@@ -331,7 +331,7 @@ export default function LaunchPage() {
                 id="lockLiquidity"
                 defaultChecked={true}
                 className="data-[state=checked]:bg-[#6C5CE7]"
-                onCheckedChange={(value) => handleFormChange("lockLiquidity", value)}
+                onCheckedChange={(value) => handleFormChange("lockLiquidity", value.toString())}
               />
             </div>
 
