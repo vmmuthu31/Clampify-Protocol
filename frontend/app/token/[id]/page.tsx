@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-
 import {
   Accordion,
   AccordionContent,
@@ -34,8 +33,44 @@ import {
 } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 
+interface TokenData {
+  id: string;
+  name: string;
+  symbol: string;
+  price: number;
+  priceChange24h: number;
+  marketCap: number;
+  volume24h: number;
+  holders: number;
+  createdAt: string;
+  description: string;
+  website: string;
+  twitter: string;
+  telegram: string;
+  contractAddress: string;
+  decimals: number;
+  totalSupply: string;
+  circulatingSupply: string;
+  lockedSupply: string;
+  supplyLockPercentage: number;
+  lockDuration: number;
+  unlockStyle: string;
+  unlockEnd: string;
+  creator: string;
+  tradingEnabled: boolean;
+  maxWalletSize: string;
+  maxTxAmount: string;
+  buyTax: string;
+  sellTax: string;
+  bondingCurve: {
+    initialPrice: number;
+    reserveRatio: number;
+    currentReserve: number;
+  };
+}
+
 // Simulated token data
-const tokenData = {
+const tokenData: TokenData = {
   id: "clampfrog",
   name: "ClampFrog",
   symbol: "CFROG",
@@ -65,18 +100,6 @@ const tokenData = {
   maxTxAmount: "1", // percent
   buyTax: "2", // percent
   sellTax: "2", // percent
-  dexList: [
-    {
-      name: "PancakeSwap",
-      url: "https://pancakeswap.finance/swap?outputCurrency=0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
-      logo: "🥞",
-    },
-    {
-      name: "CoreDAO Swap",
-      url: "https://app.core.exchange/#/swap?outputCurrency=0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
-      logo: "🔄",
-    },
-  ],
   // Bonding curve parameters
   bondingCurve: {
     initialPrice: 0.000001,
