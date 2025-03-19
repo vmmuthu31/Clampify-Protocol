@@ -10,7 +10,6 @@ import {
   ExternalLink,
   Shield,
   Rocket,
-  ArrowLeftRight,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -49,11 +48,7 @@ export function Navbar() {
           href: "/launch",
           icon: <Rocket className="w-4 h-4" />,
         },
-        {
-          label: "Trade",
-          href: "/trade",
-          icon: <ArrowLeftRight className="w-4 h-4" />,
-        },
+
         {
           label: "Lock Liquidity",
           href: "/lock",
@@ -61,7 +56,6 @@ export function Navbar() {
         },
       ],
     },
-    { label: "Trade", href: "/trade" },
     { label: "Stats", href: "/stats" },
     { label: "Docs", href: "/docs" },
   ];
