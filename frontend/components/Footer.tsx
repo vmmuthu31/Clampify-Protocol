@@ -85,32 +85,6 @@ function Footer() {
             </div>
 
             <div>
-              <h4 className="text-white font-medium mb-3">Company</h4>
-              <ul className="space-y-2">
-                <li>
-                  <a href="#" className="text-white/60 hover:text-white">
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-white/60 hover:text-white">
-                    Careers
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-white/60 hover:text-white">
-                    Contact
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-white/60 hover:text-white">
-                    Partners
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
               <h4 className="text-white font-medium mb-3">Legal</h4>
               <ul className="space-y-2">
                 <li>
