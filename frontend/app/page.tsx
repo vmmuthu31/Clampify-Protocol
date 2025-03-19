@@ -19,7 +19,6 @@ import {
   CheckCircle2,
   X,
 } from "lucide-react";
-import { Navbar } from "@/components/navbar";
 
 export default function HomePage() {
   // Client-side state
@@ -54,8 +53,6 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen relative overflow-hidden bg-gradient-to-b from-black to-[#0D0B15]">
-      <Navbar />
-
       {/* Background Elements */}
       <motion.div
         className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none"
@@ -777,6 +774,7 @@ export default function HomePage() {
         {/* Core Features */}
         <motion.div
           className="mb-20"
+          id="features"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -1502,159 +1500,6 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-[#6C5CE7]/20 py-10">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-6 md:mb-0">
-              <div className="flex items-center gap-2 mb-2">
-                <motion.div
-                  className="w-8 h-8 rounded-full bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] flex items-center justify-center"
-                  animate={{ rotate: [0, 360] }}
-                  transition={{
-                    duration: 10,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                >
-                  <Lock className="w-4 h-4 text-white" />
-                </motion.div>
-                <span className="text-white text-xl font-bold">Clampify</span>
-              </div>
-              <p className="text-white/60">The rugproof token platform</p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <div>
-                <h4 className="text-white font-medium mb-3">Product</h4>
-                <ul className="space-y-2">
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Token Launch
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Features
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Security
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Roadmap
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-white font-medium mb-3">Resources</h4>
-                <ul className="space-y-2">
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Documentation
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      API
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Guides
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Blog
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-white font-medium mb-3">Company</h4>
-                <ul className="space-y-2">
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      About
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Careers
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Contact
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Partners
-                    </a>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-white font-medium mb-3">Legal</h4>
-                <ul className="space-y-2">
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Privacy
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Terms
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-white/60 hover:text-white">
-                      Security
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-10 pt-6 border-t border-[#6C5CE7]/20 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-white/50 mb-4 md:mb-0">
-              © 2025 Clampify Protocol. All rights reserved.
-            </p>
-
-            <div className="flex space-x-4">
-              <Link
-                target="_blank"
-                href="https://x.com/Clampifydotfun"
-                className="text-white/50 hover:text-white"
-              >
-                <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
-                  <span className="text-lg">𝕏</span>
-                </div>
-              </Link>
-              <Link
-                target="_blank"
-                href="https://www.clampify.fun/"
-                className="text-white/50 hover:text-white"
-              >
-                <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
-                  <span className="text-lg">🌐</span>
-                </div>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-
       {/* Enhanced mouse follower with lock icons */}
       {mousePosition && (
         <motion.div
@@ -1708,20 +1553,6 @@ export default function HomePage() {
           <Lock className="w-full h-full" />
         </motion.div>
       ))}
-
-      {/* Global CSS */}
-      <style jsx global>{`
-        body {
-          background: #0d0b15;
-          color: white;
-        }
-
-        .gradient-text {
-          background: linear-gradient(to right, #6c5ce7, #4834d4);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-      `}</style>
     </main>
   );
 }
