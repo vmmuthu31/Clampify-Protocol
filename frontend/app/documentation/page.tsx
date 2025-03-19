@@ -21,7 +21,7 @@ import CodeBlock from "@/components/ui/code-block";
 
 export default function DocumentationPage() {
   return (
-    <div className="container mx-auto py-10 px-4 max-w-7xl">
+    <div className="container mx-auto py-20 px-4 max-w-7xl">
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold tracking-tight mb-2">
           Clampify Documentation
@@ -52,7 +52,7 @@ export default function DocumentationPage() {
                 and anti-rug pull mechanisms. It allows users to create, trade,
                 and govern meme tokens in a sustainable and secure environment.
               </p>
-              <div className="bg-sky-50 dark:bg-sky-900/20 p-4 rounded-lg">
+              <div className="bg-sky-900/20 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold mb-2">Key Features</h3>
                 <ul className="list-disc pl-5 space-y-1">
                   <li>
