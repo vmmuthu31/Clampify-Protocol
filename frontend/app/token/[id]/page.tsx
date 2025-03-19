@@ -10,9 +10,6 @@ import {
   Share2,
   Check,
   ChevronDown,
-  Globe,
-  Twitter,
-  MessageCircle,
   Users,
   Wallet,
   AlertTriangle,
@@ -112,7 +109,7 @@ const tokenData: TokenData = {
 
 export default function TokenPage() {
   const params = useParams();
-  const tokenId = params.id as string;  // Get the ID from URL
+  const tokenId = params.id as string; // Get the ID from URL
   const [isClient, setIsClient] = useState(false);
   const [copiedText, setCopiedText] = useState("");
   const [activeTimeframe, setActiveTimeframe] = useState("1D");
@@ -148,7 +145,6 @@ export default function TokenPage() {
         const tokenInfo = await TokenInfo(tokenId);
         console.log("Token Info:", tokenInfo);
         setTokenDetails(tokenInfo);
-
       }
     };
 
@@ -326,7 +322,7 @@ export default function TokenPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-3xl font-bold text-white">
-                  {tokenDetails?.name || "Loading..."} 
+                  {tokenDetails?.name || "Loading..."}
                 </h1>
                 <span className="text-white/60 text-xl">
                   {tokenDetails?.symbol || "..."}
@@ -488,7 +484,9 @@ export default function TokenPage() {
                     <div>
                       <div className="text-white/60 text-sm">Total Supply</div>
                       <div className="text-white font-bold text-lg">
-                        {formatNumber(parseInt(tokenDetails?.totalSupply || "0"))}
+                        {formatNumber(
+                          parseInt(tokenDetails?.totalSupply || "0")
+                        )}
                       </div>
                     </div>
                     <div>
@@ -534,10 +532,9 @@ export default function TokenPage() {
                           <span className="inline-block w-3 h-3 rounded-full bg-[#6C5CE7]/20 mr-2"></span>
                           Locked:{" "}
                           {formatNumber(
-                        
-                              (parseInt(tokenDetails?.totalSupply || "0") *
-                                percentUnlocked) /
-                                100
+                            (parseInt(tokenDetails?.totalSupply || "0") *
+                              percentUnlocked) /
+                              100
                           )}
                           ({tokenData.supplyLockPercentage - percentUnlocked}%)
                         </div>
@@ -849,7 +846,8 @@ export default function TokenPage() {
                       <div>
                         <div className="text-white font-medium">
                           {tx.type === "buy" ? "Buy" : "Sell"}{" "}
-                          {formatNumber(tx.amount)} {tokenDetails?.symbol || "..."}
+                          {formatNumber(tx.amount)}{" "}
+                          {tokenDetails?.symbol || "..."}
                         </div>
                         <div className="text-white/50 text-sm">
                           by {tx.address}
@@ -1007,7 +1005,9 @@ export default function TokenPage() {
                         className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#6C5CE7]/10 rounded-lg text-sm font-medium transition-colors"
                         onClick={() => {
                           const maxAmount =
-                            parseInt(tokenDetails?.totalSupply || "0") * 0.001 * 0.5;
+                            parseInt(tokenDetails?.totalSupply || "0") *
+                            0.001 *
+                            0.5;
                           setTokenAmount(maxAmount.toFixed(0));
                         }}
                       >
@@ -1045,7 +1045,9 @@ export default function TokenPage() {
                         : "0"}
                     </div>
                     <div className="text-white/80">
-                      {tradeType === "buy" ? tokenDetails?.symbol || "..." : "CoreDAO"}
+                      {tradeType === "buy"
+                        ? tokenDetails?.symbol || "..."
+                        : "CoreDAO"}
                     </div>
                   </div>
                 </div>
@@ -1064,7 +1066,8 @@ export default function TokenPage() {
 
                   <div className="flex items-center gap-1 text-white/60 text-sm">
                     <span>
-                      1 {tokenDetails?.symbol || "..."} ≈ ${tokenDetails?.initialPrice|| "Loading..."}
+                      1 {tokenDetails?.symbol || "..."} ≈ $
+                      {tokenDetails?.initialPrice || "Loading..."}
                     </span>
                   </div>
                 </div>
@@ -1193,73 +1196,21 @@ export default function TokenPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-white/60 text-sm">Decimals</div>
-                    <div className="text-white">{tokenDetails?.decimals || "Loading..."}</div>
+                    <div className="text-white">
+                      {tokenDetails?.decimals || "Loading..."}
+                    </div>
                   </div>
                   <div>
                     <div className="text-white/60 text-sm">Launch Date</div>
-                    <div className="text-white">
-                      {tokenDetails?.createdAt ? new Date(tokenDetails.createdAt).toLocaleDateString() : "Loading..."}
-                    </div>
+                    {/* <div className="text-white">
+                      {tokenDetails?.createdAt
+                        ? new Date(tokenDetails.createdAt).toLocaleDateString()
+                        : "Loading..."}
+                    </div> */}
                   </div>
                 </div>
 
                 <Separator className="bg-white/10" />
-
-                <div>
-                  <div className="text-white/60 text-sm mb-2">Social Links</div>
-                  <div className="flex gap-2">
-                    {tokenDetails?.website && (
-                      <a
-                        href={tokenDetails.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1"
-                      >
-                        <Button
-                          className="w-full bg-transparent border border-[#6C5CE7]/30 hover:bg-[#6C5CE7]/10 text-white"
-                          size="sm"
-                        >
-                          <Globe className="w-4 h-4 mr-2" />
-                          Website
-                        </Button>
-                      </a>
-                    )}
-
-                    {tokenDetails?.twitter && (
-                      <a
-                        href={tokenDetails.twitter}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1"
-                      >
-                        <Button
-                          className="w-full bg-transparent border border-[#6C5CE7]/30 hover:bg-[#6C5CE7]/10 text-white"
-                          size="sm"
-                        >
-                          <Twitter className="w-4 h-4 mr-2" />
-                          Twitter
-                        </Button>
-                      </a>
-                    )}
-
-                    {tokenDetails?.telegram && (
-                      <a
-                        href={tokenDetails.telegram}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1"
-                      >
-                        <Button
-                          className="w-full bg-transparent border border-[#6C5CE7]/30 hover:bg-[#6C5CE7]/10 text-white"
-                          size="sm"
-                        >
-                          <MessageCircle className="w-4 h-4 mr-2" />
-                          Telegram
-                        </Button>
-                      </a>
-                    )}
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -1326,9 +1277,9 @@ export default function TokenPage() {
                     )}
                     % (
                     {formatNumber(
-                    
-                        (parseInt(tokenDetails?.totalSupply || "0") * percentUnlocked) /
-                          100
+                      (parseInt(tokenDetails?.totalSupply || "0") *
+                        percentUnlocked) /
+                        100
                     )}
                     )
                   </span>
@@ -1339,7 +1290,9 @@ export default function TokenPage() {
                   <span className="text-white font-medium">
                     {percentUnlocked.toFixed(1)}% (
                     {formatNumber(
-                      (parseInt(tokenDetails?.totalSupply || "0") * percentUnlocked) / 100
+                      (parseInt(tokenDetails?.totalSupply || "0") *
+                        percentUnlocked) /
+                        100
                     )}
                     )
                   </span>
