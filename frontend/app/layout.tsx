@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
-import { Navbar } from "@/components/navbar";
 import "./global.css";
 import ClientBody from "./ClientBody";
 const geist = Geist({
@@ -25,7 +24,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geist.variable} font-sans antialiased bg-[#0A0A0A] bg-mesh min-h-screen`}
       >
-        <Navbar />
+        
         <ClientBody>{children}</ClientBody>
       </body>
     </html>
