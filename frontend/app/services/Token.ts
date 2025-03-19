@@ -27,6 +27,10 @@ interface TokenInfo {
   totalSupply: string;
   decimals: number;
   balance: string;
+  creatorLockupPeriod: string;
+  initialSupply: string;
+  initialPrice: string;
+  contractAddress: string;
 }
 
 export const TokenInfo = async (
@@ -61,6 +65,9 @@ export const TokenInfo = async (
         const symbol = await contract.symbol();
         const totalSupply = await contract.totalSupply();
         const decimals = await contract.decimals();
+        const initialSupply = await contract.initialSupply();
+        const initialPrice = await contract.initialPrice();
+        const creatorLockupPeriod = await contract.creatorLockupPeriod();
         const balance = await contract.balanceOf(userAddress);
 
 
@@ -73,7 +80,11 @@ export const TokenInfo = async (
             symbol,
             totalSupply,
             decimals,
-            balance
+            balance,
+            creatorLockupPeriod,
+            initialSupply,
+            initialPrice,
+            contractAddress: tokenAddress
         };
     } catch (error) {
         console.error("Detailed error:", error);

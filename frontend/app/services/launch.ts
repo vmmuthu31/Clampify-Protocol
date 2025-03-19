@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import abi from "../../deployments/ClampifyFactory.json";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import abi2 from "../../deployments/ClampifyToken.json";
 
 const isBrowser = (): boolean => typeof window !== "undefined";
@@ -55,9 +56,7 @@ export const Mint = async (
 
     const tokenCreatedEvent = receipt.events[0];
     const tokenAddress = tokenCreatedEvent.address;
-    const tokenContract = new ethers.Contract(tokenAddress, abi2, signer);
-    const tokenInfo = await tokenContract.name();
-    return tokenInfo;
+    return tokenAddress;
   } catch (error) {
     console.error("Detailed error:", error);
     throw error;
