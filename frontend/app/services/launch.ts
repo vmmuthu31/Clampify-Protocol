@@ -65,7 +65,7 @@ export const Mint = async (
     const tokenSupply = await tokenContract.totalSupply();
     console.log("Token supply:", tokenSupply);
 
-    return tokenInfo;
+    return tokenAddress;
   } catch (error) {
     console.error("Detailed error:", error);
     throw error;
