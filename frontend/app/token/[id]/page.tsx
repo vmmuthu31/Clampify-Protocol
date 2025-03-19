@@ -85,9 +85,7 @@ const tokenData = {
   },
 };
 
-export default function TokenPage({ params }: { params: { id: string } }) {
-  const { id } = params;
-  console.log(id);
+export default function TokenPage() {
   const [isClient, setIsClient] = useState(false);
   const [copiedText, setCopiedText] = useState("");
   const [activeTimeframe, setActiveTimeframe] = useState("1D");
