@@ -32,6 +32,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
+import { useParams } from "next/navigation";
+import { TokenInfo } from "@/app/services/Token";
 
 interface TokenData {
   id: string;
@@ -109,6 +111,8 @@ const tokenData: TokenData = {
 };
 
 export default function TokenPage() {
+  const params = useParams();
+  const tokenId = params.id as string;  // Get the ID from URL
   const [isClient, setIsClient] = useState(false);
   const [copiedText, setCopiedText] = useState("");
   const [activeTimeframe, setActiveTimeframe] = useState("1D");
@@ -125,6 +129,18 @@ export default function TokenPage() {
     (new Date(tokenData.unlockEnd as string).getTime() - new Date().getTime()) /
       (1000 * 60 * 60 * 24)
   );
+
+  useEffect(() => {
+    const fetchTokenInfo = async () => {
+      if (tokenId) {
+        console.log("Token ID from URL:", tokenId);
+        const tokenInfo = await TokenInfo(tokenId);
+        console.log("Token Info:", tokenInfo);
+      }
+    };
+
+    fetchTokenInfo();
+  }, [tokenId]);
 
   // Percent unlocked so far
   const percentUnlocked = Math.min(
