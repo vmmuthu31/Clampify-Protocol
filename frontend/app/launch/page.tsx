@@ -7,15 +7,8 @@ import { Lock, Shield, Rocket, Info, X, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Mint } from "../services/launch";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 
 // Define form field types
 interface TokenForm {
@@ -54,7 +47,7 @@ export default function LaunchPage() {
     initialPrice: "1",
     creatorLockupPeriod: "86400", // 24 hours in seconds
     lockLiquidity: true,
-    liquidityLockPeriod: "2592000" // 30 days in seconds
+    liquidityLockPeriod: "2592000", // 30 days in seconds
   });
 
   // Validation
@@ -62,17 +55,23 @@ export default function LaunchPage() {
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
-    
+
     if (!tokenForm.name.trim()) newErrors.name = "Token name is required";
     if (!tokenForm.symbol.trim()) newErrors.symbol = "Token symbol is required";
-    if (tokenForm.symbol.length > 6) newErrors.symbol = "Symbol must be 6 characters or less";
-    if (parseFloat(tokenForm.initialSupply) <= 0) newErrors.initialSupply = "Initial supply must be greater than 0";
-    if (parseFloat(tokenForm.maxSupply) <= parseFloat(tokenForm.initialSupply)) {
+    if (tokenForm.symbol.length > 6)
+      newErrors.symbol = "Symbol must be 6 characters or less";
+    if (parseFloat(tokenForm.initialSupply) <= 0)
+      newErrors.initialSupply = "Initial supply must be greater than 0";
+    if (
+      parseFloat(tokenForm.maxSupply) <= parseFloat(tokenForm.initialSupply)
+    ) {
       newErrors.maxSupply = "Max supply must be greater than initial supply";
     }
-    if (parseFloat(tokenForm.initialPrice) <= 0) newErrors.initialPrice = "Initial price must be greater than 0";
-    if (parseInt(tokenForm.creatorLockupPeriod) <= 0) newErrors.creatorLockupPeriod = "Lock period must be greater than 0";
-    
+    if (parseFloat(tokenForm.initialPrice) <= 0)
+      newErrors.initialPrice = "Initial price must be greater than 0";
+    if (parseInt(tokenForm.creatorLockupPeriod) <= 0)
+      newErrors.creatorLockupPeriod = "Lock period must be greater than 0";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -101,8 +100,6 @@ export default function LaunchPage() {
     console.log("tokenForm", tokenForm);
     setIsLaunching(true);
 
-
-
     try {
       const tokenName = await Mint(
         tokenForm.name,
@@ -120,7 +117,7 @@ export default function LaunchPage() {
         return;
       }
     } catch (error) {
-      console.error('Error creating token:', error);
+      console.error("Error creating token:", error);
       setIsLaunching(false);
     }
   };
@@ -266,14 +263,10 @@ export default function LaunchPage() {
                 type="number"
                 placeholder="e.g. 1000"
                 value={tokenForm.maxSupply}
-                onChange={(e) =>
-                  handleFormChange("maxSupply", e.target.value)
-                }
+                onChange={(e) => handleFormChange("maxSupply", e.target.value)}
               />
               {errors.maxSupply && (
-                <p className="mt-1 text-red-500 text-sm">
-                  {errors.maxSupply}
-                </p>
+                <p className="mt-1 text-red-500 text-sm">{errors.maxSupply}</p>
               )}
             </div>
 
@@ -331,7 +324,9 @@ export default function LaunchPage() {
                 id="lockLiquidity"
                 defaultChecked={true}
                 className="data-[state=checked]:bg-[#6C5CE7]"
-                onCheckedChange={(value) => handleFormChange("lockLiquidity", value.toString())}
+                onCheckedChange={(value) =>
+                  handleFormChange("lockLiquidity", value.toString())
+                }
               />
             </div>
 
@@ -364,8 +359,8 @@ export default function LaunchPage() {
               <AlertTriangle className="w-5 h-5 text-[#6C5CE7] mt-1 flex-shrink-0" />
               <div className="text-sm text-white/70">
                 By launching this token, you agree to lock{" "}
-                {tokenForm.creatorLockupPeriod}% of the supply and enable anti-rug
-                protection features. This process is irreversible.
+                {tokenForm.creatorLockupPeriod}% of the supply and enable
+                anti-rug protection features. This process is irreversible.
               </div>
             </div>
           </div>
