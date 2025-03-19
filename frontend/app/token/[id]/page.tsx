@@ -123,6 +123,17 @@ export default function TokenPage() {
   const [slippage, setSlippage] = useState(0.5);
   const [showSlippageSettings, setShowSlippageSettings] = useState(false);
   const { toast } = useToast();
+  const [tokenDetails, setTokenDetails] = useState<{
+    name: string;
+    symbol: string;
+    totalSupply: string;
+    decimals: number;
+    balance: string;
+    creatorLockupPeriod: string;
+    initialSupply: string;
+    initialPrice: string;
+    contractAddress: string;
+  } | null>(null);
 
   // Calculate days left in lock
   const daysLeft = Math.ceil(
@@ -136,6 +147,8 @@ export default function TokenPage() {
         console.log("Token ID from URL:", tokenId);
         const tokenInfo = await TokenInfo(tokenId);
         console.log("Token Info:", tokenInfo);
+        setTokenDetails(tokenInfo);
+
       }
     };
 
@@ -257,10 +270,10 @@ export default function TokenPage() {
         description: `${
           tradeType === "buy"
             ? `You bought ${parseInt(tokenAmount).toLocaleString()} $${
-                tokenData.symbol
+                tokenDetails?.symbol || "..."
               }`
             : `You sold ${parseInt(tokenAmount).toLocaleString()} $${
-                tokenData.symbol
+                tokenDetails?.symbol || "..."
               }`
         }`,
         variant: "default",
@@ -313,10 +326,10 @@ export default function TokenPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-3xl font-bold text-white">
-                  {tokenData.name}
+                  {tokenDetails?.name || "Loading..."} 
                 </h1>
                 <span className="text-white/60 text-xl">
-                  ${tokenData.symbol}
+                  {tokenDetails?.symbol || "..."}
                 </span>
               </div>
               <div className="flex items-center gap-2 mt-1">
@@ -475,7 +488,7 @@ export default function TokenPage() {
                     <div>
                       <div className="text-white/60 text-sm">Total Supply</div>
                       <div className="text-white font-bold text-lg">
-                        {formatNumber(parseInt(tokenData.totalSupply))}
+                        {formatNumber(parseInt(tokenDetails?.totalSupply || "0"))}
                       </div>
                     </div>
                     <div>
@@ -521,8 +534,8 @@ export default function TokenPage() {
                           <span className="inline-block w-3 h-3 rounded-full bg-[#6C5CE7]/20 mr-2"></span>
                           Locked:{" "}
                           {formatNumber(
-                            parseInt(tokenData.lockedSupply) -
-                              (parseInt(tokenData.totalSupply) *
+                        
+                              (parseInt(tokenDetails?.totalSupply || "0") *
                                 percentUnlocked) /
                                 100
                           )}
@@ -536,7 +549,7 @@ export default function TokenPage() {
 
                   <div>
                     <div className="text-white font-medium mb-2">
-                      About {tokenData.name}
+                      About {tokenDetails?.name || "Loading..."}
                     </div>
                     <p className="text-white/70">{tokenData.description}</p>
                   </div>
@@ -629,7 +642,7 @@ export default function TokenPage() {
                           <span className="text-white">
                             {tokenData.maxWalletSize}% (
                             {formatNumber(
-                              (parseInt(tokenData.totalSupply) *
+                              (parseInt(tokenDetails?.totalSupply || "0") *
                                 parseFloat(tokenData.maxWalletSize)) /
                                 100
                             )}{" "}
@@ -643,7 +656,7 @@ export default function TokenPage() {
                           <span className="text-white">
                             {tokenData.maxTxAmount}% (
                             {formatNumber(
-                              (parseInt(tokenData.totalSupply) *
+                              (parseInt(tokenDetails?.totalSupply || "0") *
                                 parseFloat(tokenData.maxTxAmount)) /
                                 100
                             )}{" "}
@@ -836,7 +849,7 @@ export default function TokenPage() {
                       <div>
                         <div className="text-white font-medium">
                           {tx.type === "buy" ? "Buy" : "Sell"}{" "}
-                          {formatNumber(tx.amount)} {tokenData.symbol}
+                          {formatNumber(tx.amount)} {tokenDetails?.symbol || "..."}
                         </div>
                         <div className="text-white/50 text-sm">
                           by {tx.address}
@@ -894,7 +907,7 @@ export default function TokenPage() {
                           {formatNumber(
                             parseInt(tokenData.circulatingSupply) * 0.001
                           )}{" "}
-                          {tokenData.symbol}
+                          {tokenDetails?.symbol || "..."}
                         </span>
                       </div>
                     )}
@@ -929,7 +942,7 @@ export default function TokenPage() {
                               <div className="w-6 h-6 rounded-full bg-[#6C5CE7]/30 flex items-center justify-center">
                                 🐸
                               </div>
-                              <span>{tokenData.symbol}</span>
+                              <span>{tokenDetails?.symbol || "..."}</span>
                             </>
                           )}
                         </div>
@@ -982,7 +995,7 @@ export default function TokenPage() {
                         className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#6C5CE7]/10 rounded-lg text-sm font-medium transition-colors"
                         onClick={() => {
                           const maxAmount =
-                            parseInt(tokenData.circulatingSupply) *
+                            parseInt(tokenDetails?.totalSupply || "0") *
                             0.001 *
                             0.25;
                           setTokenAmount(maxAmount.toFixed(0));
@@ -994,7 +1007,7 @@ export default function TokenPage() {
                         className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#6C5CE7]/10 rounded-lg text-sm font-medium transition-colors"
                         onClick={() => {
                           const maxAmount =
-                            parseInt(tokenData.circulatingSupply) * 0.001 * 0.5;
+                            parseInt(tokenDetails?.totalSupply || "0") * 0.001 * 0.5;
                           setTokenAmount(maxAmount.toFixed(0));
                         }}
                       >
@@ -1004,7 +1017,7 @@ export default function TokenPage() {
                         className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#6C5CE7]/10 rounded-lg text-sm font-medium transition-colors"
                         onClick={() => {
                           const maxAmount =
-                            parseInt(tokenData.circulatingSupply) *
+                            parseInt(tokenDetails?.totalSupply || "0") *
                             0.001 *
                             0.75;
                           setTokenAmount(maxAmount.toFixed(0));
@@ -1032,7 +1045,7 @@ export default function TokenPage() {
                         : "0"}
                     </div>
                     <div className="text-white/80">
-                      {tradeType === "buy" ? tokenData.symbol : "CoreDAO"}
+                      {tradeType === "buy" ? tokenDetails?.symbol || "..." : "CoreDAO"}
                     </div>
                   </div>
                 </div>
@@ -1051,7 +1064,7 @@ export default function TokenPage() {
 
                   <div className="flex items-center gap-1 text-white/60 text-sm">
                     <span>
-                      1 {tokenData.symbol} ≈ ${tokenData.price.toFixed(6)}
+                      1 {tokenDetails?.symbol || "..."} ≈ ${tokenDetails?.initialPrice|| "Loading..."}
                     </span>
                   </div>
                 </div>
@@ -1155,7 +1168,7 @@ export default function TokenPage() {
                   </div>
                   <div className="flex items-center justify-between bg-black/30 rounded-lg p-3">
                     <span className="text-white text-sm truncate mr-2">
-                      {tokenData.contractAddress}
+                      {tokenDetails?.contractAddress || "Loading..."}
                     </span>
                     <Button
                       size="icon"
@@ -1163,7 +1176,7 @@ export default function TokenPage() {
                       className="h-8 w-8 rounded-md hover:bg-[#6C5CE7]/10"
                       onClick={() =>
                         copyToClipboard(
-                          tokenData.contractAddress,
+                          tokenDetails?.contractAddress || "",
                           "Contract address"
                         )
                       }
@@ -1180,12 +1193,12 @@ export default function TokenPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-white/60 text-sm">Decimals</div>
-                    <div className="text-white">{tokenData.decimals}</div>
+                    <div className="text-white">{tokenDetails?.decimals || "Loading..."}</div>
                   </div>
                   <div>
                     <div className="text-white/60 text-sm">Launch Date</div>
                     <div className="text-white">
-                      {new Date(tokenData.createdAt).toLocaleDateString()}
+                      {tokenDetails?.createdAt ? new Date(tokenDetails.createdAt).toLocaleDateString() : "Loading..."}
                     </div>
                   </div>
                 </div>
@@ -1195,9 +1208,9 @@ export default function TokenPage() {
                 <div>
                   <div className="text-white/60 text-sm mb-2">Social Links</div>
                   <div className="flex gap-2">
-                    {tokenData.website && (
+                    {tokenDetails?.website && (
                       <a
-                        href={tokenData.website}
+                        href={tokenDetails.website}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1"
@@ -1212,9 +1225,9 @@ export default function TokenPage() {
                       </a>
                     )}
 
-                    {tokenData.twitter && (
+                    {tokenDetails?.twitter && (
                       <a
-                        href={tokenData.twitter}
+                        href={tokenDetails.twitter}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1"
@@ -1229,9 +1242,9 @@ export default function TokenPage() {
                       </a>
                     )}
 
-                    {tokenData.telegram && (
+                    {tokenDetails?.telegram && (
                       <a
-                        href={tokenData.telegram}
+                        href={tokenDetails.telegram}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1"
@@ -1301,7 +1314,7 @@ export default function TokenPage() {
                   <span className="text-white/70">Initially Locked:</span>
                   <span className="text-white font-medium">
                     {tokenData.supplyLockPercentage}% (
-                    {formatNumber(parseInt(tokenData.lockedSupply))})
+                    {formatNumber(parseInt(tokenDetails?.totalSupply || "0"))})
                   </span>
                 </div>
 
@@ -1313,8 +1326,8 @@ export default function TokenPage() {
                     )}
                     % (
                     {formatNumber(
-                      parseInt(tokenData.lockedSupply) -
-                        (parseInt(tokenData.totalSupply) * percentUnlocked) /
+                    
+                        (parseInt(tokenDetails?.totalSupply || "0") * percentUnlocked) /
                           100
                     )}
                     )
@@ -1326,7 +1339,7 @@ export default function TokenPage() {
                   <span className="text-white font-medium">
                     {percentUnlocked.toFixed(1)}% (
                     {formatNumber(
-                      (parseInt(tokenData.totalSupply) * percentUnlocked) / 100
+                      (parseInt(tokenDetails?.totalSupply || "0") * percentUnlocked) / 100
                     )}
                     )
                   </span>
