@@ -144,13 +144,13 @@ export default function TokenPage() {
       if (tokenId) {
         console.log("Token ID from URL:", tokenId);
         const tokenInfo = await TokenInfo(tokenId);
-        
+
         // Format BigNumber values
         const formattedInfo = {
           ...tokenInfo,
           totalSupply: tokenInfo.totalSupply.toString(),
           balance: tokenInfo.balance.toString(),
-          initialPrice: ethers.utils.formatEther(tokenInfo.initialPrice || '0'),
+          initialPrice: ethers.utils.formatEther(tokenInfo.initialPrice || "0"),
         };
 
         console.log("Token Info:", formattedInfo);
@@ -375,18 +375,7 @@ export default function TokenPage() {
                   <div className="text-white/70 text-sm">Price</div>
                   <div className="flex items-baseline gap-3">
                     <div className="text-white text-3xl font-bold">
-                      ${tokenDetails?.initialPrice ? (Number(tokenDetails.initialPrice) * Math.pow(10, 18)).toFixed(2) : '0.00'}
-                    </div>
-                    <div
-                      className={
-                        tokenData.priceChange24h >= 0
-                          ? "text-green-400"
-                          : "text-red-400"
-                      }
-                    >
-                      {tokenData.priceChange24h >= 0 ? "+" : ""}
-                      {tokenData.priceChange24h.toFixed(2)}%
-                      <span className="text-white/50 ml-1">24h</span>
+                      ${tokenData.price.toFixed(5)}
                     </div>
                   </div>
                 </div>
