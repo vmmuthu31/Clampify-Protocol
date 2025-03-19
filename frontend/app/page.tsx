@@ -2,18 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { motion, useAnimation, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, TrendingUp, ChartBar, Sparkles, Shield, Rocket, Lock, Zap, Users } from "lucide-react";
+import {
+  ArrowRight,
+  TrendingUp,
+  ChartBar,
+  Rocket,
+  Lock,
+  Users,
+  Shield,
+  Timer,
+  BarChart3,
+  Vote,
+  Repeat,
+} from "lucide-react";
 import { Navbar } from "@/components/navbar";
 
 export default function HomePage() {
   // Client-side state
   const [isClient, setIsClient] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const controls = useAnimation();
-  const { scrollYProgress } = useScroll();
-  const y = useTransform(scrollYProgress, [0, 1], [0, -100]);
 
   useEffect(() => {
     setIsClient(true);
@@ -27,437 +36,1206 @@ export default function HomePage() {
 
   // Fixed data instead of random
   const tokenData = [
-    { id: 1, price: 0.0001, change: 12.5 },
-    { id: 2, price: 0.0002, change: 15.7 },
-    { id: 3, price: 0.0003, change: 8.3 },
-    { id: 4, price: 0.0004, change: 21.2 },
-    { id: 5, price: 0.0005, change: 17.8 },
-    { id: 6, price: 0.0006, change: 9.4 },
-    { id: 7, price: 0.0007, change: 14.6 },
-    { id: 8, price: 0.0008, change: 11.9 },
+    { id: 1, price: 0.0012, change: 18.5, locked: "62%" },
+    { id: 2, price: 0.0025, change: 15.7, locked: "78%" },
+    { id: 3, price: 0.0031, change: 24.3, locked: "55%" },
+    { id: 4, price: 0.0047, change: 21.2, locked: "83%" },
+    { id: 5, price: 0.0053, change: 17.8, locked: "70%" },
+    { id: 6, price: 0.0069, change: 32.4, locked: "91%" },
+    { id: 7, price: 0.0071, change: 14.6, locked: "67%" },
+    { id: 8, price: 0.0083, change: 27.9, locked: "89%" },
   ];
 
-  // Only render animations on client
   if (!isClient) {
-    return null; // or a loading state
+    return null;
   }
 
-  // Floating animation for background elements
-  const floatingAnimation = {
-    initial: { y: 0 },
-    animate: {
-      y: [-20, 20, -20],
-      transition: {
-        duration: 6,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  };
-
   return (
-    <main className="min-h-screen relative overflow-hidden">
-      {/* Animated Background */}
-   
-
+    <main className="min-h-screen relative overflow-hidden bg-gradient-to-b from-black to-[#0D0B15]">
       <Navbar />
+
+      {/* Background Elements */}
+      <motion.div
+        className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 50%, rgba(72, 52, 212, 0.2) 0%, transparent 70%)",
+        }}
+        animate={{
+          scale: [1, 1.2, 1],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
 
       {/* Content */}
       <div className="container mx-auto px-4 pt-20">
-        {/* Stats Bar with sparkle effect */}
-        <motion.div 
-          className="flex items-center justify-between mb-8 p-4 bg-black/20 backdrop-blur-sm rounded-xl border border-white/10 relative overflow-hidden"
+        {/* Hero Section */}
+        <motion.div
+          className="flex flex-col md:flex-row items-center justify-between mb-16 relative"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="md:w-1/2 mb-8 md:mb-0">
+            <motion.div
+              className="inline-block mb-4 px-4 py-2 bg-[#6C5CE7]/10 backdrop-blur-sm rounded-full border border-[#6C5CE7]/30"
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <span className="text-[#6C5CE7] font-medium">
+                Introducing Clampify Protocol
+              </span>
+            </motion.div>
+
+            <motion.h1
+              className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#6C5CE7] to-[#4834D4]">
+                Meme Tokens
+              </span>
+              <br />
+              <span className="text-white">Without The Rugs</span>
+            </motion.h1>
+
+            <motion.p
+              className="text-xl text-white/70 mb-8 leading-relaxed max-w-xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              Launch your meme token with revolutionary supply locking and
+              anti-rug pull safeguards built right into the protocol.
+            </motion.p>
+
+            <motion.div
+              className="flex gap-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Link href="/launch">
+                <Button
+                  className="h-14 px-8 bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] 
+                    hover:opacity-90 rounded-xl text-lg font-medium group relative overflow-hidden"
+                >
+                  <motion.span
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    animate={{
+                      x: ["-100%", "100%"],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                  />
+                  <span className="relative flex items-center">
+                    Launch Token
+                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </Button>
+              </Link>
+
+              <Button
+                className="h-14 px-8 bg-transparent border border-[#6C5CE7]/50 
+                  hover:bg-[#6C5CE7]/10 rounded-xl text-lg font-medium text-white"
+              >
+                Learn More
+              </Button>
+            </motion.div>
+          </div>
+
+          <motion.div
+            className="md:w-1/2 relative"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            <div className="relative w-full h-[400px]">
+              {/* Animated lock */}
+              <motion.div
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10"
+                animate={{
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 5, 0, -5, 0],
+                }}
+                transition={{ duration: 5, repeat: Infinity }}
+              >
+                <div className="relative">
+                  <div className="text-[200px] opacity-90">🔒</div>
+                  <motion.div
+                    className="absolute -top-10 -right-10 text-6xl"
+                    animate={{ rotate: [0, 360], scale: [1, 1.2, 1] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  >
+                    ✨
+                  </motion.div>
+                  <motion.div
+                    className="absolute -bottom-10 -left-10 text-6xl"
+                    animate={{ rotate: [0, -360], scale: [1, 1.2, 1] }}
+                    transition={{ duration: 4, repeat: Infinity, delay: 1 }}
+                  >
+                    💰
+                  </motion.div>
+                </div>
+              </motion.div>
+
+              {/* Orbiting tokens */}
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-16 h-16 flex items-center justify-center bg-gradient-to-r from-[#6C5CE7]/20 to-[#4834D4]/20 rounded-full backdrop-blur-sm border border-white/10"
+                  initial={{
+                    x: Math.cos(i * ((2 * Math.PI) / 5)) * 150 + 150,
+                    y: Math.sin(i * ((2 * Math.PI) / 5)) * 150 + 150,
+                  }}
+                  animate={{
+                    x: [
+                      Math.cos(i * ((2 * Math.PI) / 5)) * 150 + 150,
+                      Math.cos(i * ((2 * Math.PI) / 5) + Math.PI) * 150 + 150,
+                      Math.cos(i * ((2 * Math.PI) / 5) + 2 * Math.PI) * 150 +
+                        150,
+                    ],
+                    y: [
+                      Math.sin(i * ((2 * Math.PI) / 5)) * 150 + 150,
+                      Math.sin(i * ((2 * Math.PI) / 5) + Math.PI) * 150 + 150,
+                      Math.sin(i * ((2 * Math.PI) / 5) + 2 * Math.PI) * 150 +
+                        150,
+                    ],
+                  }}
+                  transition={{
+                    duration: 15 + i * 2,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                >
+                  <span className="text-white font-bold">CLAMP</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Stats Bar with locking effect */}
+        <motion.div
+          className="flex items-center justify-between mb-14 p-5 bg-[#6C5CE7]/10 backdrop-blur-md rounded-xl border border-[#6C5CE7]/30 relative overflow-hidden"
           whileHover={{ scale: 1.02 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
           <motion.div
             className="absolute inset-0 opacity-30"
             animate={{
               background: [
-                "radial-gradient(circle at 0% 0%, #FF3B69 0%, transparent 50%)",
-                "radial-gradient(circle at 100% 100%, #FF3B69 0%, transparent 50%)",
-                "radial-gradient(circle at 0% 0%, #FF3B69 0%, transparent 50%)",
-              ]
+                "radial-gradient(circle at 0% 0%, #6C5CE7 0%, transparent 50%)",
+                "radial-gradient(circle at 100% 100%, #6C5CE7 0%, transparent 50%)",
+                "radial-gradient(circle at 0% 0%, #6C5CE7 0%, transparent 50%)",
+              ],
             }}
             transition={{ duration: 5, repeat: Infinity }}
           />
-          <div className="flex items-center gap-2 text-white/60">
-            <ChartBar className="w-4 h-4" />
+          <div className="flex items-center gap-2 text-white/70">
+            <ChartBar className="w-4 h-4 text-[#6C5CE7]" />
             <span>24h Volume:</span>
-            <motion.span 
+            <motion.span
               className="text-white font-medium"
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              $1.2M
+              $2.4M
             </motion.span>
           </div>
-          <div className="flex items-center gap-2 text-white/60">
-            <TrendingUp className="w-4 h-4" />
+          <div className="flex items-center gap-2 text-white/70">
+            <Lock className="w-4 h-4 text-[#6C5CE7]" />
+            <span>Supply Locked:</span>
+            <motion.span
+              className="text-white font-medium"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+            >
+              74.8%
+            </motion.span>
+          </div>
+          <div className="flex items-center gap-2 text-white/70">
+            <TrendingUp className="w-4 h-4 text-[#6C5CE7]" />
             <span>Tokens Created:</span>
-            <motion.span 
+            <motion.span
               className="text-white font-medium"
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 2, repeat: Infinity, delay: 1 }}
             >
-              1,234
+              1,834
+            </motion.span>
+          </div>
+          <div className="flex items-center gap-2 text-white/70">
+            <Shield className="w-4 h-4 text-[#6C5CE7]" />
+            <span>Rugs Prevented:</span>
+            <motion.span
+              className="text-white font-medium"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 1.5 }}
+            >
+              324
             </motion.span>
           </div>
         </motion.div>
 
-        {/* Token Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {tokenData.map((token, i) => (
-            <motion.div 
-              key={token.id}
-              className="bg-black/20 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-[#FF3B69]/20 transition-all duration-300"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ 
-                scale: 1.02,
-                backgroundColor: "rgba(0,0,0,0.3)"
-              }}
-            >
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF3B69]/20 to-[#FF3E9C]/20 flex items-center justify-center">
-                  <span className="text-white/80 font-medium">M{token.id}</span>
-                </div>
-                <div>
-                  <div className="text-white font-medium">$MEME{token.id}</div>
-                  <div className="text-white/40 text-sm">Core</div>
-                </div>
-              </div>
-              
-              <div className="flex justify-between items-end">
-                <div>
-                  <div className="text-white/60 text-sm">Price</div>
-                  <motion.div 
-                    className="text-white font-bold text-lg"
-                    animate={{ 
-                      opacity: [0.7, 1, 0.7],
-                    }}
-                    transition={{ 
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                  >
-                    ${token.price.toFixed(4)}
-                  </motion.div>
-                </div>
-                <div className="flex flex-col items-end">
-                  <div className="text-[#00FFA3] font-medium">
-                    +{token.change.toFixed(1)}%
-                  </div>
-                  <div className="text-white/40 text-sm">24h</div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Enhanced Launch Card */}
-        <motion.div 
-          className="bg-black/20 backdrop-blur-sm rounded-xl p-8 md:p-12 border border-white/10 relative overflow-hidden mb-20"
+        {/* Token Grid with lock indicators */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-20"
         >
-          {/* Animated background gradient */}
-          <motion.div
-            className="absolute inset-0 opacity-20"
-            animate={{
-              background: [
-                "radial-gradient(circle at 0% 0%, #FF3B69 0%, transparent 50%)",
-                "radial-gradient(circle at 100% 100%, #FF3B69 0%, transparent 50%)",
-                "radial-gradient(circle at 0% 0%, #FF3B69 0%, transparent 50%)",
-              ]
-            }}
-            transition={{ duration: 10, repeat: Infinity }}
-          />
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-3xl font-bold text-white">Trending Tokens</h2>
+            <Link
+              href="/discover"
+              className="text-[#6C5CE7] hover:underline flex items-center"
+            >
+              View All <ArrowRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
 
-          <div className="relative flex flex-col md:flex-row items-center gap-12">
-            <div className="flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {tokenData.map((token, i) => (
               <motion.div
-                className="relative"
-                animate={{
-                  y: [0, -20, 0],
-                  rotate: [0, 10, -10, 0]
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                <span className="text-7xl">🚀</span>
-                <motion.div
-                  className="absolute -bottom-2 -right-2 text-4xl"
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    rotate: [0, 360],
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  ✨
-                </motion.div>
-              </motion.div>
-
-              <motion.h1 
-                className="text-5xl md:text-6xl font-bold mt-8 mb-6 gradient-text leading-tight"
-                animate={{ 
-                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
-                }}
-                transition={{ 
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: "linear"
+                key={token.id}
+                className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-6 border border-[#6C5CE7]/20 hover:border-[#6C5CE7]/40 transition-all duration-300"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{
+                  scale: 1.03,
+                  backgroundColor: "rgba(108, 92, 231, 0.08)",
                 }}
               >
-                Launch Your Token
-              </motion.h1>
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#6C5CE7]/30 to-[#4834D4]/30 flex items-center justify-center">
+                    <span className="text-white/90 font-medium">
+                      C{token.id}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">
+                      $CLAMP{token.id}
+                    </div>
+                    <div className="text-white/50 text-sm">Secure</div>
+                  </div>
+                </div>
 
-              <p className="text-xl text-white/60 mb-8 leading-relaxed">
-                Create your meme token with built-in rug pull protection in seconds
-              </p>
-
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Link href="/launch">
-                  <Button 
-                    className="h-14 px-8 bg-gradient-to-r from-[#FF3B69] to-[#FF3E9C] 
-                      hover:opacity-90 rounded-xl text-lg font-medium group relative overflow-hidden"
-                  >
-                    <motion.span
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                <div className="flex justify-between items-end mb-5">
+                  <div>
+                    <div className="text-white/60 text-sm">Price</div>
+                    <motion.div
+                      className="text-white font-bold text-lg"
                       animate={{
-                        x: ["-100%", "100%"],
+                        opacity: [0.7, 1, 0.7],
                       }}
                       transition={{
                         duration: 2,
                         repeat: Infinity,
-                        ease: "linear",
+                        ease: "easeInOut",
                       }}
-                    />
-                    <span className="relative flex items-center">
-                      Launch Now
-                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </span>
-                  </Button>
-                </Link>
-              </motion.div>
-            </div>
-
-            <div className="flex-1">
-              <div className="space-y-4">
-                {[
-                  { 
-                    title: "Anti-Rug Protection", 
-                    desc: "Mathematically impossible to rug pull",
-                    emoji: "🔒"
-                  },
-                  { 
-                    title: "Instant Liquidity", 
-                    desc: "Automatic market making",
-                    emoji: "💧"
-                  },
-                  { 
-                    title: "Supply Control", 
-                    desc: "Advanced tokenomics built-in",
-                    emoji: "⚡"
-                  }
-                ].map((item, i) => (
-                  <motion.div 
-                    key={i}
-                    className="flex gap-4 p-6 rounded-xl bg-black/20 hover:bg-black/30 transition-colors relative group"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.7 + (i * 0.2) }}
-                    whileHover={{ 
-                      scale: 1.05,
-                      transition: { type: "spring", stiffness: 400 }
-                    }}
-                  >
-                    <motion.div 
-                      className="text-2xl"
-                      animate={{ rotate: [0, 10, -10, 0] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
                     >
-                      {item.emoji}
+                      ${token.price.toFixed(4)}
                     </motion.div>
-                    <div>
-                      <div className="text-white font-medium text-lg">{item.title}</div>
-                      <div className="text-white/60">{item.desc}</div>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <div className="text-[#00FFA3] font-medium">
+                      +{token.change.toFixed(1)}%
                     </div>
+                    <div className="text-white/50 text-sm">24h</div>
+                  </div>
+                </div>
+
+                {/* Lock indicator */}
+                <div className="relative pt-1">
+                  <div className="text-white/60 text-xs flex justify-between mb-1">
+                    <span>Supply Locked</span>
+                    <span className="text-white/90 font-medium">
+                      {token.locked}
+                    </span>
+                  </div>
+                  <div className="overflow-hidden h-2 text-xs flex rounded-full bg-white/10">
                     <motion.div
-                      className="absolute -inset-[1px] rounded-xl opacity-0 group-hover:opacity-100"
-                      initial={{ rotate: 0 }}
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                    >
-                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#FF3B69] to-[#FF3E9C] blur opacity-20" />
-                    </motion.div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+                      style={{ width: token.locked }}
+                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-[#6C5CE7] to-[#4834D4]"
+                      initial={{ width: "0%" }}
+                      animate={{ width: token.locked }}
+                      transition={{ duration: 1, delay: i * 0.1 + 0.5 }}
+                    ></motion.div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
 
-        {/* New Section: How It Works */}
-        <motion.div 
+        {/* Why Clampify Section */}
+        <motion.div
           className="mb-20"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl font-bold text-center mb-12 gradient-text">How It Works</h2>
+          <h2 className="text-4xl font-bold text-center mb-4 text-white">
+            Why Clampify
+          </h2>
+          <p className="text-xl text-white/60 text-center mb-12 max-w-3xl mx-auto">
+            Our revolutionary protocol prevents rug pulls and protects investors
+            through innovative supply locking mechanisms
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            {/* Left Feature */}
+            <motion.div
+              className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-8 border border-[#6C5CE7]/20 relative overflow-hidden"
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.02 }}
+            >
+              <motion.div
+                className="absolute inset-0 opacity-20"
+                animate={{
+                  background: [
+                    "radial-gradient(circle at 0% 0%, #6C5CE7 0%, transparent 70%)",
+                    "radial-gradient(circle at 100% 100%, #6C5CE7 0%, transparent 70%)",
+                    "radial-gradient(circle at 0% 0%, #6C5CE7 0%, transparent 70%)",
+                  ],
+                }}
+                transition={{ duration: 10, repeat: Infinity }}
+              />
+
+              <div className="relative">
+                <div className="mb-6">
+                  <motion.div
+                    className="w-14 h-14 rounded-xl bg-[#6C5CE7]/20 border border-[#6C5CE7]/30 flex items-center justify-center"
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 6, repeat: Infinity }}
+                  >
+                    <Lock className="w-7 h-7 text-[#6C5CE7]" />
+                  </motion.div>
+                </div>
+
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  Supply Locking Mechanism
+                </h3>
+
+                <ul className="space-y-4">
+                  {[
+                    "Time-based lockups prevent large holders from dumping tokens",
+                    "Graduated unlock schedules protect against market manipulation",
+                    "Smart contract triggers prevent coordinated selling",
+                    "Built-in protection against flash loan attacks",
+                  ].map((item, i) => (
+                    <motion.li
+                      key={i}
+                      className="flex items-start gap-3"
+                      initial={{ opacity: 0, x: -10 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <div className="mt-1 min-w-5">
+                        <motion.div
+                          className="w-5 h-5 rounded-full bg-[#6C5CE7]/20 border border-[#6C5CE7]/40 flex items-center justify-center"
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            delay: i * 0.2,
+                          }}
+                        >
+                          <div className="w-2 h-2 rounded-full bg-[#6C5CE7]"></div>
+                        </motion.div>
+                      </div>
+                      <span className="text-white/80">{item}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+              </div>
+            </motion.div>
+
+            {/* Right Feature */}
+            <motion.div
+              className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-8 border border-[#6C5CE7]/20 relative overflow-hidden"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.02 }}
+            >
+              <motion.div
+                className="absolute inset-0 opacity-20"
+                animate={{
+                  background: [
+                    "radial-gradient(circle at 100% 0%, #6C5CE7 0%, transparent 70%)",
+                    "radial-gradient(circle at 0% 100%, #6C5CE7 0%, transparent 70%)",
+                    "radial-gradient(circle at 100% 0%, #6C5CE7 0%, transparent 70%)",
+                  ],
+                }}
+                transition={{ duration: 10, repeat: Infinity }}
+              />
+
+              <div className="relative">
+                <div className="mb-6">
+                  <motion.div
+                    className="w-14 h-14 rounded-xl bg-[#6C5CE7]/20 border border-[#6C5CE7]/30 flex items-center justify-center"
+                    animate={{ rotate: [0, -10, 10, 0] }}
+                    transition={{ duration: 6, repeat: Infinity }}
+                  >
+                    <Shield className="w-7 h-7 text-[#6C5CE7]" />
+                  </motion.div>
+                </div>
+
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  Anti-Rug Pull Safeguards
+                </h3>
+
+                <ul className="space-y-4">
+                  {[
+                    "100% of liquidity locked in time-release smart contracts",
+                    "Algorithmic circuit breakers prevent major price manipulations",
+                    "Transparent on-chain verification of token supply distribution",
+                    "Tiered liquidity release schedules to prevent instant draining",
+                  ].map((item, i) => (
+                    <motion.li
+                      key={i}
+                      className="flex items-start gap-3"
+                      initial={{ opacity: 0, x: -10 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <div className="mt-1 min-w-5">
+                        <motion.div
+                          className="w-5 h-5 rounded-full bg-[#6C5CE7]/20 border border-[#6C5CE7]/40 flex items-center justify-center"
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            delay: i * 0.2,
+                          }}
+                        >
+                          <div className="w-2 h-2 rounded-full bg-[#6C5CE7]"></div>
+                        </motion.div>
+                      </div>
+                      <span className="text-white/80">{item}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* How It Works Section - Reimagined with lock animations */}
+        <motion.div
+          className="mb-20"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-4xl font-bold text-center mb-4 text-white">
+            How It Works
+          </h2>
+          <p className="text-xl text-white/60 text-center mb-12 max-w-3xl mx-auto">
+            Launch your secure token in three simple steps
+          </p>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
                 step: 1,
                 title: "Connect Wallet",
-                desc: "Connect your CoreDAO wallet to get started",
-                icon: <Users className="w-6 h-6" />
+                desc: "Connect your wallet securely to the Clampify protocol",
+                icon: <Users className="w-6 h-6" />,
+                animation: {
+                  rotate: [0, 10, -10, 0],
+                  duration: 6,
+                },
               },
               {
                 step: 2,
-                title: "Configure Token",
-                desc: "Set your token parameters and security features",
-                icon: <Zap className="w-6 h-6" />
+                title: "Configure Security",
+                desc: "Set your supply lock parameters and anti-rug safeguards",
+                icon: <Lock className="w-6 h-6" />,
+                animation: {
+                  scale: [1, 1.1, 1],
+                  duration: 4,
+                },
               },
               {
                 step: 3,
                 title: "Launch & Trade",
-                desc: "Deploy your token and start trading instantly",
-                icon: <Rocket className="w-6 h-6" />
-              }
+                desc: "Deploy your rugproof token with confidence",
+                icon: <Rocket className="w-6 h-6" />,
+                animation: {
+                  y: [0, -5, 0],
+                  duration: 5,
+                },
+              },
             ].map((item, i) => (
               <motion.div
                 key={i}
-                className="relative"
+                className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-8 border border-[#6C5CE7]/20 relative overflow-hidden"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.2 }}
+                whileHover={{ scale: 1.05 }}
               >
                 <motion.div
-                  className="absolute -inset-4 rounded-xl bg-gradient-to-r from-[#FF3B69] to-[#FF3E9C] opacity-0 group-hover:opacity-20 blur"
+                  className="absolute inset-0 opacity-10"
                   animate={{
-                    scale: [1, 1.1, 1],
-                    opacity: [0.1, 0.2, 0.1],
+                    background: [
+                      `radial-gradient(circle at ${50 + i * 20}% ${
+                        50 - i * 20
+                      }%, #6C5CE7 0%, transparent 70%)`,
+                      `radial-gradient(circle at ${50 - i * 20}% ${
+                        50 + i * 20
+                      }%, #6C5CE7 0%, transparent 70%)`,
+                      `radial-gradient(circle at ${50 + i * 20}% ${
+                        50 - i * 20
+                      }%, #6C5CE7 0%, transparent 70%)`,
+                    ],
                   }}
-                  transition={{ duration: 3, repeat: Infinity }}
+                  transition={{ duration: 8, repeat: Infinity }}
                 />
-                <div className="bg-black/20 backdrop-blur-sm rounded-xl p-6 border border-white/10 relative group">
-                  <motion.div
-                    className="w-12 h-12 rounded-xl bg-[#FF3B69] flex items-center justify-center mb-4"
-                    whileHover={{ rotate: 360 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {item.icon}
-                  </motion.div>
-                  <div className="text-2xl font-bold text-white mb-2">Step {item.step}</div>
-                  <div className="text-xl font-medium text-white mb-2">{item.title}</div>
-                  <div className="text-white/60">{item.desc}</div>
+
+                <div className="relative">
+                  <div className="flex justify-between items-center mb-6">
+                    <motion.div
+                      className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] flex items-center justify-center"
+                      animate={item.animation}
+                      transition={{
+                        duration: item.animation.duration,
+                        repeat: Infinity,
+                      }}
+                    >
+                      {item.icon}
+                    </motion.div>
+
+                    <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/40 flex items-center justify-center text-xl font-bold text-white">
+                      {item.step}
+                    </div>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    {item.title}
+                  </h3>
+                  <p className="text-white/70">{item.desc}</p>
+
+                  {i < 2 && (
+                    <motion.div
+                      className="absolute -right-12 top-12 text-[#6C5CE7]/40 hidden md:block"
+                      animate={{ x: [0, 10, 0] }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                    >
+                      <ArrowRight className="w-8 h-8" />
+                    </motion.div>
+                  )}
                 </div>
               </motion.div>
             ))}
           </div>
         </motion.div>
 
-        {/* New Section: Statistics */}
-        <motion.div 
-          className="mb-20 relative"
+        {/* Core Features */}
+        <motion.div
+          className="mb-20"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#FF3B69]/20 to-transparent rounded-xl blur-3xl" />
-          <div className="relative grid grid-cols-2 md:grid-cols-4 gap-6">
+          <h2 className="text-4xl font-bold text-center mb-12 text-white">
+            Core Protocol Features
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { value: "$12.5M", label: "Total Value Locked", icon: <Lock /> },
-              { value: "1,234", label: "Tokens Created", icon: <Rocket /> },
-              { value: "$5.8M", label: "Trading Volume", icon: <ChartBar /> },
-              { value: "45.2K", label: "Active Users", icon: <Users /> }
-            ].map((stat, i) => (
+              {
+                title: "Time-Lock Mechanics",
+                desc: "Gradual supply unlocking based on predefined schedules",
+                icon: <Timer className="w-6 h-6" />,
+              },
+              {
+                title: "Stability Mechanics",
+                desc: "Dynamic minting/burning features stabilize token price",
+                icon: <BarChart3 className="w-6 h-6" />,
+              },
+              {
+                title: "Governance System",
+                desc: "Decentralized community control of protocol parameters",
+                icon: <Vote className="w-6 h-6" />,
+              },
+              {
+                title: "DEX Integration",
+                desc: "Seamless trading on major decentralized exchanges",
+                icon: <Repeat className="w-6 h-6" />,
+              },
+            ].map((feature, i) => (
               <motion.div
                 key={i}
-                className="bg-black/20 backdrop-blur-sm rounded-xl p-6 border border-white/10"
-                initial={{ scale: 0.9, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                whileHover={{ scale: 1.05 }}
+                className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-6 border border-[#6C5CE7]/20"
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
+                whileHover={{
+                  scale: 1.05,
+                  backgroundColor: "rgba(108, 92, 231, 0.1)",
+                  borderColor: "rgba(108, 92, 231, 0.3)",
+                }}
               >
                 <motion.div
-                  className="text-[#FF3B69] mb-4"
+                  className="w-12 h-12 rounded-xl bg-[#6C5CE7]/20 border border-[#6C5CE7]/30 
+                  flex items-center justify-center mb-4"
                   animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+                  transition={{ duration: 5, repeat: Infinity, delay: i * 0.5 }}
                 >
-                  {stat.icon}
+                  {feature.icon}
                 </motion.div>
-                <motion.div 
-                  className="text-3xl font-bold text-white mb-2"
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
-                >
-                  {stat.value}
-                </motion.div>
-                <div className="text-white/60">{stat.label}</div>
+
+                <h3 className="text-lg font-bold text-white mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-white/70">{feature.desc}</p>
               </motion.div>
             ))}
           </div>
         </motion.div>
 
-        {/* New Section: Call to Action */}
-        <motion.div 
-          className="rounded-xl bg-gradient-to-r from-[#FF3B69] to-[#FF3E9C] p-[1px] mb-20"
+        {/* Statistics Section with Animated Charts */}
+        <motion.div
+          className="mb-20 relative"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[#6C5CE7]/20 to-transparent rounded-xl blur-3xl" />
+          <div className="relative">
+            <h2 className="text-4xl font-bold text-center mb-14 text-white">
+              Protocol Analytics
+            </h2>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                {
+                  value: "$18.5M",
+                  label: "Total Value Locked",
+                  icon: <Lock />,
+                },
+                { value: "1,834", label: "Tokens Launched", icon: <Rocket /> },
+                {
+                  value: "$7.2M",
+                  label: "24h Trading Volume",
+                  icon: <ChartBar />,
+                },
+                { value: "56.4K", label: "Active Users", icon: <Users /> },
+              ].map((stat, i) => (
+                <motion.div
+                  key={i}
+                  className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-6 border border-[#6C5CE7]/20"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  whileInView={{ scale: 1, opacity: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <motion.div
+                    className="text-[#6C5CE7] mb-4"
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      delay: i * 0.2,
+                    }}
+                  >
+                    {stat.icon}
+                  </motion.div>
+                  <motion.div
+                    className="text-3xl font-bold text-white mb-2"
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      delay: i * 0.2,
+                    }}
+                  >
+                    {stat.value}
+                  </motion.div>
+                  <div className="text-white/60">{stat.label}</div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Latest Tokens Section */}
+        <motion.div
+          className="mb-20"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-white">Latest Launches</h2>
+            <Link
+              href="/tokens"
+              className="text-[#6C5CE7] hover:underline flex items-center"
+            >
+              View All <ArrowRight className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+              <thead>
+                <tr className="border-b border-[#6C5CE7]/20">
+                  <th className="text-left p-4 text-white/70 font-medium">
+                    Token
+                  </th>
+                  <th className="text-left p-4 text-white/70 font-medium">
+                    Price
+                  </th>
+                  <th className="text-left p-4 text-white/70 font-medium">
+                    24h Change
+                  </th>
+                  <th className="text-left p-4 text-white/70 font-medium">
+                    Supply Locked
+                  </th>
+                  <th className="text-left p-4 text-white/70 font-medium">
+                    Launch Date
+                  </th>
+                  <th className="text-left p-4 text-white/70 font-medium"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  {
+                    name: "SafeMoon",
+                    symbol: "SAFEMN",
+                    price: 0.0095,
+                    change: 32.4,
+                    locked: "94%",
+                    date: "2d ago",
+                  },
+                  {
+                    name: "PepeCoin",
+                    symbol: "PEPE",
+                    price: 0.0071,
+                    change: 18.7,
+                    locked: "87%",
+                    date: "3d ago",
+                  },
+                  {
+                    name: "Doge Fork",
+                    symbol: "DOGEF",
+                    price: 0.0034,
+                    change: 24.5,
+                    locked: "76%",
+                    date: "4d ago",
+                  },
+                  {
+                    name: "Shiba Lock",
+                    symbol: "SHIBALK",
+                    price: 0.0023,
+                    change: -8.3,
+                    locked: "92%",
+                    date: "5d ago",
+                  },
+                  {
+                    name: "Moon Coin",
+                    symbol: "MOON",
+                    price: 0.0042,
+                    change: 15.1,
+                    locked: "89%",
+                    date: "6d ago",
+                  },
+                ].map((token, i) => (
+                  <motion.tr
+                    key={i}
+                    className="border-b border-[#6C5CE7]/10 hover:bg-[#6C5CE7]/5"
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#6C5CE7]/30 to-[#4834D4]/30 flex items-center justify-center">
+                          <span className="text-white/90 font-medium">
+                            {token.symbol.slice(0, 1)}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-white font-medium">
+                            {token.name}
+                          </div>
+                          <div className="text-white/50 text-sm">
+                            ${token.symbol}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 text-white font-medium">
+                      ${token.price}
+                    </td>
+                    <td className="p-4">
+                      <span
+                        className={
+                          token.change >= 0
+                            ? "text-[#00FFA3]"
+                            : "text-[#FF3B69]"
+                        }
+                      >
+                        {token.change >= 0 ? "+" : ""}
+                        {token.change}%
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <div className="relative w-20 h-2 bg-white/10 rounded-full overflow-hidden">
+                          <motion.div
+                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#6C5CE7] to-[#4834D4]"
+                            style={{ width: token.locked }}
+                            initial={{ width: "0%" }}
+                            whileInView={{ width: token.locked }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8, delay: i * 0.1 }}
+                          />
+                        </div>
+                        <span className="text-white">{token.locked}</span>
+                      </div>
+                    </td>
+                    <td className="p-4 text-white/70">{token.date}</td>
+                    <td className="p-4">
+                      <Button className="bg-[#6C5CE7]/20 hover:bg-[#6C5CE7]/30 text-white">
+                        Trade
+                      </Button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+
+        {/* Testimonials Section */}
+        <motion.div
+          className="mb-20"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-4xl font-bold text-center mb-4 text-white">
+            Creator Testimonials
+          </h2>
+          <p className="text-xl text-white/60 text-center mb-12 max-w-3xl mx-auto">
+            Hear from token creators who&apos;ve launched with Clampify
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                quote:
+                  "Clampify's supply locking gave investors confidence in our token from day one. We've seen 10x the engagement compared to our previous launch.",
+                author: "Alex Chen",
+                role: "Founder, MoonDAO",
+                avatar: "😎",
+              },
+              {
+                quote:
+                  "The anti-rug safeguards literally saved our project. A malicious actor tried to drain liquidity but the protocol prevented it automatically.",
+                author: "Sarah Johnson",
+                role: "Lead Dev, PepeFi",
+                avatar: "👩‍💻",
+              },
+              {
+                quote:
+                  "Our community loves the transparency that Clampify provides. The time-locked supply creates a much healthier growth pattern.",
+                author: "Michael Thompson",
+                role: "Creator, DogeMeme",
+                avatar: "🧔",
+              },
+            ].map((testimonial, i) => (
+              <motion.div
+                key={i}
+                className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-8 border border-[#6C5CE7]/20 relative"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.2 }}
+                whileHover={{ scale: 1.03 }}
+              >
+                <div className="absolute top-6 left-6 text-[#6C5CE7] opacity-20 text-6xl font-serif">
+                  &quot;
+                </div>
+                <div className="relative">
+                  <p className="text-white/80 mb-6 text-lg leading-relaxed pt-4">
+                    {testimonial.quote}
+                  </p>
+
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-[#6C5CE7]/20 flex items-center justify-center text-2xl">
+                      {testimonial.avatar}
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">
+                        {testimonial.author}
+                      </div>
+                      <div className="text-white/50 text-sm">
+                        {testimonial.role}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Call to Action */}
+        <motion.div
+          className="rounded-xl bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] p-[1px] mb-20"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <div className="bg-black/90 backdrop-blur-sm rounded-xl p-12 relative overflow-hidden">
+          <div className="bg-black/80 backdrop-blur-sm rounded-xl p-12 relative overflow-hidden">
             <motion.div
               className="absolute inset-0"
               animate={{
                 background: [
-                  "radial-gradient(circle at 0% 0%, rgba(255,59,105,0.2) 0%, transparent 50%)",
-                  "radial-gradient(circle at 100% 100%, rgba(255,59,105,0.2) 0%, transparent 50%)",
-                  "radial-gradient(circle at 0% 0%, rgba(255,59,105,0.2) 0%, transparent 50%)",
-                ]
+                  "radial-gradient(circle at 0% 0%, rgba(108,92,231,0.2) 0%, transparent 50%)",
+                  "radial-gradient(circle at 100% 100%, rgba(108,92,231,0.2) 0%, transparent 50%)",
+                  "radial-gradient(circle at 0% 0%, rgba(108,92,231,0.2) 0%, transparent 50%)",
+                ],
               }}
               transition={{ duration: 10, repeat: Infinity }}
             />
-            <div className="relative flex flex-col md:flex-row items-center justify-between gap-8">
+
+            <motion.div
+              className="relative flex flex-col md:flex-row items-center justify-between gap-8"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+            >
               <div>
-                <h2 className="text-4xl font-bold text-white mb-4">Ready to Launch?</h2>
-                <p className="text-xl text-white/60">Create your token with built-in security</p>
+                <h2 className="text-4xl font-bold text-white mb-4">
+                  Ready to Launch Your Rugproof Token?
+                </h2>
+                <p className="text-xl text-white/70 max-w-xl">
+                  Create a token with built-in security that investors can
+                  trust. No code required.
+                </p>
               </div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link href="/launch">
-                  <Button 
-                    className="h-14 px-8 bg-white text-[#FF3B69] hover:bg-white/90 
-                      rounded-xl text-lg font-medium group"
-                  >
-                    Get Started
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-              </motion.div>
-            </div>
+
+              <div className="flex gap-4">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Link href="/launch">
+                    <Button
+                      className="h-14 px-8 bg-white text-[#6C5CE7] hover:bg-white/90 
+                        rounded-xl text-lg font-medium group"
+                    >
+                      Launch Token
+                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Link href="/docs">
+                    <Button
+                      className="h-14 px-8 bg-transparent border border-white/30 text-white
+                        hover:bg-white/10 rounded-xl text-lg font-medium"
+                    >
+                      Read Docs
+                    </Button>
+                  </Link>
+                </motion.div>
+              </div>
+            </motion.div>
           </div>
         </motion.div>
       </div>
 
-      {/* Enhanced mouse follower */}
+      {/* Footer */}
+      <footer className="border-t border-[#6C5CE7]/20 py-10">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="mb-6 md:mb-0">
+              <div className="flex items-center gap-2 mb-2">
+                <motion.div
+                  className="w-8 h-8 rounded-full bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] flex items-center justify-center"
+                  animate={{ rotate: [0, 360] }}
+                  transition={{
+                    duration: 10,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                >
+                  <Lock className="w-4 h-4 text-white" />
+                </motion.div>
+                <span className="text-white text-xl font-bold">Clampify</span>
+              </div>
+              <p className="text-white/60">The rugproof token platform</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div>
+                <h4 className="text-white font-medium mb-3">Product</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Token Launch
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Features
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Security
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Roadmap
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-white font-medium mb-3">Resources</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Documentation
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      API
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Guides
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Blog
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-white font-medium mb-3">Company</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      About
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Careers
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Contact
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Partners
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-white font-medium mb-3">Legal</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Privacy
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Terms
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="text-white/60 hover:text-white">
+                      Security
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 pt-6 border-t border-[#6C5CE7]/20 flex flex-col md:flex-row justify-between items-center">
+            <p className="text-white/50 mb-4 md:mb-0">
+              © 2025 Clampify Protocol. All rights reserved.
+            </p>
+
+            <div className="flex space-x-4">
+              <a href="#" className="text-white/50 hover:text-white">
+                <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
+                  <span className="text-lg">𝕏</span>
+                </div>
+              </a>
+              <a href="#" className="text-white/50 hover:text-white">
+                <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
+                  <span className="text-lg">📱</span>
+                </div>
+              </a>
+              <a href="#" className="text-white/50 hover:text-white">
+                <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
+                  <span className="text-lg">🌐</span>
+                </div>
+              </a>
+              <a href="#" className="text-white/50 hover:text-white">
+                <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
+                  <span className="text-lg">🔗</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Enhanced mouse follower with lock icons */}
       {mousePosition && (
-        <motion.div 
+        <motion.div
           className="fixed pointer-events-none w-[600px] h-[600px] rounded-full"
           style={{
-            background: `radial-gradient(circle at center, rgba(255,59,105,0.1) 0%, transparent 70%)`,
+            background: `radial-gradient(circle at center, rgba(108,92,231,0.1) 0%, transparent 70%)`,
             left: mousePosition.x - 300,
             top: mousePosition.y - 300,
           }}
@@ -472,6 +1250,53 @@ export default function HomePage() {
           }}
         />
       )}
+
+      {/* Floating mini locks */}
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="fixed w-6 h-6 text-[#6C5CE7]/30 pointer-events-none z-10"
+          initial={{
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+          }}
+          animate={{
+            x: [
+              Math.random() * window.innerWidth,
+              Math.random() * window.innerWidth,
+              Math.random() * window.innerWidth,
+            ],
+            y: [
+              Math.random() * window.innerHeight,
+              Math.random() * window.innerHeight,
+              Math.random() * window.innerHeight,
+            ],
+            rotate: [0, 360],
+            opacity: [0.3, 0.7, 0.3],
+          }}
+          transition={{
+            duration: 20 + Math.random() * 10,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        >
+          <Lock className="w-full h-full" />
+        </motion.div>
+      ))}
+
+      {/* Global CSS */}
+      <style jsx global>{`
+        body {
+          background: #0d0b15;
+          color: white;
+        }
+
+        .gradient-text {
+          background: linear-gradient(to right, #6c5ce7, #4834d4);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+      `}</style>
     </main>
   );
 }

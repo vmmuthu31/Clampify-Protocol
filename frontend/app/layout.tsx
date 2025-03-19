@@ -22,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
+        suppressHydrationWarning
         className={`${geist.variable} font-sans antialiased bg-[#0A0A0A] bg-mesh min-h-screen`}
       >
         <Navbar />
