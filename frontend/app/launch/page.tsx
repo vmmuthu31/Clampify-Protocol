@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Mint } from "../services/contractInteraction";
+import { Mint } from "@/services/tokenCreation";
 import { useRouter } from "next/navigation";
 import { ethers } from "ethers";
 import { usePrivy } from "@privy-io/react-auth";
