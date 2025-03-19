@@ -27,7 +27,7 @@ export default function WalletButtonProvider({
   };
   return (
     <PrivyProvider
-      appId="cm8ednps8005jljpr281m2oqq"
+      appId={process.env.PRIVY_APP_ID || ""}
       config={{
         defaultChain: coreDaoTestnet2,
         supportedChains: [coreDaoTestnet2],
