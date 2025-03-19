@@ -15,15 +15,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Mint } from "./integration";
+import { useRouter } from 'next/navigation';
 
 // Define form field types
 interface TokenForm {
   name: string;
   symbol: string;
   initialSupply: string;
-  decimals: string;
-  supplyLock: string;
-  liquidityAmount: string;
+  maxSupply: string;
+  initialPrice: string;
+  creatorLockupPeriod: string;
+  lockLiquidity: boolean;
+  liquidityLockPeriod: string;
 }
 
 // Define errors type
@@ -31,9 +34,11 @@ interface FormErrors {
   name?: string;
   symbol?: string;
   initialSupply?: string;
-  decimals?: string;
-  supplyLock?: string;
-  liquidityAmount?: string;
+  maxSupply?: string;
+  initialPrice?: string;
+  creatorLockupPeriod?: string;
+  lockLiquidity?: boolean;
+  liquidityLockPeriod?: string;
 }
 
 export default function LaunchPage() {
@@ -45,9 +50,11 @@ export default function LaunchPage() {
     name: "",
     symbol: "",
     initialSupply: "1000",
-    decimals: "18",
-    supplyLock: "70",
-    liquidityAmount: "0.001",
+    maxSupply: "10000",
+    initialPrice: "1",
+    creatorLockupPeriod: "86400", // 24 hours in seconds
+    lockLiquidity: true,
+    liquidityLockPeriod: "2592000" // 30 days in seconds
   });
 
   // Validation
@@ -55,24 +62,22 @@ export default function LaunchPage() {
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
-
+    
     if (!tokenForm.name.trim()) newErrors.name = "Token name is required";
     if (!tokenForm.symbol.trim()) newErrors.symbol = "Token symbol is required";
-    if (tokenForm.symbol.length > 6)
-      newErrors.symbol = "Symbol must be 6 characters or less";
-    if (!tokenForm.initialSupply || parseInt(tokenForm.initialSupply) <= 0) {
-      newErrors.initialSupply = "Initial supply must be greater than 0";
+    if (tokenForm.symbol.length > 6) newErrors.symbol = "Symbol must be 6 characters or less";
+    if (parseFloat(tokenForm.initialSupply) <= 0) newErrors.initialSupply = "Initial supply must be greater than 0";
+    if (parseFloat(tokenForm.maxSupply) <= parseFloat(tokenForm.initialSupply)) {
+      newErrors.maxSupply = "Max supply must be greater than initial supply";
     }
-    if (
-      !tokenForm.liquidityAmount ||
-      parseFloat(tokenForm.liquidityAmount) < 1
-    ) {
-      newErrors.liquidityAmount = "Minimum 1 CoreDAO required for liquidity";
-    }
-
+    if (parseFloat(tokenForm.initialPrice) <= 0) newErrors.initialPrice = "Initial price must be greater than 0";
+    if (parseInt(tokenForm.creatorLockupPeriod) <= 0) newErrors.creatorLockupPeriod = "Lock period must be greater than 0";
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  const router = useRouter();
 
   const handleFormChange = (field: keyof TokenForm, value: string) => {
     setTokenForm((prev) => ({
@@ -90,38 +95,34 @@ export default function LaunchPage() {
     }
   };
 
-  const handleLaunch = () => {
+  const handleLaunch = async () => {
     if (!validateForm()) return;
 
-    setIsLaunching(true); 
-    
-    // Use minimal values for testing
-    Mint(
+    console.log("tokenForm", tokenForm);
+    setIsLaunching(true);
+
+
+
+    try {
+      const tokenName = await Mint(
         tokenForm.name,
         tokenForm.symbol,
-        "10", // Very small supply
-        "70", // 70% lock
-        30 * 24 * 60 * 60, // 30 days
-        "0.001", // Minimal liquidity
-        "0.000001", // Very small initial price
-        true,
-        true
-    ).catch(error => {
-        console.error('Error creating token:', error);
-        setIsLaunching(false);
-    });
+        tokenForm.initialSupply,
+        tokenForm.maxSupply,
+        tokenForm.initialPrice,
+        tokenForm.creatorLockupPeriod,
+        tokenForm.lockLiquidity,
+        tokenForm.liquidityLockPeriod
+      );
 
-    // Simulate token creation
-    return
-    setTimeout(() => {
+      if (tokenName) {
+        router.push(`/token/${tokenName}`);
+        return;
+      }
+    } catch (error) {
+      console.error('Error creating token:', error);
       setIsLaunching(false);
-      setLaunchSuccess(true);
-
-      // Redirect after showing success popup
-      setTimeout(() => {
-        window.location.href = `/token/${tokenForm.symbol.toLowerCase()}`;
-      }, 3000);
-    }, 2000);
+    }
   };
 
   return (
@@ -253,88 +254,108 @@ export default function LaunchPage() {
                 </p>
               )}
             </div>
-
             <div>
-              <Label htmlFor="decimals" className="text-white mb-2">
-                Decimals
-              </Label>
-              <Select
-                value={tokenForm.decimals}
-                onValueChange={(value) => handleFormChange("decimals", value)}
-              >
-                <SelectTrigger
-                  id="decimals"
-                  className="w-full bg-black/30 border-[#6C5CE7]/20 focus:border-[#6C5CE7] text-white"
-                >
-                  <SelectValue placeholder="Select decimals" />
-                </SelectTrigger>
-                <SelectContent className="bg-black/90 border-[#6C5CE7]/20 text-white">
-                  <SelectItem value="6">6 decimals</SelectItem>
-                  <SelectItem value="9">9 decimals</SelectItem>
-                  <SelectItem value="18">18 decimals (standard)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="liquidityAmount" className="text-white mb-2">
-                Initial Liquidity (CoreDAO){" "}
-                <span className="text-[#6C5CE7]">*</span>
+              <Label htmlFor="maxSupply" className="text-white mb-2">
+                Max Supply <span className="text-[#6C5CE7]">*</span>
               </Label>
               <Input
-                id="liquidityAmount"
+                id="maxSupply"
                 className={`w-full bg-black/30 border-[#6C5CE7]/20 focus:border-[#6C5CE7] text-white ${
-                  errors.liquidityAmount ? "border-red-500" : ""
+                  errors.maxSupply ? "border-red-500" : ""
                 }`}
                 type="number"
-                placeholder="e.g. 0.001"
-                value={tokenForm.liquidityAmount}
+                placeholder="e.g. 1000"
+                value={tokenForm.maxSupply}
                 onChange={(e) =>
-                  handleFormChange("liquidityAmount", e.target.value)
+                  handleFormChange("maxSupply", e.target.value)
                 }
               />
-              {errors.liquidityAmount && (
+              {errors.maxSupply && (
                 <p className="mt-1 text-red-500 text-sm">
-                  {errors.liquidityAmount}
+                  {errors.maxSupply}
                 </p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="supplyLock" className="text-white mb-2">
-                Supply Lock Percentage <span className="text-[#6C5CE7]">*</span>
+              <Label htmlFor="initialPrice" className="text-white mb-2">
+                Initial Price <span className="text-[#6C5CE7]">*</span>
               </Label>
-              <Select
-                value={tokenForm.supplyLock}
-                onValueChange={(value) => handleFormChange("supplyLock", value)}
-              >
-                <SelectTrigger
-                  id="supplyLock"
-                  className="w-full bg-black/30 border-[#6C5CE7]/20 focus:border-[#6C5CE7] text-white"
-                >
-                  <SelectValue placeholder="Select lock percentage" />
-                </SelectTrigger>
-                <SelectContent className="bg-black/90 border-[#6C5CE7]/20 text-white">
-                  <SelectItem value="50">50% locked</SelectItem>
-                  <SelectItem value="70">70% locked</SelectItem>
-                  <SelectItem value="80">80% locked</SelectItem>
-                  <SelectItem value="90">90% locked</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="mt-1 text-white/50 text-sm">
-                Higher lock percentage provides more stability
-              </p>
+              <Input
+                id="initialPrice"
+                className={`w-full bg-black/30 border-[#6C5CE7]/20 focus:border-[#6C5CE7] text-white ${
+                  errors.initialPrice ? "border-red-500" : ""
+                }`}
+                type="number"
+                placeholder="e.g. 0.0001"
+                value={tokenForm.initialPrice}
+                onChange={(e) =>
+                  handleFormChange("initialPrice", e.target.value)
+                }
+              />
+              {errors.initialPrice && (
+                <p className="mt-1 text-red-500 text-sm">
+                  {errors.initialPrice}
+                </p>
+              )}
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div>
+              <Label htmlFor="creatorLockupPeriod" className="text-white mb-2">
+                Creator Lockup Period <span className="text-[#6C5CE7]">*</span>
+              </Label>
+              <Input
+                id="creatorLockupPeriod"
+                className={`w-full bg-black/30 border-[#6C5CE7]/20 focus:border-[#6C5CE7] text-white ${
+                  errors.creatorLockupPeriod ? "border-red-500" : ""
+                }`}
+                type="number"
+                placeholder="e.g. 86400 (24 hours in seconds)"
+                value={tokenForm.creatorLockupPeriod}
+                onChange={(e) =>
+                  handleFormChange("creatorLockupPeriod", e.target.value)
+                }
+              />
+              {errors.creatorLockupPeriod && (
+                <p className="mt-1 text-red-500 text-sm">
+                  {errors.creatorLockupPeriod}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="lockLiquidity" className="text-white mb-2">
+                Lock Liquidity <span className="text-[#6C5CE7]">*</span>
+              </Label>
               <Switch
-                id="rugProtection"
+                id="lockLiquidity"
                 defaultChecked={true}
                 className="data-[state=checked]:bg-[#6C5CE7]"
+                onCheckedChange={(value) => handleFormChange("lockLiquidity", value)}
               />
-              <Label htmlFor="rugProtection" className="text-white">
-                Enable Anti-Rug Protection
+            </div>
+
+            <div>
+              <Label htmlFor="liquidityLockPeriod" className="text-white mb-2">
+                Liquidity Lock Period <span className="text-[#6C5CE7]">*</span>
               </Label>
+              <Input
+                id="liquidityLockPeriod"
+                className={`w-full bg-black/30 border-[#6C5CE7]/20 focus:border-[#6C5CE7] text-white ${
+                  errors.liquidityLockPeriod ? "border-red-500" : ""
+                }`}
+                type="number"
+                placeholder="e.g. 2592000 (30 days in seconds)"
+                value={tokenForm.liquidityLockPeriod}
+                onChange={(e) =>
+                  handleFormChange("liquidityLockPeriod", e.target.value)
+                }
+              />
+              {errors.liquidityLockPeriod && (
+                <p className="mt-1 text-red-500 text-sm">
+                  {errors.liquidityLockPeriod}
+                </p>
+              )}
             </div>
           </div>
 
@@ -343,7 +364,7 @@ export default function LaunchPage() {
               <AlertTriangle className="w-5 h-5 text-[#6C5CE7] mt-1 flex-shrink-0" />
               <div className="text-sm text-white/70">
                 By launching this token, you agree to lock{" "}
-                {tokenForm.supplyLock}% of the supply and enable anti-rug
+                {tokenForm.creatorLockupPeriod}% of the supply and enable anti-rug
                 protection features. This process is irreversible.
               </div>
             </div>
