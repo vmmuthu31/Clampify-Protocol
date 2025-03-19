@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Mint } from "../services/launch";
+import { Mint } from "../services/contractInteraction";
 import { useRouter } from "next/navigation";
 import { ethers } from "ethers";
 
