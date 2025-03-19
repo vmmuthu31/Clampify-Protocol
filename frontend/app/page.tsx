@@ -1474,8 +1474,8 @@ export default function HomePage() {
                 >
                   <Link href="/launch">
                     <Button
-                      className="h-14 px-8 bg-white text-[#6C5CE7] hover:bg-white/90 
-                        rounded-xl text-lg font-medium group"
+                      className=" md:h-14 px-4 md:px-8 bg-white text-[#6C5CE7] hover:bg-white/90 
+                        rounded-xl text-sm md:text-lg font-medium group"
                     >
                       Launch Token
                       <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -1489,8 +1489,8 @@ export default function HomePage() {
                 >
                   <Link href="/docs">
                     <Button
-                      className="h-14 px-8 bg-transparent border border-white/30 text-white
-                        hover:bg-white/10 rounded-xl text-lg font-medium"
+                      className="md:h-14 px-4 md:px-8 bg-transparent border border-white/30 text-white
+                        hover:bg-white/10 rounded-xl text-sm md:text-lg font-medium"
                     >
                       Read Docs
                     </Button>
