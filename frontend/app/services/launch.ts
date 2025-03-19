@@ -30,6 +30,8 @@ export const Mint = async (
       throw new Error("No wallet connected");
     }
     const contract = new ethers.Contract(contract_address, abi, signer);
+    const initialPriceWei = ethers.utils.parseEther(initialPrice);
+    const depositAmount = ethers.utils.parseEther("0.01");
 
     // Create token
     const tx = await contract.createToken(
@@ -37,34 +39,21 @@ export const Mint = async (
       symbol,
       initialSupply,
       maxSupply,
-      initialPrice,
+      initialPriceWei,
       creatorLockupPeriod,
       lockLiquidity,
       liquidityLockPeriod,
       {
-        value: ethers.utils.parseEther("0.01"),
+        value: depositAmount,
       }
     );
 
-    console.log("Transaction sent:", tx.hash);
     const receipt = await tx.wait();
-    console.log("Transaction confirmed:", receipt);
 
     const tokenCreatedEvent = receipt.events[0];
     const tokenAddress = tokenCreatedEvent.address;
-    console.log("Token created at address:", tokenAddress);
-
     const tokenContract = new ethers.Contract(tokenAddress, abi2, signer);
-
     const tokenInfo = await tokenContract.name();
-    console.log("Token info:", tokenInfo);
-
-    const tokenSymbol = await tokenContract.symbol();
-    console.log("Token symbol:", tokenSymbol);
-
-    const tokenSupply = await tokenContract.totalSupply();
-    console.log("Token supply:", tokenSupply);
-
     return tokenInfo;
   } catch (error) {
     console.error("Detailed error:", error);
