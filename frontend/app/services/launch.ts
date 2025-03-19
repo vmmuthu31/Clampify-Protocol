@@ -1,7 +1,5 @@
 import { ethers } from "ethers";
 import abi from "../../deployments/ClampifyFactory.json";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import abi2 from "../../deployments/ClampifyToken.json";
 
 const isBrowser = (): boolean => typeof window !== "undefined";
 
