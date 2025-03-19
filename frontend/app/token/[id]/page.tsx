@@ -375,7 +375,7 @@ export default function TokenPage() {
                   <div className="text-white/70 text-sm">Price</div>
                   <div className="flex items-baseline gap-3">
                     <div className="text-white text-3xl font-bold">
-                      ${tokenData.price.toFixed(6)}
+                      ${tokenDetails?.initialPrice ? (Number(tokenDetails.initialPrice) * Math.pow(10, 18)).toFixed(2) : '0.00'}
                     </div>
                     <div
                       className={
