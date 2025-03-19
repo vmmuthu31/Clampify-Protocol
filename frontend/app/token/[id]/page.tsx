@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
-import { TokenInfo } from "@/app/services/Token";
+import { TokenInfo } from "@/app/services/contractInteraction";
 
 interface TokenData {
   id: string;
