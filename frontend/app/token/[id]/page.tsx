@@ -31,6 +31,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
 import { TokenInfo } from "@/app/services/contractInteraction";
+import { ethers } from "ethers";
 
 interface TokenData {
   id: string;
@@ -143,8 +144,17 @@ export default function TokenPage() {
       if (tokenId) {
         console.log("Token ID from URL:", tokenId);
         const tokenInfo = await TokenInfo(tokenId);
-        console.log("Token Info:", tokenInfo);
-        setTokenDetails(tokenInfo);
+        
+        // Format BigNumber values
+        const formattedInfo = {
+          ...tokenInfo,
+          totalSupply: tokenInfo.totalSupply.toString(),
+          balance: tokenInfo.balance.toString(),
+          initialPrice: ethers.utils.formatEther(tokenInfo.initialPrice || '0'),
+        };
+
+        console.log("Token Info:", formattedInfo);
+        setTokenDetails(formattedInfo);
       }
     };
 
