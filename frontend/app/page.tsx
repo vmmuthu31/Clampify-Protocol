@@ -1205,26 +1205,24 @@ export default function HomePage() {
             </p>
 
             <div className="flex space-x-4">
-              <a href="#" className="text-white/50 hover:text-white">
+              <Link
+                target="_blank"
+                href="https://x.com/Clampifydotfun"
+                className="text-white/50 hover:text-white"
+              >
                 <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
                   <span className="text-lg">𝕏</span>
                 </div>
-              </a>
-              <a href="#" className="text-white/50 hover:text-white">
-                <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
-                  <span className="text-lg">📱</span>
-                </div>
-              </a>
-              <a href="#" className="text-white/50 hover:text-white">
+              </Link>
+              <Link
+                target="_blank"
+                href="https://www.clampify.fun/"
+                className="text-white/50 hover:text-white"
+              >
                 <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
                   <span className="text-lg">🌐</span>
                 </div>
-              </a>
-              <a href="#" className="text-white/50 hover:text-white">
-                <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
-                  <span className="text-lg">🔗</span>
-                </div>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
