@@ -16,6 +16,8 @@ import {
   BarChart3,
   Vote,
   Repeat,
+  CheckCircle2,
+  X,
 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 
@@ -75,24 +77,36 @@ export default function HomePage() {
       <div className="container mx-auto px-4 pt-20">
         {/* Hero Section */}
         <motion.div
-          className="flex flex-col md:flex-row items-center justify-between mb-16 relative"
+          className="flex flex-col md:flex-row items-center justify-between mb-16 relative py-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="md:w-1/2 mb-8 md:mb-0">
+          {/* Left Content - Text */}
+          <div className="w-full md:w-1/2 mb-16 md:mb-0 z-10">
             <motion.div
               className="inline-block mb-4 px-4 py-2 bg-[#6C5CE7]/10 backdrop-blur-sm rounded-full border border-[#6C5CE7]/30"
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <span className="text-[#6C5CE7] font-medium">
+              <span className="text-[#6C5CE7] font-medium flex items-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 20,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                  className="mr-2"
+                >
+                  🔒
+                </motion.div>
                 Introducing Clampify Protocol
               </span>
             </motion.div>
 
             <motion.h1
-              className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -105,7 +119,7 @@ export default function HomePage() {
             </motion.h1>
 
             <motion.p
-              className="text-xl text-white/70 mb-8 leading-relaxed max-w-xl"
+              className="text-lg sm:text-xl text-white/70 mb-8 leading-relaxed max-w-xl"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
@@ -115,15 +129,15 @@ export default function HomePage() {
             </motion.p>
 
             <motion.div
-              className="flex gap-4"
+              className="flex flex-col sm:flex-row gap-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              <Link href="/launch">
+              <Link href="/launch" className="w-full sm:w-auto">
                 <Button
-                  className="h-14 px-8 bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] 
-                    hover:opacity-90 rounded-xl text-lg font-medium group relative overflow-hidden"
+                  className="w-full sm:w-auto h-14 px-8 bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] 
+            hover:opacity-90 rounded-xl text-lg font-medium group relative overflow-hidden"
                 >
                   <motion.span
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
@@ -136,7 +150,7 @@ export default function HomePage() {
                       ease: "linear",
                     }}
                   />
-                  <span className="relative flex items-center">
+                  <span className="relative flex items-center justify-center">
                     Launch Token
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </span>
@@ -144,70 +158,101 @@ export default function HomePage() {
               </Link>
 
               <Button
-                className="h-14 px-8 bg-transparent border border-[#6C5CE7]/50 
-                  hover:bg-[#6C5CE7]/10 rounded-xl text-lg font-medium text-white"
+                className="w-full sm:w-auto h-14 px-8 bg-transparent border border-[#6C5CE7]/50 
+          hover:bg-[#6C5CE7]/10 rounded-xl text-lg font-medium text-white"
               >
                 Learn More
               </Button>
             </motion.div>
           </div>
 
+          {/* Right Content - Animation */}
           <motion.div
-            className="md:w-1/2 relative"
+            className="w-full md:w-1/2 relative h-[300px] sm:h-[400px] flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.6 }}
           >
-            <div className="relative w-full h-[400px]">
-              {/* Animated lock */}
-              <motion.div
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10"
-                animate={{
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 5, 0, -5, 0],
-                }}
-                transition={{ duration: 5, repeat: Infinity }}
-              >
-                <div className="relative">
-                  <div className="text-[200px] opacity-90">🔒</div>
+            {/* Lottie Animation - Replace with actual Lottie component if you have it */}
+            <div className="relative w-full h-full flex items-center justify-center">
+              {/* Main Lock Animation with Glow Effect */}
+              <div className="relative">
+                <motion.div
+                  className="absolute w-[240px] h-[240px] sm:w-[300px] sm:h-[300px] rounded-full bg-[#6C5CE7]/20 blur-3xl"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+
+                <motion.div
+                  className="relative z-10"
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    rotate: [0, 5, 0, -5, 0],
+                  }}
+                  transition={{ duration: 5, repeat: Infinity }}
+                >
                   <motion.div
-                    className="absolute -top-10 -right-10 text-6xl"
+                    className="text-[120px] sm:text-[180px] opacity-90 filter drop-shadow-[0_0_15px_rgba(108,92,231,0.5)]"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.7, duration: 0.5 }}
+                  >
+                    🔒
+                  </motion.div>
+
+                  <motion.div
+                    className="absolute -top-8 -right-8 sm:-top-10 sm:-right-10 text-4xl sm:text-6xl"
                     animate={{ rotate: [0, 360], scale: [1, 1.2, 1] }}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
                     ✨
                   </motion.div>
+
                   <motion.div
-                    className="absolute -bottom-10 -left-10 text-6xl"
+                    className="absolute -bottom-8 -left-8 sm:-bottom-10 sm:-left-10 text-4xl sm:text-6xl"
                     animate={{ rotate: [0, -360], scale: [1, 1.2, 1] }}
                     transition={{ duration: 4, repeat: Infinity, delay: 1 }}
                   >
                     💰
                   </motion.div>
-                </div>
-              </motion.div>
+                </motion.div>
+              </div>
 
-              {/* Orbiting tokens */}
+              {/* Orbiting Tokens with Better Visibility on Mobile */}
               {[...Array(5)].map((_, i) => (
                 <motion.div
                   key={i}
-                  className="absolute w-16 h-16 flex items-center justify-center bg-gradient-to-r from-[#6C5CE7]/20 to-[#4834D4]/20 rounded-full backdrop-blur-sm border border-white/10"
+                  className="absolute w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center bg-gradient-to-r from-[#6C5CE7]/20 to-[#4834D4]/20 rounded-full backdrop-blur-sm border border-[#6C5CE7]/30 shadow-lg shadow-[#6C5CE7]/10"
                   initial={{
-                    x: Math.cos(i * ((2 * Math.PI) / 5)) * 150 + 150,
-                    y: Math.sin(i * ((2 * Math.PI) / 5)) * 150 + 150,
+                    x:
+                      Math.cos(i * ((2 * Math.PI) / 5)) *
+                      (window.innerWidth < 640 ? 100 : 150),
+                    y:
+                      Math.sin(i * ((2 * Math.PI) / 5)) *
+                      (window.innerWidth < 640 ? 100 : 150),
                   }}
                   animate={{
                     x: [
-                      Math.cos(i * ((2 * Math.PI) / 5)) * 150 + 150,
-                      Math.cos(i * ((2 * Math.PI) / 5) + Math.PI) * 150 + 150,
-                      Math.cos(i * ((2 * Math.PI) / 5) + 2 * Math.PI) * 150 +
-                        150,
+                      Math.cos(i * ((2 * Math.PI) / 5)) *
+                        (window.innerWidth < 640 ? 100 : 150),
+                      Math.cos(i * ((2 * Math.PI) / 5) + Math.PI) *
+                        (window.innerWidth < 640 ? 100 : 150),
+                      Math.cos(i * ((2 * Math.PI) / 5) + 2 * Math.PI) *
+                        (window.innerWidth < 640 ? 100 : 150),
                     ],
                     y: [
-                      Math.sin(i * ((2 * Math.PI) / 5)) * 150 + 150,
-                      Math.sin(i * ((2 * Math.PI) / 5) + Math.PI) * 150 + 150,
-                      Math.sin(i * ((2 * Math.PI) / 5) + 2 * Math.PI) * 150 +
-                        150,
+                      Math.sin(i * ((2 * Math.PI) / 5)) *
+                        (window.innerWidth < 640 ? 100 : 150),
+                      Math.sin(i * ((2 * Math.PI) / 5) + Math.PI) *
+                        (window.innerWidth < 640 ? 100 : 150),
+                      Math.sin(i * ((2 * Math.PI) / 5) + 2 * Math.PI) *
+                        (window.innerWidth < 640 ? 100 : 150),
                     ],
                   }}
                   transition={{
@@ -215,17 +260,97 @@ export default function HomePage() {
                     repeat: Infinity,
                     ease: "linear",
                   }}
+                  whileHover={{
+                    scale: 1.2,
+                    backgroundColor: "rgba(108, 92, 231, 0.3)",
+                  }}
                 >
-                  <span className="text-white font-bold">CLAMP</span>
+                  <span className="text-white font-bold flex items-center">
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 10,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="inline-block mr-1"
+                    >
+                      🔒
+                    </motion.span>
+                    <span>CLAMP</span>
+                  </span>
                 </motion.div>
               ))}
+
+              {/* Floating Tokens */}
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={`float-${i}`}
+                  className="absolute w-8 h-8 rounded-full bg-[#6C5CE7]/10 border border-[#6C5CE7]/20 flex items-center justify-center text-xs text-white/70 hidden md:flex"
+                  initial={{
+                    x: Math.random() * 300 - 150,
+                    y: Math.random() * 300 - 150,
+                    scale: Math.random() * 0.5 + 0.5,
+                    opacity: Math.random() * 0.5 + 0.3,
+                  }}
+                  animate={{
+                    y: [
+                      Math.random() * 100 - 50,
+                      Math.random() * -100 + 50,
+                      Math.random() * 100 - 50,
+                    ],
+                    opacity: [
+                      Math.random() * 0.5 + 0.3,
+                      Math.random() * 0.5 + 0.5,
+                      Math.random() * 0.5 + 0.3,
+                    ],
+                  }}
+                  transition={{
+                    duration: 10 + Math.random() * 10,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  {["$", "💎", "🔒", "⚡", "🛡️", "🚀", "💰", "🔐"][i]}
+                </motion.div>
+              ))}
+
+              {/* Animated Shield Glow Effect */}
+              <motion.div
+                className="absolute inset-0 z-0 opacity-30"
+                animate={{
+                  background: [
+                    "radial-gradient(circle at 50% 50%, rgba(108, 92, 231, 0.4) 0%, transparent 60%)",
+                    "radial-gradient(circle at 50% 50%, rgba(108, 92, 231, 0.2) 20%, transparent 70%)",
+                    "radial-gradient(circle at 50% 50%, rgba(108, 92, 231, 0.4) 0%, transparent 60%)",
+                  ],
+                }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
             </div>
           </motion.div>
+
+          {/* Optional: Diagonal divider to create visual interest */}
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-r from-[#0D0B15] via-[#0D0B15]/95 to-transparent transform -skew-y-1 z-0 hidden md:block" />
+
+          {/* Mobile-optimized animated background */}
+          <motion.div
+            className="absolute top-1/3 -right-1/4 w-1/2 h-1/2 rounded-full bg-[#6C5CE7]/5 blur-3xl z-0 md:hidden"
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.3, 0.5, 0.3],
+            }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          />
         </motion.div>
 
         {/* Stats Bar with locking effect */}
         <motion.div
-          className="flex items-center justify-between mb-14 p-5 bg-[#6C5CE7]/10 backdrop-blur-md rounded-xl border border-[#6C5CE7]/30 relative overflow-hidden"
+          className="grid grid-cols-2 gap-2 md:grid-cols-4 items-center justify-between mb-14 p-5 bg-[#6C5CE7]/10 backdrop-blur-md rounded-xl border border-[#6C5CE7]/30 relative overflow-hidden"
           whileHover={{ scale: 1.02 }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -656,6 +781,308 @@ export default function HomePage() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
+          <h2 className="text-4xl font-bold text-center mb-6 text-white">
+            Why Choose{" "}
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#6C5CE7] to-[#4834D4]">
+              Clampify
+            </span>
+          </h2>
+
+          <p className="text-xl text-white/70 text-center mb-12 max-w-3xl mx-auto">
+            See how our rugproof technology compares to other platforms
+          </p>
+
+          <div className="overflow-x-auto rounded-xl border border-[#6C5CE7]/20">
+            <table className="w-full min-w-[900px]">
+              <thead>
+                <tr className="bg-[#6C5CE7]/10">
+                  <th className="p-5 text-left text-white font-medium border-b border-[#6C5CE7]/20">
+                    Features
+                  </th>
+                  <th className="p-5 text-left text-white font-medium border-b border-[#6C5CE7]/20">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] flex items-center justify-center">
+                        <Lock className="w-4 h-4 text-white" />
+                      </div>
+                      <span>Clampify</span>
+                    </div>
+                  </th>
+                  <th className="p-5 text-left text-white font-medium border-b border-[#6C5CE7]/20">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center">
+                        <span className="text-pink-500">🚀</span>
+                      </div>
+                      <span>Pump.fun</span>
+                    </div>
+                  </th>
+                  <th className="p-5 text-left text-white font-medium border-b border-[#6C5CE7]/20">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-pink-700/20 flex items-center justify-center">
+                        <span className="text-pink-600">🔒</span>
+                      </div>
+                      <span>PinkSale</span>
+                    </div>
+                  </th>
+                  <th className="p-5 text-left text-white font-medium border-b border-[#6C5CE7]/20">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gray-500/20 flex items-center justify-center">
+                        <Repeat className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <span>Standard DEXs</span>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-black/20 backdrop-blur-sm">
+                {[
+                  {
+                    feature: "Supply Locking Mechanism",
+                    clampify: {
+                      supported: true,
+                      notes: "Advanced time-based release schedules",
+                    },
+                    pumpfun: {
+                      supported: false,
+                      notes: "No built-in supply locking",
+                    },
+                    pinksale: {
+                      supported: true,
+                      notes: "Basic lock features only",
+                    },
+                    dexs: { supported: false, notes: "Not available" },
+                  },
+                  {
+                    feature: "Anti-Rug Pull Safeguards",
+                    clampify: {
+                      supported: true,
+                      notes: "Mathematically impossible to rug",
+                    },
+                    pumpfun: {
+                      supported: false,
+                      notes: "No special protections",
+                    },
+                    pinksale: {
+                      supported: true,
+                      notes: "Basic liquidity locks only",
+                    },
+                    dexs: { supported: false, notes: "Not available" },
+                  },
+                  {
+                    feature: "Gradual Unlock Schedules",
+                    clampify: {
+                      supported: true,
+                      notes: "Linear, milestone & cliff options",
+                    },
+                    pumpfun: { supported: false, notes: "No unlock schedules" },
+                    pinksale: {
+                      supported: false,
+                      notes: "No unlock schedules",
+                    },
+                    dexs: { supported: false, notes: "Not available" },
+                  },
+                  {
+                    feature: "Max Wallet Size Limits",
+                    clampify: {
+                      supported: true,
+                      notes: "Prevents whales from dominating",
+                    },
+                    pumpfun: { supported: false, notes: "No wallet limits" },
+                    pinksale: { supported: false, notes: "No wallet limits" },
+                    dexs: { supported: false, notes: "Not available" },
+                  },
+                  {
+                    feature: "Transaction Size Limits",
+                    clampify: {
+                      supported: true,
+                      notes: "Prevents sudden large dumps",
+                    },
+                    pumpfun: {
+                      supported: false,
+                      notes: "No transaction limits",
+                    },
+                    pinksale: {
+                      supported: false,
+                      notes: "No transaction limits",
+                    },
+                    dexs: { supported: false, notes: "Not available" },
+                  },
+                  {
+                    feature: "Anti-Bot Protection",
+                    clampify: {
+                      supported: true,
+                      notes: "Advanced protection system",
+                    },
+                    pumpfun: { supported: false, notes: "None" },
+                    pinksale: {
+                      supported: true,
+                      notes: "Basic protection only",
+                    },
+                    dexs: { supported: false, notes: "Not available" },
+                  },
+                  {
+                    feature: "User Experience",
+                    clampify: {
+                      supported: true,
+                      notes: "Modern UI, simplified creation",
+                    },
+                    pumpfun: {
+                      supported: true,
+                      notes: "Simple but limited options",
+                    },
+                    pinksale: {
+                      supported: false,
+                      notes: "Complex, technical interface",
+                    },
+                    dexs: {
+                      supported: false,
+                      notes: "Highly technical, not for beginners",
+                    },
+                  },
+                  {
+                    feature: "Community Governance",
+                    clampify: {
+                      supported: true,
+                      notes: "Built-in voting mechanism",
+                    },
+                    pumpfun: {
+                      supported: false,
+                      notes: "No governance features",
+                    },
+                    pinksale: {
+                      supported: false,
+                      notes: "No governance features",
+                    },
+                    dexs: { supported: false, notes: "Varies by platform" },
+                  },
+                ].map((row, i) => (
+                  <motion.tr
+                    key={i}
+                    className="border-b border-[#6C5CE7]/10 hover:bg-[#6C5CE7]/5"
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <td className="p-5 text-white font-medium">
+                      {row.feature}
+                    </td>
+
+                    <td className="p-5">
+                      <div className="flex flex-col">
+                        <div
+                          className={`flex items-center ${
+                            row.clampify.supported
+                              ? "text-green-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          {row.clampify.supported ? (
+                            <CheckCircle2 className="w-5 h-5 mr-2" />
+                          ) : (
+                            <X className="w-5 h-5 mr-2" />
+                          )}
+                          <span>{row.clampify.supported ? "Yes" : "No"}</span>
+                        </div>
+                        <span className="text-white/50 text-sm mt-1">
+                          {row.clampify.notes}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td className="p-5">
+                      <div className="flex flex-col">
+                        <div
+                          className={`flex items-center ${
+                            row.pumpfun.supported
+                              ? "text-green-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          {row.pumpfun.supported ? (
+                            <CheckCircle2 className="w-5 h-5 mr-2" />
+                          ) : (
+                            <X className="w-5 h-5 mr-2" />
+                          )}
+                          <span>{row.pumpfun.supported ? "Yes" : "No"}</span>
+                        </div>
+                        <span className="text-white/50 text-sm mt-1">
+                          {row.pumpfun.notes}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td className="p-5">
+                      <div className="flex flex-col">
+                        <div
+                          className={`flex items-center ${
+                            row.pinksale.supported
+                              ? "text-green-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          {row.pinksale.supported ? (
+                            <CheckCircle2 className="w-5 h-5 mr-2" />
+                          ) : (
+                            <X className="w-5 h-5 mr-2" />
+                          )}
+                          <span>{row.pinksale.supported ? "Yes" : "No"}</span>
+                        </div>
+                        <span className="text-white/50 text-sm mt-1">
+                          {row.pinksale.notes}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td className="p-5">
+                      <div className="flex flex-col">
+                        <div
+                          className={`flex items-center ${
+                            row.dexs.supported
+                              ? "text-green-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          {row.dexs.supported ? (
+                            <CheckCircle2 className="w-5 h-5 mr-2" />
+                          ) : (
+                            <X className="w-5 h-5 mr-2" />
+                          )}
+                          <span>{row.dexs.supported ? "Yes" : "No"}</span>
+                        </div>
+                        <span className="text-white/50 text-sm mt-1">
+                          {row.dexs.notes}
+                        </span>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-10 text-center">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-block"
+            >
+              <Link href="/launch">
+                <Button className="bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] hover:opacity-90 text-white px-8 py-3 rounded-xl text-lg">
+                  Launch with Clampify
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* Core Protocol Features Section */}
+        <motion.div
+          className="mb-20"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+        >
           <h2 className="text-4xl font-bold text-center mb-12 text-white">
             Core Protocol Features
           </h2>
@@ -698,7 +1125,7 @@ export default function HomePage() {
               >
                 <motion.div
                   className="w-12 h-12 rounded-xl bg-[#6C5CE7]/20 border border-[#6C5CE7]/30 
-                  flex items-center justify-center mb-4"
+          flex items-center justify-center mb-4"
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 5, repeat: Infinity, delay: i * 0.5 }}
                 >
