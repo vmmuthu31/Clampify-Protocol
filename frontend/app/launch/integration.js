@@ -4,11 +4,11 @@ import abi from "../../deployments/ClampifyFactory.json";
 import abi2 from "../../deployments/ClampifyToken.json";
 const isBrowser = () => typeof window !== "undefined";
 
-const {ethereum } = isBrowser();
+const { ethereum } = isBrowser();
 
-if (ethereum){
-    isBrowser().web3 = new Web3(ethereum);
-    isBrowser().web3 = new Web3(isBrowser().web3.currentProvider);
+if (ethereum) {
+  isBrowser().web3 = new Web3(ethereum);
+  isBrowser().web3 = new Web3(isBrowser().web3.currentProvider);
 }
 
 const contract_address = "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67"; //factory
@@ -74,9 +74,9 @@ export const Mint = async (
             }
         );
 
-        console.log("Transaction sent:", tx.hash);
-        const receipt = await tx.wait();
-        console.log("Transaction confirmed:", receipt);
+    console.log("Transaction sent:", tx.hash);
+    const receipt = await tx.wait();
+    console.log("Transaction confirmed:", receipt);
 
         const tokenCreatedEvent = receipt.events[0];
         const tokenAddress = tokenCreatedEvent.address;
