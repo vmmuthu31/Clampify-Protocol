@@ -4,7 +4,7 @@ import Link from "next/link";
 
 function Footer() {
   return (
-    <footer className="border-t border-[#ffae5c]/20 py-10">
+    <footer className="border-t bg-gradient-to-r from-[#0D0B15] to-[#0D0B15]/95 border-[#ffae5c]/20 py-10">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-6 md:mb-0">
