@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
-import { Lock, Shield, Rocket, Info, X, AlertTriangle } from "lucide-react";
+import {
+  Lock,
+  Shield,
+  Rocket,
+  Info,
+  X,
+  AlertTriangle,
+  Wallet,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -14,9 +22,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Mint } from "../services/contractInteraction";
+import { Mint } from "@/services/tokenCreation";
 import { useRouter } from "next/navigation";
 import { ethers } from "ethers";
+import { usePrivy } from "@privy-io/react-auth";
 
 // Lock period options in seconds
 const CREATOR_LOCK_PERIODS = [
@@ -71,6 +80,8 @@ const formatDuration = (seconds: number): string => {
 export default function LaunchPage() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [launchSuccess, setLaunchSuccess] = useState(false);
+  const { ready, authenticated, login } = usePrivy();
+  const router = useRouter();
 
   // Form state
   const [tokenForm, setTokenForm] = useState<TokenForm>({
@@ -111,8 +122,6 @@ export default function LaunchPage() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
-  const router = useRouter();
 
   const handleFormChange = (field: keyof TokenForm, value: string) => {
     setTokenForm((prev) => ({
@@ -368,13 +377,23 @@ export default function LaunchPage() {
           </div>
 
           <div className="mt-6 flex justify-end">
-            <Button
-              className="bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] hover:opacity-90 text-white px-8 py-2 rounded-xl"
-              onClick={handleLaunch}
-            >
-              <Rocket className="mr-2 w-5 h-5" />
-              Launch Token
-            </Button>
+            {ready && authenticated ? (
+              <Button
+                className="bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] hover:opacity-90 text-white px-8 py-2 rounded-xl"
+                onClick={handleLaunch}
+              >
+                <Rocket className="mr-2 w-5 h-5" />
+                Launch Token
+              </Button>
+            ) : (
+              <Button
+                onClick={login}
+                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white transition-all"
+              >
+                <Wallet className="mr-2 h-4 w-4" />
+                Connect Wallet
+              </Button>
+            )}
           </div>
         </div>
 
