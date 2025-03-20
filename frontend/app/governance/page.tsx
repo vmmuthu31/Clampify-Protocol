@@ -46,6 +46,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { format, formatDistanceToNow } from "date-fns";
 import { Navbar } from "@/components/navbar";
+import { getTokenDetails } from "@/services/api";
 
 // This would be imported from your contract artifacts
 const GOVERNANCE_ABI = [
@@ -129,6 +130,7 @@ export default function GovernancePage() {
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [proposals, setProposals] = useState<ProposalInfo[]>([]);
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
+  const [userCreatedTokens, setUserCreatedTokens] = useState<TokenInfo[]>([]);
 
   // Connect wallet and set up contract instances
   useEffect(() => {
@@ -153,12 +155,17 @@ export default function GovernancePage() {
           setGovernanceContract(governance);
           setUserAddress(address);
 
+          // Fetch user's created tokens
+          await fetchUserCreatedTokens(address);
+
           // Listen for account changes
-          window.ethereum.on("accountsChanged", (accounts: string[]) => {
+          window.ethereum.on("accountsChanged", async (accounts: string[]) => {
             if (accounts.length === 0) {
               setUserAddress(null);
+              setUserCreatedTokens([]);
             } else {
               setUserAddress(accounts[0]);
+              await fetchUserCreatedTokens(accounts[0]);
             }
           });
         } catch (error) {
@@ -513,6 +520,39 @@ export default function GovernancePage() {
   // Handle token selection change
   const handleTokenChange = (value: string) => {
     setSelectedToken(value);
+  };
+
+  // Add this function to fetch user's created tokens
+  const fetchUserCreatedTokens = async (userAddress: string) => {
+    try {
+      if (!userAddress) return;
+      
+      const response = await fetch(`/api/tokens/creator/${userAddress}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data.success) {
+        console.log("User created tokens:", data.tokens);
+        setUserCreatedTokens(data.tokens);
+        
+        // Add user's created tokens to the tokens list if they're not already there
+        setTokens(prevTokens => {
+          const newTokens = [...prevTokens];
+          data.tokens.forEach((token: TokenInfo) => {
+            if (!newTokens.some(t => t.address === token.address)) {
+              newTokens.push(token);
+            }
+          });
+          return newTokens;
+        });
+      } else {
+        console.error("Failed to fetch tokens:", data.error);
+      }
+    } catch (error) {
+      console.error("Error fetching user created tokens:", error);
+    }
   };
 
   if (!provider) {
@@ -872,6 +912,30 @@ export default function GovernancePage() {
                         )}
                       </TabsContent>
                     </Tabs>
+                  </div>
+                )}
+
+                {userCreatedTokens.length > 0 && (
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">Your Created Tokens</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {userCreatedTokens.map((token) => (
+                        <div
+                          key={token.address}
+                          className="p-4 border rounded-lg bg-black/20 backdrop-blur-sm"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-medium">{token.name}</h3>
+                            <span className="text-sm text-muted-foreground">
+                              {token.symbol}
+                            </span>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Address: {token.address.slice(0, 6)}...{token.address.slice(-4)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </>
