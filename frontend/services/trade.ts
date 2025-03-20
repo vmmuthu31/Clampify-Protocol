@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
-import ClampifyFactory from "../../deployments/ClampifyFactory.json";
-import ClampifyToken from "../../deployments/ClampifyToken.json";
+import ClampifyFactory from "../deployments/ClampifyFactory.json";
+import ClampifyToken from "../deployments/ClampifyToken.json";
 
 const isBrowser = (): boolean => typeof window !== "undefined";
 
