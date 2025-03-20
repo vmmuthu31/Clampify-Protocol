@@ -44,7 +44,16 @@ import {
 } from "@/services/trade";
 import { recordTransaction, getTokenTransactions } from "@/services/api";
 import { usePrivy } from "@privy-io/react-auth";
-import { createChart, ColorType, IChartApi, CrosshairMode, LineStyle } from 'lightweight-charts';
+import {
+  createChart,
+  ColorType,
+  CrosshairMode,
+  LineStyle,
+  LineSeries,
+  LineWidth,
+  Time,
+  CandlestickData,
+} from "lightweight-charts";
 
 interface TokenData {
   id: string;
@@ -161,6 +170,15 @@ const getTimeAgo = (timestamp: string) => {
   return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
 };
 
+interface CandleDataPoint {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
 export default function TokenPage() {
   const params = useParams();
   const tokenId = params.id as string; // Get the ID from URL
@@ -209,14 +227,16 @@ export default function TokenPage() {
   const [tokenBalance, setTokenBalance] = useState<string>("");
   const [currentPrice, setCurrentPrice] = useState<string>("0");
   const { user } = usePrivy();
-  const [candleData, setCandleData] = useState<{
-    time: number;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-    volume: number;
-  }[]>([]);
+  const [candleData, setCandleData] = useState<
+    {
+      time: number;
+      open: number;
+      high: number;
+      low: number;
+      close: number;
+      volume: number;
+    }[]
+  >([]);
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
   // Calculate days left in lock
@@ -467,10 +487,6 @@ export default function TokenPage() {
     });
   };
 
-  const formatCurrency = (num: number) => {
-    return `$${formatNumber(num)}`;
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       if (tokenId) {
@@ -514,105 +530,109 @@ export default function TokenPage() {
 
     const chartOptions = {
       layout: {
-        background: { type: ColorType.Solid, color: '#0D0B15' },
-        textColor: '#d1d4dc',
+        background: { type: ColorType.Solid, color: "#0D0B15" },
+        textColor: "#d1d4dc",
       },
       grid: {
-        vertLines: { color: 'rgba(42, 46, 57, 0.6)' },
-        horzLines: { color: 'rgba(42, 46, 57, 0.6)' },
+        vertLines: { color: "rgba(42, 46, 57, 0.6)" },
+        horzLines: { color: "rgba(42, 46, 57, 0.6)" },
       },
       width: chartContainerRef.current.clientWidth,
       height: 400,
       timeScale: {
         timeVisible: true,
         secondsVisible: false,
-        borderColor: 'rgba(42, 46, 57, 0.6)',
-        textColor: '#d1d4dc',
+        borderColor: "rgba(42, 46, 57, 0.6)",
+        textColor: "#d1d4dc",
       },
       rightPriceScale: {
-        borderColor: 'rgba(42, 46, 57, 0.6)',
-        textColor: '#d1d4dc',
+        borderColor: "rgba(42, 46, 57, 0.6)",
+        textColor: "#d1d4dc",
       },
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: {
-          color: '#758696',
-          width: 1,
+          color: "#758696",
+          width: 1 as LineWidth,
           style: LineStyle.Dashed,
         },
         horzLine: {
-          color: '#758696',
-          width: 1,
+          color: "#758696",
+          width: 1 as LineWidth,
           style: LineStyle.Dashed,
         },
       },
     };
 
     const chart = createChart(chartContainerRef.current, chartOptions);
-
     // Create series with professional styling
-    const mainSeries = chart.addCandlestickSeries({
-      upColor: '#26a69a',
-      downColor: '#ef5350',
-      borderUpColor: '#26a69a',
-      borderDownColor: '#ef5350',
-      wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
+    const mainSeries = chart.addSeries(LineSeries, {
+      title: "Price",
+      lastValueVisible: true,
+      priceLineVisible: false,
+      baseLineVisible: false,
+      color: "#26a69a",
     });
 
     // Set the data
-    mainSeries.setData(candleData);
+    mainSeries.setData(
+      candleData.map((d) => ({
+        time: d.time as Time,
+        value: d.close,
+      }))
+    );
 
-    // Add volume series with better styling
-    const volumeSeries = chart.addHistogramSeries({
-      priceFormat: {
-        type: 'volume',
-      },
-      priceScaleId: '', // Set as an overlay
-      scaleMargins: {
-        top: 0.8, // Keep volumes in the lower 20% of the chart
-        bottom: 0,
-      },
+    // Add volume series
+    const volumeSeries = createChart(
+      chartContainerRef.current,
+      chartOptions
+    ).addSeries(LineSeries, {
+      title: "Volume",
+      lastValueVisible: true,
+      priceLineVisible: false,
+      baseLineVisible: false,
+      color: "rgba(38, 166, 154, 0.5)",
+      priceScaleId: "",
+      // scaleMargins: {
+      //   top: 0.8,
+      //   bottom: 0,
+      // },
     });
 
-    // Set volume data with color coordination to candles
+    // Set volume data
     volumeSeries.setData(
       candleData.map((d) => ({
-        time: d.time,
+        time: d.time as Time,
         value: d.volume,
-        color: d.open > d.close 
-          ? 'rgba(239, 83, 80, 0.5)'  // Red with opacity
-          : 'rgba(38, 166, 154, 0.5)', // Green with opacity
       }))
     );
 
     // Handle legend updates
-    let legend = document.createElement('div');
-    legend.style.position = 'absolute';
-    legend.style.left = '12px';
-    legend.style.top = '12px';
-    legend.style.zIndex = '1';
-    legend.style.fontSize = '12px';
-    legend.style.color = '#d1d4dc';
-    legend.style.fontFamily = 'sans-serif';
+    const legend = document.createElement("div");
+    legend.style.position = "absolute";
+    legend.style.left = "12px";
+    legend.style.top = "12px";
+    legend.style.zIndex = "1";
+    legend.style.fontSize = "12px";
+    legend.style.color = "#d1d4dc";
+    legend.style.fontFamily = "sans-serif";
     chartContainerRef.current.appendChild(legend);
 
-    chart.subscribeCrosshairMove(param => {
+    chart.subscribeCrosshairMove((param) => {
       if (param.time) {
-        const data = param.seriesData.get(mainSeries);
+        const data = param.seriesData.get(mainSeries) as CandlestickData;
         if (data) {
-          const price = data as any;
           legend.innerHTML = `
             <div style="font-size: 13px; margin: 4px 0;">
-              O <span style="color: #d1d4dc">${price.open.toFixed(6)}</span> 
-              H <span style="color: #d1d4dc">${price.high.toFixed(6)}</span> 
-              L <span style="color: #d1d4dc">${price.low.toFixed(6)}</span> 
-              C <span style="color: #d1d4dc">${price.close.toFixed(6)}</span>
+              O <span style="color: #d1d4dc">${data.open.toFixed(6)}</span> 
+              H <span style="color: #d1d4dc">${data.high.toFixed(6)}</span> 
+              L <span style="color: #d1d4dc">${data.low.toFixed(6)}</span> 
+              C <span style="color: #d1d4dc">${data.close.toFixed(6)}</span>
             </div>
           `;
         }
       } else {
-        legend.innerHTML = '';
+        legend.innerHTML = "";
       }
     });
 
@@ -627,11 +647,11 @@ export default function TokenPage() {
         });
       }
     };
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     // Cleanup
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       chart.remove();
     };
   }, [candleData]);
@@ -643,8 +663,8 @@ export default function TokenPage() {
         try {
           const data = await getCandleData(tokenId);
           // Format the data for the chart
-          const formattedData = data.map((d: any) => ({
-            time: Math.floor(d.time / 1000), // Convert to seconds for the chart
+          const formattedData = data.map((d: CandleDataPoint) => ({
+            time: Math.floor(d.time / 1000) as Time,
             open: d.open,
             high: d.high,
             low: d.low,
@@ -678,8 +698,8 @@ export default function TokenPage() {
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [initializeChart]);
 
   if (!isClient) {
@@ -742,7 +762,9 @@ export default function TokenPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="w-5 h-5 text-[#ffae5c]" />
-                    <h3 className="text-lg font-medium text-white">Price Chart</h3>
+                    <h3 className="text-lg font-medium text-white">
+                      Price Chart
+                    </h3>
                   </div>
                   <div className="flex gap-2">
                     {["1H", "1D", "1W", "1M"].map((timeframe) => (
@@ -826,21 +848,29 @@ export default function TokenPage() {
                     <div>
                       <div className="text-white/60 text-sm">Market Cap</div>
                       <div className="text-white font-bold text-lg">
-                        {parseFloat(ethers.utils.formatEther(tokenDetails?.marketCap.toString() || "0")).toFixed(4)}
+                        {parseFloat(
+                          ethers.utils.formatEther(
+                            tokenDetails?.marketCap.toString() || "0"
+                          )
+                        ).toFixed(4)}
                       </div>
                     </div>
                     <div>
                       <div className="text-white/60 text-sm">24h Volume</div>
                       <div className="text-white font-bold text-lg">
-                        {parseFloat(ethers.utils.formatEther(tokenDetails?.volume24h.toString() || "0")).toFixed(4)}
+                        {parseFloat(
+                          ethers.utils.formatEther(
+                            tokenDetails?.volume24h.toString() || "0"
+                          )
+                        ).toFixed(4)}
                       </div>
                     </div>
                     <div>
                       <div className="text-white/60 text-sm">Total Supply</div>
                       <div className="text-white font-bold text-lg">
-                        {
-                         parseFloat(tokenDetails?.totalSupply || "0").toFixed(4)
-                        }
+                        {parseFloat(tokenDetails?.totalSupply || "0").toFixed(
+                          4
+                        )}
                       </div>
                     </div>
                     <div>
