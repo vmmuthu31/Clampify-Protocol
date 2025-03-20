@@ -1,0 +1,23 @@
+# Source files
+src/
+
+# Tests
+test/
+
+# Development files
+.github/
+.vscode/
+.git/
+.gitignore
+tsconfig.json
+
+# Build artifacts
+*.tsbuildinfo
+*.log
+
+# Example code
+examples/
+
+# Misc
+node_modules/
+.env

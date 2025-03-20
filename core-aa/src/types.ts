@@ -1,56 +1,84 @@
-import { BigNumber, BytesLike } from "ethers";
+import { BigNumber, BigNumberish } from "ethers";
 
-// UserOperation type according to ERC-4337
+/**
+ * User operation state
+ */
+export enum UserOperationState {
+  PENDING = "pending",
+  COMPLETED = "completed",
+  FAILED = "failed",
+}
+
+/**
+ * Paymaster configuration options
+ */
+export interface PaymasterConfig {
+  paymasterAddress: string;
+  entryPointAddress: string;
+  chainId?: number;
+}
+
+/**
+ * Account gas details
+ */
+export interface AccountGasDetails {
+  isWhitelisted: boolean;
+  gasLimit: BigNumber;
+  gasUsed: BigNumber;
+}
+
+/**
+ * User operation data structure (simplified)
+ */
 export interface UserOperation {
   sender: string;
-  nonce: BigNumber;
-  initCode: BytesLike;
-  callData: BytesLike;
-  callGasLimit: BigNumber;
-  verificationGasLimit: BigNumber;
-  preVerificationGas: BigNumber;
-  maxFeePerGas: BigNumber;
-  maxPriorityFeePerGas: BigNumber;
-  paymasterAndData: BytesLike;
-  signature: BytesLike;
+  nonce: string;
+  initCode: string;
+  callData: string;
+  callGasLimit: string;
+  verificationGasLimit: string;
+  preVerificationGas: string;
+  maxFeePerGas: string;
+  maxPriorityFeePerGas: string;
+  paymasterAndData: string;
+  signature: string;
 }
 
-// Configuration for the SDK
-export interface CoreAAConfig {
-  // Chain Information
-  chainId: number;
-  rpcUrl: string;
-
-  // Contract Addresses
-  entryPointAddress: string;
-  accountFactoryAddress: string;
-
-  // Optional Paymaster
-  paymasterAddress?: string;
+/**
+ * Paymaster deposit information
+ */
+export interface PaymasterDepositInfo {
+  balance: BigNumber;
+  staked: boolean;
+  stake: BigNumber;
+  unstakeDelaySec: number;
+  withdrawTime: number;
 }
 
-// Account creation parameters
-export interface AccountParams {
-  owner: string; // Owner's address (the one who can sign transactions)
-  index?: number; // Optional index for creating multiple accounts for the same owner
-  salt?: string; // Custom salt for account address derivation
+/**
+ * Events that can be subscribed to
+ */
+export interface PaymasterEvents {
+  AccountWhitelisted: (account: string, whitelisted: boolean) => void;
+  AccountGasLimitSet: (account: string, gasLimit: BigNumber) => void;
+  PaymasterDeposited: (sender: string, amount: BigNumber) => void;
+  PaymasterWithdrawn: (recipient: string, amount: BigNumber) => void;
+  GasPaymentMade: (account: string, gasAmount: BigNumber) => void;
 }
 
-// Paymaster usage parameters
-export interface PaymasterParams {
-  type: "verifying" | "token";
-  token?: string; // If using token paymaster, which token to use
-  gasToken?: string; // If using token paymaster, which token to pay gas with
-  data?: BytesLike; // Additional data for custom paymasters
+/**
+ * User operation status response
+ */
+export interface UserOperationStatus {
+  state: UserOperationState;
+  transactionHash?: string;
+  blockNumber?: number;
+  actualGasCost?: BigNumber;
+  success?: boolean;
+  error?: string;
 }
 
-// Transaction request
-export interface TransactionRequest {
-  to: string;
-  value?: BigNumber;
-  data?: BytesLike;
-  nonce?: BigNumber;
-  gasLimit?: BigNumber;
-  maxFeePerGas?: BigNumber;
-  maxPriorityFeePerGas?: BigNumber;
-}
+/**
+ * Events to listen for
+ */
+export type EventType = keyof PaymasterEvents;
