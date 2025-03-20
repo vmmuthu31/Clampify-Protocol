@@ -1503,7 +1503,7 @@ export default function HomePage() {
                 >
                   <Link href="/launch">
                     <Button
-                      className=" md:h-14 px-4 md:px-8 bg-white text-[#ffae5c] hover:bg-white/90 
+                      className=" md:h-14 px-4 md:px-8 bg-gradient-to-r from-[#ffae5c] to-[#4834D4] text-white hover:bg-white/90 
                         rounded-xl text-sm md:text-lg font-medium group"
                     >
                       Launch Token
