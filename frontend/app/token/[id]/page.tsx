@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Navbar } from "@/components/navbar";
 import {
   ArrowUpRight,
@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
 import { TokenInfo } from "@/app/services/contractInteraction";
 import { ethers } from "ethers";
+import { buyTokens, TokenReturnOnBuy } from "@/app/services/trade";
 
 interface TokenData {
   id: string;
@@ -108,6 +109,20 @@ const tokenData: TokenData = {
   },
 };
 
+// Add this debounce utility function outside the component
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
+// Add input validation helper
+const isValidNumber = (value: string): boolean => {
+  return /^\d*\.?\d*$/.test(value) && Number(value) >= 0;
+};
+
 export default function TokenPage() {
   const params = useParams();
   const tokenId = params.id as string; // Get the ID from URL
@@ -132,6 +147,8 @@ export default function TokenPage() {
     initialPrice: string;
     contractAddress: string;
   } | null>(null);
+  const [estimatedReturn, setEstimatedReturn] = useState<string>("");
+  const [isCalculating, setIsCalculating] = useState(false);
 
   // Calculate days left in lock
   const daysLeft = Math.ceil(
@@ -199,19 +216,6 @@ export default function TokenPage() {
     }
   };
 
-  // Update Core amount when token amount changes
-  useEffect(() => {
-    if (tokenAmount) {
-      const calculatedCore = calculatePriceFromCurve(
-        tokenAmount,
-        tradeType === "buy"
-      );
-      setCoreAmount(calculatedCore.toFixed(6));
-    } else {
-      setCoreAmount("");
-    }
-  }, [tokenAmount, tradeType]);
-
   // Update Token amount when Core amount changes
   useEffect(() => {
     if (coreAmount && parseFloat(coreAmount) > 0) {
@@ -246,6 +250,44 @@ export default function TokenPage() {
     }
   }, [coreAmount, tradeType]);
 
+  // Add this helper function at component level
+  const calculateEstimatedReturn = async (value: string, contractAddress: string) => {
+    if (value && contractAddress) {
+      setIsCalculating(true);
+      try {
+        const tokenReturnOnBuy = await TokenReturnOnBuy(contractAddress, value);
+        setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
+      } catch (error) {
+        console.error("Error calculating return:", error);
+        setEstimatedReturn("0");
+      } finally {
+        setIsCalculating(false);
+      }
+    } else {
+      setEstimatedReturn("0");
+    }
+  };
+
+  // Update the input handler
+  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Only allow valid numbers
+    if (value === '' || isValidNumber(value)) {
+      if (tradeType === "buy") {
+        setCoreAmount(value);
+        if (tokenDetails?.contractAddress) {
+          const amount = ethers.utils.parseEther(value);
+          await calculateEstimatedReturn( amount.toString(), tokenDetails.contractAddress);
+        }
+      } else {
+        setTokenAmount(value);
+        setCoreAmount(value);
+        setEstimatedReturn(value);
+      }
+    }
+  };
+
   const handleTradeTypeToggle = (type: string) => {
     setTradeType(type);
     // Reset inputs
@@ -253,42 +295,35 @@ export default function TokenPage() {
     setCoreAmount("");
   };
 
-  const handleTrade = () => {
-    if (!tokenAmount || !coreAmount) {
-      toast({
-        title: "Invalid amount",
-        description: "Please enter a valid amount",
-        variant: "destructive",
-      });
-      return;
+  const handleTrade = async () => {
+    console.log("Token Amount:", tokenAmount);
+    console.log("Core Amount:", coreAmount);
+
+    if (tradeType === "buy") {
+      if (!tokenAmount || !coreAmount) {
+        console.log("Invalid amount");
+        return;
+      }
+      console.log(tokenDetails?.contractAddress);
+
+      const tokenReturnOnBuy = await TokenReturnOnBuy(tokenDetails?.contractAddress || "", coreAmount);
+      console.log(tokenReturnOnBuy);
+      setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
+     const buy = await buyTokens(tokenDetails?.contractAddress || "", coreAmount);
+     console.log(buy);
+    } else {
+      if (!tokenAmount || !coreAmount) {
+        toast({
+          title: "Invalid amount",
+          description: "Please enter a valid amount",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const tokenReturnOnBuy = await TokenReturnOnBuy(tokenDetails?.contractAddress || "", tokenAmount);
+      setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
     }
-
-    // Simulate transaction
-    toast({
-      title: `${tradeType === "buy" ? "Buying" : "Selling"} tokens...`,
-      description: "Please confirm the transaction in your wallet",
-    });
-
-    // Simulate a successful transaction after 2 seconds
-    setTimeout(() => {
-      toast({
-        title: "Transaction successful!",
-        description: `${
-          tradeType === "buy"
-            ? `You bought ${parseInt(tokenAmount).toLocaleString()} $${
-                tokenDetails?.symbol || "..."
-              }`
-            : `You sold ${parseInt(tokenAmount).toLocaleString()} $${
-                tokenDetails?.symbol || "..."
-              }`
-        }`,
-        variant: "default",
-      });
-
-      // Reset form
-      setTokenAmount("");
-      setCoreAmount("");
-    }, 2000);
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -923,18 +958,13 @@ export default function TokenPage() {
                   <div className="bg-black/40 rounded-xl border border-[#6C5CE7]/10 focus-within:border-[#6C5CE7]/30 transition-colors overflow-hidden">
                     <div className="flex">
                       <input
-                        type="number"
+                        type="text"
                         placeholder="0"
                         className="bg-transparent border-none text-white text-xl font-medium w-full outline-none px-4 py-5"
                         value={tradeType === "buy" ? coreAmount : tokenAmount}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (tradeType === "buy") {
-                            setCoreAmount(value);
-                          } else {
-                            setTokenAmount(value);
-                          }
-                        }}
+                        onChange={handleInputChange}
+                        inputMode="decimal"
+                        pattern="[0-9]*[.]?[0-9]*"
                       />
                       <div className="flex items-center px-4 text-white">
                         <div className="flex items-center gap-2 bg-[#6C5CE7]/20 px-3 py-2 rounded-lg">
@@ -1046,13 +1076,15 @@ export default function TokenPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="text-white text-xl font-medium">
-                      {tradeType === "buy"
-                        ? tokenAmount
-                          ? formatNumber(parseInt(tokenAmount))
-                          : "0"
-                        : coreAmount
-                        ? parseFloat(coreAmount).toFixed(4)
-                        : "0"}
+                      {tradeType === "buy" ? (
+                        isCalculating ? (
+                          <span className="text-white/50">Calculating...</span>
+                        ) : (
+                          estimatedReturn ? formatNumber(parseInt(estimatedReturn)) : "0"
+                        )
+                      ) : (
+                        coreAmount ? parseFloat(coreAmount).toFixed(4) : "0"
+                      )}
                     </div>
                     <div className="text-white/80">
                       {tradeType === "buy"
