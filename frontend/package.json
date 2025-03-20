@@ -34,6 +34,7 @@
     "ethers": "^5.7.2",
     "framer-motion": "^12.5.0",
     "lucide-react": "^0.482.0",
+    "mongoose": "^8.12.1",
     "next": "15.2.3",
     "progress": "^2.0.3",
     "react": "^19.0.0",
