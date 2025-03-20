@@ -26,7 +26,7 @@ import { Mint } from "@/services/tokenCreation";
 import { useRouter } from "next/navigation";
 import { ethers } from "ethers";
 import { usePrivy } from "@privy-io/react-auth";
-import { createTokenRecord } from "@/services/api";
+import { createTokenRecord, recordTransaction } from "@/services/api";
 
 // Lock period options in seconds
 const CREATOR_LOCK_PERIODS = [
@@ -172,6 +172,21 @@ export default function LaunchPage() {
         maxSupply: tokenForm.maxSupply,
         initialPrice: tokenForm.initialPrice,
         txHash: tokenAddress // or get the actual tx hash if available
+
+      });
+
+      await recordTransaction({
+        address: tokenAddress,
+        creator: user?.wallet?.address,
+        type: 'CREATE',
+        amount: tokenForm.initialSupply,
+        price: tokenForm.initialPrice,
+        txHash: tokenAddress,
+        name: tokenForm.name,
+        symbol: tokenForm.symbol,
+        
+
+
       });
 
       setLaunchSuccess(true);

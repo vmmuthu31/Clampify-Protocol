@@ -19,13 +19,13 @@ export async function POST(req: Request) {
     });
 
     // Create a CREATE transaction record
-    await Transaction.create({
-      tokenAddress: body.address,
-      userAddress: body.creator,
-      type: 'CREATE',
-      price: body.initialPrice,
-      txHash: body.txHash,
-    });
+    // await Transaction.create({
+    //   tokenAddress: body.address,
+    //   userAddress: body.creator,
+    //   type: 'CREATE',
+    //   price: body.initialPrice,
+    //   txHash: body.txHash,
+    // });
 
     return NextResponse.json({ success: true, token });
   } catch (error) {

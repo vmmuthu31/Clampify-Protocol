@@ -10,6 +10,8 @@ export const createTokenRecord = async (tokenData: any) => {
 };
 
 export const recordTransaction = async (transactionData: any) => {
+
+  console.log('transactionData', transactionData);
   const response = await fetch('/api/transactions', {
     method: 'POST',
     headers: {

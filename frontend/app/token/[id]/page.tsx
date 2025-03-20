@@ -19,6 +19,7 @@ import {
   ArrowDown,
   Settings,
   X,
+  Rocket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -125,6 +126,32 @@ const isValidNumber = (value: string): boolean => {
   return /^\d*\.?\d*$/.test(value) && Number(value) >= 0;
 };
 
+// Update the getTimeAgo function
+const getTimeAgo = (timestamp: string) => {
+  const now = new Date();
+  const txTime = new Date(timestamp);
+  const diffInSeconds = Math.floor((now.getTime() - txTime.getTime()) / 1000);
+
+  if (isNaN(diffInSeconds)) return 'Just now';
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} ${diffInSeconds === 1 ? 'second' : 'seconds'} ago`;
+  }
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+};
+
 export default function TokenPage() {
   const params = useParams();
   const tokenId = params.id as string; // Get the ID from URL
@@ -164,6 +191,8 @@ export default function TokenPage() {
     ethAmounts: string[];
     prices: string[];
     timestamps: string[];
+    type: string[];
+    txHashes: string[];
   } | null>(null);
   const [tokenBalance, setTokenBalance] = useState<string>("");
   const [currentPrice, setCurrentPrice] = useState<string>("0");
@@ -192,12 +221,6 @@ export default function TokenPage() {
         console.log("Token Info:", formattedInfo);
         setTokenDetails(formattedInfo);
 
-        const recentTransactions = await getRecentTransactions(tokenId, 10);
-        console.log("Recent Transactions:", recentTransactions);
-        setRecentTransactions(recentTransactions);  
-
-        // const tokenBalance = await getTokenBalance(tokenId);
-        // console.log("Token Balance:", tokenBalance);
         const formattedTokenBalance = ethers.utils.formatEther(tokenInfo.balance.toString());
         setTokenBalance(formattedTokenBalance);
       }
@@ -427,18 +450,26 @@ export default function TokenPage() {
   useEffect(() => {
     const fetchData = async () => {
       if (tokenId) {
-        // ... existing token info fetch ...
-        
-        // Fetch recent transactions
-        const { transactions } = await getTokenTransactions(tokenId);
-        setRecentTransactions({
-          accounts: transactions.map((tx: any) => tx.userAddress),
-          isBuys: transactions.map((tx: any) => tx.type === 'BUY'),
-          tokenAmounts: transactions.map((tx: any) => tx.amount),
-          ethAmounts: transactions.map((tx: any) => tx.amount),
-          prices: transactions.map((tx: any) => tx.price),
-          timestamps: transactions.map((tx: any) => tx.timestamp)
-        });
+        try {
+          // Fetch transactions from our database
+          const { transactions } = await getTokenTransactions(tokenId);
+          console.log("DB Transactions:", transactions);
+
+          if (transactions && transactions.length > 0) {
+            setRecentTransactions({
+              accounts: transactions.map((tx: any) => tx.userAddress || ''),
+              isBuys: transactions.map((tx: any) => tx.type === 'BUY'),
+              tokenAmounts: transactions.map((tx: any) => tx.amount || '0'),
+              ethAmounts: transactions.map((tx: any) => tx.amount || '0'),
+              prices: transactions.map((tx: any) => tx.price || '0'),
+              timestamps: transactions.map((tx: any) => tx.timestamp || new Date().toISOString()),
+              type: transactions.map((tx: any) => tx.type || ''),
+              txHashes: transactions.map((tx: any) => tx.txHash || '')
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching transactions:", error);
+        }
       }
     };
 
@@ -906,43 +937,7 @@ export default function TokenPage() {
               </div>
 
               <div className="space-y-3">
-                {[
-                  {
-                    type: "buy",
-                    address: "0x3A54...6C4e",
-                    amount: 25000000,
-                    value: 105,
-                    time: "5 mins ago",
-                  },
-                  {
-                    type: "sell",
-                    address: "0x4B20...02db",
-                    amount: 12000000,
-                    value: 48,
-                    time: "12 mins ago",
-                  },
-                  {
-                    type: "buy",
-                    address: "0x5AED...67DE",
-                    amount: 50000000,
-                    value: 200,
-                    time: "45 mins ago",
-                  },
-                  {
-                    type: "sell",
-                    address: "0x6A35...30e3",
-                    amount: 8000000,
-                    value: 32,
-                    time: "1 hour ago",
-                  },
-                  {
-                    type: "buy",
-                    address: "0x71C7...976F",
-                    amount: 30000000,
-                    value: 120,
-                    time: "2 hours ago",
-                  },
-                ].map((tx, i) => (
+                {recentTransactions?.accounts.map((account, i) => (
                   <div
                     key={i}
                     className="flex items-center justify-between p-3 bg-black/20 rounded-xl hover:bg-black/30 transition-colors"
@@ -950,43 +945,60 @@ export default function TokenPage() {
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-8 h-8 rounded-full ${
-                          tx.type === "buy"
-                            ? "bg-green-500/20"
-                            : "bg-red-500/20"
+                          recentTransactions?.type[i] === 'BUY' 
+                            ? "bg-green-500/20" 
+                            : recentTransactions?.type[i] === 'SELL'
+                            ? "bg-red-500/20"
+                            : "bg-purple-500/20"
                         } flex items-center justify-center`}
                       >
-                        {tx.type === "buy" ? (
-                          <ArrowUpRight
-                            className={`w-4 h-4 ${
-                              tx.type === "buy"
-                                ? "text-green-400"
-                                : "text-red-400"
-                            }`}
-                          />
+                        {recentTransactions?.type[i] === "CREATE" ? (
+                          <Rocket className="w-4 h-4 text-purple-400" />
+                        ) : recentTransactions?.type[i] === "BUY" ? (
+                          <ArrowUpRight className="w-4 h-4 text-green-400" />
                         ) : (
-                          <ArrowDown
-                            className={`w-4 h-4 ${
-                              tx.type === "buy"
-                                ? "text-green-400"
-                                : "text-red-400"
-                            }`}
-                          />
+                          <ArrowDown className="w-4 h-4 text-red-400" />
                         )}
                       </div>
                       <div>
                         <div className="text-white font-medium">
-                          {tx.type === "buy" ? "Buy" : "Sell"}{" "}
-                          {formatNumber(tx.amount)}{" "}
-                          {tokenDetails?.symbol || "..."}
+                          {recentTransactions?.type[i] === "CREATE" ? (
+                            <>Token Created: {tokenDetails?.name || "Unknown Token"}</>
+                          ) : (
+                            <>
+                              {recentTransactions?.type[i]}{" "}
+                              {parseFloat(recentTransactions?.tokenAmounts[i] || "0").toFixed(2)}{" "}
+                              {tokenDetails?.symbol}
+                            </>
+                          )}
                         </div>
-                        <div className="text-white/50 text-sm">
-                          by {tx.address}
+                        <div className="text-white/50 text-sm flex items-center gap-2">
+                          by {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Unknown'}
+                          {recentTransactions?.txHashes?.[i] && (
+                            <a 
+                              href={recentTransactions?.type[i] === "CREATE" 
+                                ? `https://scan.test2.btcs.network/address/${recentTransactions.txHashes[i]}`
+                                : `https://scan.test2.btcs.network/tx/${recentTransactions.txHashes[i]}`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#6C5CE7] hover:underline"
+                            >
+                              {recentTransactions?.type[i] === "CREATE" ? "View Contract" : "View Tx"}
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-white">{tx.value} CoreDAO</div>
-                      <div className="text-white/50 text-xs">{tx.time}</div>
+                      {recentTransactions?.type[i] !== "CREATE" && (
+                        <div className="text-white">
+                          {parseFloat(recentTransactions?.prices[i] || "0").toFixed(6)} tCORE
+                        </div>
+                      )}
+                      <div className="text-white/50 text-xs">
+                        {getTimeAgo(recentTransactions?.timestamps[i] || new Date().toISOString())}
+                      </div>
                     </div>
                   </div>
                 ))}

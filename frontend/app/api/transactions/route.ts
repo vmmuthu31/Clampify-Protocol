@@ -13,11 +13,12 @@ export async function POST(req: Request) {
       tokenAddress: body.address,
       userAddress: body.creator,
       type: body.type, // For token creation
-      amount: body.initialSupply,
-      price: body.initialPrice,
+      amount: body.amount,
+      price: body.price,
       txHash: body.txHash,
       name: body.name,
       symbol: body.symbol
+
     });
 
     return NextResponse.json({ success: true, transaction });
