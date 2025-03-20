@@ -229,12 +229,12 @@ export default function TokenPage() {
   const { user } = usePrivy();
   const [candleData, setCandleData] = useState<
     {
-      time: number;
-      open: number;
-      high: number;
-      low: number;
-      close: number;
-      volume: number;
+      time: 0;
+      open: 0;
+      high: 0;
+      low: 0;
+      close: 0;
+      volume: 0;
     }[]
   >([]);
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -576,35 +576,32 @@ export default function TokenPage() {
 
     // Set the data
     mainSeries.setData(
-      candleData.map((d) => ({
-        time: d.time as Time,
-        value: d.close,
-      }))
+      candleData
+        .sort((a, b) => a.time - b.time)
+        .map((d) => ({
+          time: d.time as Time,
+          value: d.close,
+        }))
     );
 
     // Add volume series
-    const volumeSeries = createChart(
-      chartContainerRef.current,
-      chartOptions
-    ).addSeries(LineSeries, {
+    const volumeSeries = chart.addSeries(LineSeries, {
       title: "Volume",
       lastValueVisible: true,
       priceLineVisible: false,
       baseLineVisible: false,
       color: "rgba(38, 166, 154, 0.5)",
       priceScaleId: "",
-      // scaleMargins: {
-      //   top: 0.8,
-      //   bottom: 0,
-      // },
     });
 
     // Set volume data
     volumeSeries.setData(
-      candleData.map((d) => ({
-        time: d.time as Time,
-        value: d.volume,
-      }))
+      candleData
+        .sort((a, b) => a.time - b.time)
+        .map((d) => ({
+          time: d.time as Time,
+          value: d.volume,
+        }))
     );
 
     // Handle legend updates
@@ -852,7 +849,7 @@ export default function TokenPage() {
                           ethers.utils.formatEther(
                             tokenDetails?.marketCap.toString() || "0"
                           )
-                        ).toFixed(4)}
+                        )?.toFixed(4)}
                       </div>
                     </div>
                     <div>
@@ -862,13 +859,13 @@ export default function TokenPage() {
                           ethers.utils.formatEther(
                             tokenDetails?.volume24h.toString() || "0"
                           )
-                        ).toFixed(4)}
+                        )?.toFixed(4)}
                       </div>
                     </div>
                     <div>
                       <div className="text-white/60 text-sm">Total Supply</div>
                       <div className="text-white font-bold text-lg">
-                        {parseFloat(tokenDetails?.totalSupply || "0").toFixed(
+                        {parseFloat(tokenDetails?.totalSupply || "0")?.toFixed(
                           4
                         )}
                       </div>
@@ -997,7 +994,7 @@ export default function TokenPage() {
                               Unlock Progress:
                             </span>
                             <span className="text-white">
-                              {percentUnlocked.toFixed(1)}%
+                              {percentUnlocked?.toFixed(1)}%
                             </span>
                           </div>
                           <div className="w-full h-3 bg-[#ffae5c]/10 rounded-full overflow-hidden">
@@ -1195,7 +1192,7 @@ export default function TokenPage() {
                               {recentTransactions?.type[i]}{" "}
                               {parseFloat(
                                 recentTransactions?.tokenAmounts[i] || "0"
-                              ).toFixed(2)}{" "}
+                              )?.toFixed(2)}{" "}
                               {tokenDetails?.symbol}
                             </>
                           )}
@@ -1229,7 +1226,7 @@ export default function TokenPage() {
                         <div className="text-white">
                           {parseFloat(
                             recentTransactions?.prices[i] || "0"
-                          ).toFixed(10)}{" "}
+                          )?.toFixed(10)}{" "}
                           tCORE
                         </div>
                       )}
@@ -1370,7 +1367,7 @@ export default function TokenPage() {
                             parseInt(tokenDetails?.totalSupply || "0") *
                             0.001 *
                             0.25;
-                          setTokenAmount(maxAmount.toFixed(0));
+                          setTokenAmount(maxAmount?.toFixed(0));
                         }}
                       >
                         25%
@@ -1382,7 +1379,7 @@ export default function TokenPage() {
                             parseInt(tokenDetails?.totalSupply || "0") *
                             0.001 *
                             0.5;
-                          setTokenAmount(maxAmount.toFixed(0));
+                          setTokenAmount(maxAmount?.toFixed(0));
                         }}
                       >
                         50%
@@ -1394,7 +1391,7 @@ export default function TokenPage() {
                             parseInt(tokenDetails?.totalSupply || "0") *
                             0.001 *
                             0.75;
-                          setTokenAmount(maxAmount.toFixed(0));
+                          setTokenAmount(maxAmount?.toFixed(0));
                         }}
                       >
                         75%
@@ -1414,7 +1411,7 @@ export default function TokenPage() {
                         isCalculating ? (
                           <span className="text-white/50">Calculating...</span>
                         ) : estimatedReturn ? (
-                          parseFloat(estimatedReturn).toFixed(2)
+                          parseFloat(estimatedReturn)?.toFixed(2)
                         ) : (
                           "0"
                         )
@@ -1649,9 +1646,9 @@ export default function TokenPage() {
                 <div className="flex justify-between">
                   <span className="text-white/70">Currently Locked:</span>
                   <span className="text-white font-medium">
-                    {(tokenData.supplyLockPercentage - percentUnlocked).toFixed(
-                      1
-                    )}
+                    {(
+                      tokenData.supplyLockPercentage - percentUnlocked
+                    )?.toFixed(1)}
                     % (
                     {formatNumber(
                       (parseInt(tokenDetails?.totalSupply || "0") *
@@ -1665,7 +1662,7 @@ export default function TokenPage() {
                 <div className="flex justify-between">
                   <span className="text-white/70">Already Unlocked:</span>
                   <span className="text-white font-medium">
-                    {percentUnlocked.toFixed(1)}% (
+                    {percentUnlocked?.toFixed(1)}% (
                     {formatNumber(
                       (parseInt(tokenDetails?.totalSupply || "0") *
                         percentUnlocked) /
