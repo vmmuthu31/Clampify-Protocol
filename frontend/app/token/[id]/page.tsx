@@ -181,6 +181,8 @@ export default function TokenPage() {
     initialSupply: string;
     initialPrice: string;
     contractAddress: string;
+    marketCap: string;
+    volume24h: string;
   } | null>(null);
   const [estimatedReturn, setEstimatedReturn] = useState<string>("");
   const [isCalculating, setIsCalculating] = useState(false);
@@ -647,20 +649,20 @@ export default function TokenPage() {
                     <div>
                       <div className="text-white/60 text-sm">Market Cap</div>
                       <div className="text-white font-bold text-lg">
-                        {formatCurrency(tokenData.marketCap)}
+                        {parseFloat(ethers.utils.formatEther(tokenDetails?.marketCap.toString() || "0")).toFixed(4)}
                       </div>
                     </div>
                     <div>
                       <div className="text-white/60 text-sm">24h Volume</div>
                       <div className="text-white font-bold text-lg">
-                        {formatCurrency(tokenData.volume24h)}
+                        {parseFloat(ethers.utils.formatEther(tokenDetails?.volume24h.toString() || "0")).toFixed(4)}
                       </div>
                     </div>
                     <div>
                       <div className="text-white/60 text-sm">Total Supply</div>
                       <div className="text-white font-bold text-lg">
                         {
-                         tokenDetails?.totalSupply || "0"
+                         parseFloat(tokenDetails?.totalSupply || "0").toFixed(4)
                         }
                       </div>
                     </div>
@@ -1020,7 +1022,7 @@ export default function TokenPage() {
                         <div className="text-white">
                           {parseFloat(
                             recentTransactions?.prices[i] || "0"
-                          ).toFixed(6)}{" "}
+                          ).toFixed(10)}{" "}
                           tCORE
                         </div>
                       )}
