@@ -166,12 +166,12 @@ export default function LaunchPage() {
         address: tokenAddress,
         name: tokenForm.name,
         symbol: tokenForm.symbol,
-        type: 'CREATE',
+        type: "CREATE",
         creator: user?.wallet?.address, // from usePrivy
         initialSupply: tokenForm.initialSupply,
         maxSupply: tokenForm.maxSupply,
         initialPrice: tokenForm.initialPrice,
-        txHash: tokenAddress // or get the actual tx hash if available
+        txHash: tokenAddress, // or get the actual tx hash if available
       });
 
       setLaunchSuccess(true);
@@ -189,7 +189,7 @@ export default function LaunchPage() {
       {/* Success Modal */}
       {launchSuccess && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50 p-4">
-          <div className="bg-[#0D0B15] border border-[#6C5CE7]/30 rounded-xl max-w-md w-full p-6 relative">
+          <div className="bg-[#0D0B15] border border-[#ffae5c]/30 rounded-xl max-w-md w-full p-6 relative">
             <button
               className="absolute top-4 right-4 text-white/50 hover:text-white"
               onClick={() => setLaunchSuccess(false)}
@@ -198,8 +198,8 @@ export default function LaunchPage() {
             </button>
 
             <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#6C5CE7]/20 flex items-center justify-center">
-                <Rocket className="w-8 h-8 text-[#6C5CE7]" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#ffae5c]/20 flex items-center justify-center">
+                <Rocket className="w-8 h-8 text-[#ffae5c]" />
               </div>
 
               <h2 className="text-2xl font-bold text-white mb-2">Success!</h2>
@@ -208,7 +208,7 @@ export default function LaunchPage() {
                 protection
               </p>
 
-              <p className="text-[#6C5CE7]">Redirecting to token page...</p>
+              <p className="text-[#ffae5c]">Redirecting to token page...</p>
             </div>
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function LaunchPage() {
       {isLaunching && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50">
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-[#6C5CE7]/20 border-t-[#6C5CE7] animate-spin"></div>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-[#ffae5c]/20 border-t-[#ffae5c] animate-spin"></div>
             <p className="text-white">Launching your token...</p>
           </div>
         </div>
@@ -229,7 +229,7 @@ export default function LaunchPage() {
         <div className="mb-10 text-center">
           <h1 className="text-4xl font-bold mb-4 text-white">
             Launch Your{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#6C5CE7] to-[#4834D4]">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#ffae5c] to-[#4834D4]">
               Secure Token
             </span>
           </h1>
@@ -240,20 +240,20 @@ export default function LaunchPage() {
         </div>
 
         {/* Form Container */}
-        <div className="max-w-2xl mx-auto bg-black/20 backdrop-blur-md rounded-xl border border-[#6C5CE7]/20 p-6">
+        <div className="max-w-2xl mx-auto bg-black/20 backdrop-blur-md rounded-xl border border-[#ffae5c]/20 p-6">
           <div className="flex items-center mb-6">
-            <Rocket className="w-5 h-5 text-[#6C5CE7] mr-2" />
+            <Rocket className="w-5 h-5 text-[#ffae5c] mr-2" />
             <h2 className="text-2xl font-bold text-white">Token Details</h2>
           </div>
 
           <div className="space-y-6">
             <div>
               <Label htmlFor="name" className="text-white mb-2">
-                Token Name <span className="text-[#6C5CE7]">*</span>
+                Token Name <span className="text-[#ffae5c]">*</span>
               </Label>
               <Input
                 id="name"
-                className={`w-full bg-black/30 border-[#6C5CE7]/20 focus:border-[#6C5CE7] text-white ${
+                className={`w-full bg-black/30 border-[#ffae5c]/20 focus:border-[#ffae5c] text-white ${
                   errors.name ? "border-red-500" : ""
                 }`}
                 placeholder="e.g. Clampify Token"
@@ -267,11 +267,11 @@ export default function LaunchPage() {
 
             <div>
               <Label htmlFor="symbol" className="text-white mb-2">
-                Token Symbol <span className="text-[#6C5CE7]">*</span>
+                Token Symbol <span className="text-[#ffae5c]">*</span>
               </Label>
               <Input
                 id="symbol"
-                className={`w-full bg-black/30 border-[#6C5CE7]/20 focus:border-[#6C5CE7] text-white uppercase ${
+                className={`w-full bg-black/30 border-[#ffae5c]/20 focus:border-[#ffae5c] text-white uppercase ${
                   errors.symbol ? "border-red-500" : ""
                 }`}
                 placeholder="e.g. CLAMP"
@@ -290,7 +290,7 @@ export default function LaunchPage() {
             </div>
             <div>
               <Label htmlFor="creatorLockupPeriod" className="text-white mb-2">
-                Lockup Period <span className="text-[#6C5CE7]">*</span>
+                Lockup Period <span className="text-[#ffae5c]">*</span>
               </Label>
               <Select
                 value={tokenForm.creatorLockupPeriod}
@@ -298,10 +298,10 @@ export default function LaunchPage() {
                   handleFormChange("creatorLockupPeriod", value)
                 }
               >
-                <SelectTrigger className="w-full bg-black/30 border-[#6C5CE7]/20 focus:border-[#6C5CE7] text-white">
+                <SelectTrigger className="w-full bg-black/30 border-[#ffae5c]/20 focus:border-[#ffae5c] text-white">
                   <SelectValue placeholder="Select lock period" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0D0B15] border-[#6C5CE7]/20 focus:border-[#6C5CE7] text-white">
+                <SelectContent className="bg-[#0D0B15] border-[#ffae5c]/20 focus:border-[#ffae5c] text-white">
                   {CREATOR_LOCK_PERIODS.map((period) => (
                     <SelectItem key={period.value} value={period.value}>
                       {period.label}
@@ -324,12 +324,12 @@ export default function LaunchPage() {
 
             <div className="flex items-center gap-2">
               <Label htmlFor="lockLiquidity" className="text-white mb-2">
-                Lock Liquidity <span className="text-[#6C5CE7]">*</span>
+                Lock Liquidity <span className="text-[#ffae5c]">*</span>
               </Label>
               <Switch
                 id="lockLiquidity"
                 defaultChecked={true}
-                className="data-[state=checked]:bg-[#6C5CE7]"
+                className="data-[state=checked]:bg-[#ffae5c]"
                 onCheckedChange={(value) =>
                   handleFormChange("lockLiquidity", value.toString())
                 }
@@ -343,7 +343,7 @@ export default function LaunchPage() {
                   className="text-white mb-2"
                 >
                   Liquidity Lock Period{" "}
-                  <span className="text-[#6C5CE7]">*</span>
+                  <span className="text-[#ffae5c]">*</span>
                 </Label>
                 <Select
                   value={tokenForm.liquidityLockPeriod}
@@ -351,10 +351,10 @@ export default function LaunchPage() {
                     handleFormChange("liquidityLockPeriod", value)
                   }
                 >
-                  <SelectTrigger className="w-full bg-black/30 border-[#6C5CE7]/20 focus:border-[#6C5CE7] text-white">
+                  <SelectTrigger className="w-full bg-black/30 border-[#ffae5c]/20 focus:border-[#ffae5c] text-white">
                     <SelectValue placeholder="Select lock period" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#0D0B15] border-[#6C5CE7]/20 focus:border-[#6C5CE7] text-white">
+                  <SelectContent className="bg-[#0D0B15] border-[#ffae5c]/20 focus:border-[#ffae5c] text-white">
                     {LIQUIDITY_LOCK_PERIODS.map((period) => (
                       <SelectItem key={period.value} value={period.value}>
                         {period.label}
@@ -377,9 +377,9 @@ export default function LaunchPage() {
             )}
           </div>
 
-          <div className="mt-8 p-4 rounded-xl bg-[#6C5CE7]/10 border border-[#6C5CE7]/20">
+          <div className="mt-8 p-4 rounded-xl bg-[#ffae5c]/10 border border-[#ffae5c]/20">
             <div className="flex items-start gap-2">
-              <AlertTriangle className="w-5 h-5 text-[#6C5CE7] mt-1 flex-shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-[#ffae5c] mt-1 flex-shrink-0" />
               <div className="text-sm text-white/70">
                 By launching this token, you agree to lock{" "}
                 {tokenForm.creatorLockupPeriod}% of the supply and enable
@@ -391,7 +391,7 @@ export default function LaunchPage() {
           <div className="mt-6 flex justify-end">
             {ready && authenticated ? (
               <Button
-                className="bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] hover:opacity-90 text-white px-8 py-2 rounded-xl"
+                className="bg-gradient-to-r from-[#ffae5c] to-[#4834D4] hover:opacity-90 text-white px-8 py-2 rounded-xl"
                 onClick={handleLaunch}
               >
                 <Rocket className="mr-2 w-5 h-5" />
@@ -410,10 +410,10 @@ export default function LaunchPage() {
         </div>
 
         {/* Features Section */}
-        <div className="max-w-3xl mx-auto mt-12 p-6 bg-black/20 backdrop-blur-md rounded-xl border border-[#6C5CE7]/20">
+        <div className="max-w-3xl mx-auto mt-12 p-6 bg-black/20 backdrop-blur-md rounded-xl border border-[#ffae5c]/20">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 rounded-full bg-[#6C5CE7]/20 flex items-center justify-center">
-              <Shield className="w-6 h-6 text-[#6C5CE7]" />
+            <div className="w-12 h-12 rounded-full bg-[#ffae5c]/20 flex items-center justify-center">
+              <Shield className="w-6 h-6 text-[#ffae5c]" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-white">
@@ -427,7 +427,7 @@ export default function LaunchPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-start gap-3">
-              <Lock className="w-5 h-5 text-[#6C5CE7] mt-1" />
+              <Lock className="w-5 h-5 text-[#ffae5c] mt-1" />
               <div>
                 <div className="text-white font-medium">Supply Locking</div>
                 <div className="text-white/70 text-sm">
@@ -437,7 +437,7 @@ export default function LaunchPage() {
             </div>
 
             <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-[#6C5CE7] mt-1" />
+              <Info className="w-5 h-5 text-[#ffae5c] mt-1" />
               <div>
                 <div className="text-white font-medium">
                   Liquidity Protection
@@ -449,7 +449,7 @@ export default function LaunchPage() {
             </div>
 
             <div className="flex items-start gap-3">
-              <Shield className="w-5 h-5 text-[#6C5CE7] mt-1" />
+              <Shield className="w-5 h-5 text-[#ffae5c] mt-1" />
               <div>
                 <div className="text-white font-medium">Wallet Limits</div>
                 <div className="text-white/70 text-sm">
@@ -459,7 +459,7 @@ export default function LaunchPage() {
             </div>
 
             <div className="flex items-start gap-3">
-              <Rocket className="w-5 h-5 text-[#6C5CE7] mt-1" />
+              <Rocket className="w-5 h-5 text-[#ffae5c] mt-1" />
               <div>
                 <div className="text-white font-medium">Trading Safeguards</div>
                 <div className="text-white/70 text-sm">

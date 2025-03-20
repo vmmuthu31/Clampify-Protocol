@@ -26,7 +26,19 @@ export default function HomePage() {
   const [isClient, setIsClient] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  const [tokens, setTokens] = useState([]);
+  interface Token {
+    _id: string;
+    address: string;
+    name: string;
+    symbol: string;
+    creator: string;
+    initialSupply: string;
+    maxSupply: string;
+    createdAt: string;
+    __v: number;
+  }
+
+  const [tokens, setTokens] = useState<Token[]>([]);
 
   const fetchTokens = async () => {
     const response = await fetch("/api/tokens");
@@ -49,18 +61,6 @@ export default function HomePage() {
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
-
-  // Fixed data instead of random
-  const tokenData = [
-    { id: 1, price: 0.0012, change: 18.5, locked: "62%" },
-    { id: 2, price: 0.0025, change: 15.7, locked: "78%" },
-    { id: 3, price: 0.0031, change: 24.3, locked: "55%" },
-    { id: 4, price: 0.0047, change: 21.2, locked: "83%" },
-    { id: 5, price: 0.0053, change: 17.8, locked: "70%" },
-    { id: 6, price: 0.0069, change: 32.4, locked: "91%" },
-    { id: 7, price: 0.0071, change: 14.6, locked: "67%" },
-    { id: 8, price: 0.0083, change: 27.9, locked: "89%" },
-  ];
 
   if (!isClient) {
     return null;
@@ -97,11 +97,11 @@ export default function HomePage() {
           {/* Left Content - Text */}
           <div className="w-full md:w-1/2 mb-16 md:mb-0 z-10">
             <motion.div
-              className="inline-block mb-4 px-4 py-2 bg-[#6C5CE7]/10 backdrop-blur-sm rounded-full border border-[#6C5CE7]/30"
+              className="inline-block mb-4 px-4 py-2 bg-[#ffae5c]/10 backdrop-blur-sm rounded-full border border-[#ffae5c]/30"
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <span className="text-[#6C5CE7] font-medium flex items-center">
+              <span className="text-[#ffae5c] font-medium flex items-center">
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{
@@ -123,7 +123,7 @@ export default function HomePage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#6C5CE7] to-[#4834D4]">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#ffae5c] to-[#4834D4]">
                 Meme Tokens
               </span>
               <br />
@@ -148,7 +148,7 @@ export default function HomePage() {
             >
               <Link href="/launch" className="w-full sm:w-auto">
                 <Button
-                  className="w-full sm:w-auto h-14 px-8 bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] 
+                  className="w-full sm:w-auto h-14 px-8 bg-gradient-to-r from-[#ffae5c] to-[#4834D4] 
             hover:opacity-90 rounded-xl text-lg font-medium group relative overflow-hidden"
                 >
                   <motion.span
@@ -170,8 +170,8 @@ export default function HomePage() {
               </Link>
 
               <Button
-                className="w-full sm:w-auto h-14 px-8 bg-transparent border border-[#6C5CE7]/50 
-          hover:bg-[#6C5CE7]/10 rounded-xl text-lg font-medium text-white"
+                className="w-full sm:w-auto h-14 px-8 bg-transparent border border-[#ffae5c]/50 
+          hover:bg-[#ffae5c]/10 rounded-xl text-lg font-medium text-white"
               >
                 Learn More
               </Button>
@@ -190,7 +190,7 @@ export default function HomePage() {
               {/* Main Lock Animation with Glow Effect */}
               <div className="relative">
                 <motion.div
-                  className="absolute w-[240px] h-[240px] sm:w-[300px] sm:h-[300px] rounded-full bg-[#6C5CE7]/20 blur-3xl"
+                  className="absolute w-[240px] h-[240px] sm:w-[300px] sm:h-[300px] rounded-full bg-[#ffae5c]/20 blur-3xl"
                   animate={{
                     scale: [1, 1.2, 1],
                   }}
@@ -240,7 +240,7 @@ export default function HomePage() {
               {[...Array(5)].map((_, i) => (
                 <motion.div
                   key={i}
-                  className="absolute w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center bg-gradient-to-r from-[#6C5CE7]/20 to-[#4834D4]/20 rounded-full backdrop-blur-sm border border-[#6C5CE7]/30 shadow-lg shadow-[#6C5CE7]/10"
+                  className="absolute w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center bg-gradient-to-r from-[#ffae5c]/20 to-[#4834D4]/20 rounded-full backdrop-blur-sm border border-[#ffae5c]/30 shadow-lg shadow-[#ffae5c]/10"
                   initial={{
                     x:
                       Math.cos(i * ((2 * Math.PI) / 5)) *
@@ -298,7 +298,7 @@ export default function HomePage() {
               {[...Array(8)].map((_, i) => (
                 <motion.div
                   key={`float-${i}`}
-                  className="absolute w-8 h-8 rounded-full bg-[#6C5CE7]/10 border border-[#6C5CE7]/20 flex items-center justify-center text-xs text-white/70 hidden md:flex"
+                  className="absolute w-8 h-8 rounded-full bg-[#ffae5c]/10 border border-[#ffae5c]/20 flex items-center justify-center text-xs text-white/70  md:flex"
                   initial={{
                     x: Math.random() * 300 - 150,
                     y: Math.random() * 300 - 150,
@@ -351,7 +351,7 @@ export default function HomePage() {
 
           {/* Mobile-optimized animated background */}
           <motion.div
-            className="absolute top-1/3 -right-1/4 w-1/2 h-1/2 rounded-full bg-[#6C5CE7]/5 blur-3xl z-0 md:hidden"
+            className="absolute top-1/3 -right-1/4 w-1/2 h-1/2 rounded-full bg-[#ffae5c]/5 blur-3xl z-0 md:hidden"
             animate={{
               scale: [1, 1.3, 1],
               opacity: [0.3, 0.5, 0.3],
@@ -362,7 +362,7 @@ export default function HomePage() {
 
         {/* Stats Bar with locking effect */}
         <motion.div
-          className="grid grid-cols-2 gap-2 md:grid-cols-4 items-center justify-between mb-14 p-5 bg-[#6C5CE7]/10 backdrop-blur-md rounded-xl border border-[#6C5CE7]/30 relative overflow-hidden"
+          className="grid grid-cols-2 gap-2 md:grid-cols-4 items-center justify-between mb-14 p-5 bg-[#ffae5c]/10 backdrop-blur-md rounded-xl border border-[#ffae5c]/30 relative overflow-hidden"
           whileHover={{ scale: 1.02 }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -371,15 +371,15 @@ export default function HomePage() {
             className="absolute inset-0 opacity-30"
             animate={{
               background: [
-                "radial-gradient(circle at 0% 0%, #6C5CE7 0%, transparent 50%)",
-                "radial-gradient(circle at 100% 100%, #6C5CE7 0%, transparent 50%)",
-                "radial-gradient(circle at 0% 0%, #6C5CE7 0%, transparent 50%)",
+                "radial-gradient(circle at 0% 0%, #ffae5c 0%, transparent 50%)",
+                "radial-gradient(circle at 100% 100%, #ffae5c 0%, transparent 50%)",
+                "radial-gradient(circle at 0% 0%, #ffae5c 0%, transparent 50%)",
               ],
             }}
             transition={{ duration: 5, repeat: Infinity }}
           />
           <div className="flex items-center gap-2 text-white/70">
-            <ChartBar className="w-4 h-4 text-[#6C5CE7]" />
+            <ChartBar className="w-4 h-4 text-[#ffae5c]" />
             <span>24h Volume:</span>
             <motion.span
               className="text-white font-medium"
@@ -390,7 +390,7 @@ export default function HomePage() {
             </motion.span>
           </div>
           <div className="flex items-center gap-2 text-white/70">
-            <Lock className="w-4 h-4 text-[#6C5CE7]" />
+            <Lock className="w-4 h-4 text-[#ffae5c]" />
             <span>Supply Locked:</span>
             <motion.span
               className="text-white font-medium"
@@ -401,7 +401,7 @@ export default function HomePage() {
             </motion.span>
           </div>
           <div className="flex items-center gap-2 text-white/70">
-            <TrendingUp className="w-4 h-4 text-[#6C5CE7]" />
+            <TrendingUp className="w-4 h-4 text-[#ffae5c]" />
             <span>Tokens Created:</span>
             <motion.span
               className="text-white font-medium"
@@ -412,7 +412,7 @@ export default function HomePage() {
             </motion.span>
           </div>
           <div className="flex items-center gap-2 text-white/70">
-            <Shield className="w-4 h-4 text-[#6C5CE7]" />
+            <Shield className="w-4 h-4 text-[#ffae5c]" />
             <span>Rugs Prevented:</span>
             <motion.span
               className="text-white font-medium"
@@ -435,17 +435,17 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold text-white">Trending Tokens</h2>
             <Link
               href="/discover"
-              className="text-[#6C5CE7] hover:underline flex items-center"
+              className="text-[#ffae5c] hover:underline flex items-center"
             >
               View All <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {tokenData.map((token, i) => (
+            {tokens.map((token: Token, i: number) => (
               <motion.div
-                key={token.id}
-                className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-6 border border-[#6C5CE7]/20 hover:border-[#6C5CE7]/40 transition-all duration-300"
+                key={token._id}
+                className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-6 border border-[#ffae5c]/20 hover:border-[#ffae5c]/40 transition-all duration-300"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
@@ -455,61 +455,35 @@ export default function HomePage() {
                 }}
               >
                 <div className="flex items-center gap-4 mb-5">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#6C5CE7]/30 to-[#4834D4]/30 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#ffae5c]/30 to-[#4834D4]/30 flex items-center justify-center">
                     <span className="text-white/90 font-medium">
-                      C{token.id}
+                      {token.symbol}
                     </span>
                   </div>
                   <div>
-                    <div className="text-white font-medium">
-                      $CLAMP{token.id}
-                    </div>
+                    <div className="text-white font-medium">{token.name}</div>
                     <div className="text-white/50 text-sm">Secure</div>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-end mb-5">
-                  <div>
-                    <div className="text-white/60 text-sm">Price</div>
-                    <motion.div
-                      className="text-white font-bold text-lg"
-                      animate={{
-                        opacity: [0.7, 1, 0.7],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                    >
-                      ${token.price.toFixed(4)}
-                    </motion.div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <div className="text-[#00FFA3] font-medium">
-                      +{token.change.toFixed(1)}%
-                    </div>
-                    <div className="text-white/50 text-sm">24h</div>
-                  </div>
-                </div>
-
+                {/* TODO: Add lock indicator */}
                 {/* Lock indicator */}
                 <div className="relative pt-1">
                   <div className="text-white/60 text-xs flex justify-between mb-1">
                     <span>Supply Locked</span>
                     <span className="text-white/90 font-medium">
-                      {token.locked}
+                      {/* {token.locked} */}
                     </span>
                   </div>
-                  <div className="overflow-hidden h-2 text-xs flex rounded-full bg-white/10">
+                  {/* <div className="overflow-hidden h-2 text-xs flex rounded-full bg-white/10">
                     <motion.div
                       style={{ width: token.locked }}
-                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-[#6C5CE7] to-[#4834D4]"
+                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-[#ffae5c] to-[#4834D4]"
                       initial={{ width: "0%" }}
                       animate={{ width: token.locked }}
                       transition={{ duration: 1, delay: i * 0.1 + 0.5 }}
                     ></motion.div>
-                  </div>
+                  </div> */}
                 </div>
               </motion.div>
             ))}
@@ -534,7 +508,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             {/* Left Feature */}
             <motion.div
-              className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-8 border border-[#6C5CE7]/20 relative overflow-hidden"
+              className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-8 border border-[#ffae5c]/20 relative overflow-hidden"
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -544,9 +518,9 @@ export default function HomePage() {
                 className="absolute inset-0 opacity-20"
                 animate={{
                   background: [
-                    "radial-gradient(circle at 0% 0%, #6C5CE7 0%, transparent 70%)",
-                    "radial-gradient(circle at 100% 100%, #6C5CE7 0%, transparent 70%)",
-                    "radial-gradient(circle at 0% 0%, #6C5CE7 0%, transparent 70%)",
+                    "radial-gradient(circle at 0% 0%, #ffae5c 0%, transparent 70%)",
+                    "radial-gradient(circle at 100% 100%, #ffae5c 0%, transparent 70%)",
+                    "radial-gradient(circle at 0% 0%, #ffae5c 0%, transparent 70%)",
                   ],
                 }}
                 transition={{ duration: 10, repeat: Infinity }}
@@ -555,11 +529,11 @@ export default function HomePage() {
               <div className="relative">
                 <div className="mb-6">
                   <motion.div
-                    className="w-14 h-14 rounded-xl bg-[#6C5CE7]/20 border border-[#6C5CE7]/30 flex items-center justify-center"
+                    className="w-14 h-14 rounded-xl bg-[#ffae5c]/20 border border-[#ffae5c]/30 flex items-center justify-center"
                     animate={{ rotate: [0, 10, -10, 0] }}
                     transition={{ duration: 6, repeat: Infinity }}
                   >
-                    <Lock className="w-7 h-7 text-[#6C5CE7]" />
+                    <Lock className="w-7 h-7 text-[#ffae5c]" />
                   </motion.div>
                 </div>
 
@@ -584,7 +558,7 @@ export default function HomePage() {
                     >
                       <div className="mt-1 min-w-5">
                         <motion.div
-                          className="w-5 h-5 rounded-full bg-[#6C5CE7]/20 border border-[#6C5CE7]/40 flex items-center justify-center"
+                          className="w-5 h-5 rounded-full bg-[#ffae5c]/20 border border-[#ffae5c]/40 flex items-center justify-center"
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{
                             duration: 2,
@@ -592,7 +566,7 @@ export default function HomePage() {
                             delay: i * 0.2,
                           }}
                         >
-                          <div className="w-2 h-2 rounded-full bg-[#6C5CE7]"></div>
+                          <div className="w-2 h-2 rounded-full bg-[#ffae5c]"></div>
                         </motion.div>
                       </div>
                       <span className="text-white/80">{item}</span>
@@ -604,7 +578,7 @@ export default function HomePage() {
 
             {/* Right Feature */}
             <motion.div
-              className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-8 border border-[#6C5CE7]/20 relative overflow-hidden"
+              className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-8 border border-[#ffae5c]/20 relative overflow-hidden"
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -614,9 +588,9 @@ export default function HomePage() {
                 className="absolute inset-0 opacity-20"
                 animate={{
                   background: [
-                    "radial-gradient(circle at 100% 0%, #6C5CE7 0%, transparent 70%)",
-                    "radial-gradient(circle at 0% 100%, #6C5CE7 0%, transparent 70%)",
-                    "radial-gradient(circle at 100% 0%, #6C5CE7 0%, transparent 70%)",
+                    "radial-gradient(circle at 100% 0%, #ffae5c 0%, transparent 70%)",
+                    "radial-gradient(circle at 0% 100%, #ffae5c 0%, transparent 70%)",
+                    "radial-gradient(circle at 100% 0%, #ffae5c 0%, transparent 70%)",
                   ],
                 }}
                 transition={{ duration: 10, repeat: Infinity }}
@@ -625,11 +599,11 @@ export default function HomePage() {
               <div className="relative">
                 <div className="mb-6">
                   <motion.div
-                    className="w-14 h-14 rounded-xl bg-[#6C5CE7]/20 border border-[#6C5CE7]/30 flex items-center justify-center"
+                    className="w-14 h-14 rounded-xl bg-[#ffae5c]/20 border border-[#ffae5c]/30 flex items-center justify-center"
                     animate={{ rotate: [0, -10, 10, 0] }}
                     transition={{ duration: 6, repeat: Infinity }}
                   >
-                    <Shield className="w-7 h-7 text-[#6C5CE7]" />
+                    <Shield className="w-7 h-7 text-[#ffae5c]" />
                   </motion.div>
                 </div>
 
@@ -654,7 +628,7 @@ export default function HomePage() {
                     >
                       <div className="mt-1 min-w-5">
                         <motion.div
-                          className="w-5 h-5 rounded-full bg-[#6C5CE7]/20 border border-[#6C5CE7]/40 flex items-center justify-center"
+                          className="w-5 h-5 rounded-full bg-[#ffae5c]/20 border border-[#ffae5c]/40 flex items-center justify-center"
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{
                             duration: 2,
@@ -662,7 +636,7 @@ export default function HomePage() {
                             delay: i * 0.2,
                           }}
                         >
-                          <div className="w-2 h-2 rounded-full bg-[#6C5CE7]"></div>
+                          <div className="w-2 h-2 rounded-full bg-[#ffae5c]"></div>
                         </motion.div>
                       </div>
                       <span className="text-white/80">{item}</span>
@@ -723,7 +697,7 @@ export default function HomePage() {
             ].map((item, i) => (
               <motion.div
                 key={i}
-                className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-8 border border-[#6C5CE7]/20 relative overflow-hidden"
+                className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-8 border border-[#ffae5c]/20 relative overflow-hidden"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -736,13 +710,13 @@ export default function HomePage() {
                     background: [
                       `radial-gradient(circle at ${50 + i * 20}% ${
                         50 - i * 20
-                      }%, #6C5CE7 0%, transparent 70%)`,
+                      }%, #ffae5c 0%, transparent 70%)`,
                       `radial-gradient(circle at ${50 - i * 20}% ${
                         50 + i * 20
-                      }%, #6C5CE7 0%, transparent 70%)`,
+                      }%, #ffae5c 0%, transparent 70%)`,
                       `radial-gradient(circle at ${50 + i * 20}% ${
                         50 - i * 20
-                      }%, #6C5CE7 0%, transparent 70%)`,
+                      }%, #ffae5c 0%, transparent 70%)`,
                     ],
                   }}
                   transition={{ duration: 8, repeat: Infinity }}
@@ -751,7 +725,7 @@ export default function HomePage() {
                 <div className="relative">
                   <div className="flex justify-between items-center mb-6">
                     <motion.div
-                      className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] flex items-center justify-center"
+                      className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#ffae5c] to-[#4834D4] flex items-center justify-center"
                       animate={item.animation}
                       transition={{
                         duration: item.animation.duration,
@@ -761,7 +735,7 @@ export default function HomePage() {
                       {item.icon}
                     </motion.div>
 
-                    <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/40 flex items-center justify-center text-xl font-bold text-white">
+                    <div className="w-10 h-10 rounded-full border border-[#ffae5c]/40 flex items-center justify-center text-xl font-bold text-white">
                       {item.step}
                     </div>
                   </div>
@@ -773,7 +747,7 @@ export default function HomePage() {
 
                   {i < 2 && (
                     <motion.div
-                      className="absolute -right-12 top-12 text-[#6C5CE7]/40 hidden md:block"
+                      className="absolute -right-12 top-12 text-[#ffae5c]/40 hidden md:block"
                       animate={{ x: [0, 10, 0] }}
                       transition={{ duration: 3, repeat: Infinity }}
                     >
@@ -796,7 +770,7 @@ export default function HomePage() {
         >
           <h2 className="text-4xl font-bold text-center mb-6 text-white">
             Why Choose{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#6C5CE7] to-[#4834D4]">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#ffae5c] to-[#4834D4]">
               Clampify
             </span>
           </h2>
@@ -805,22 +779,22 @@ export default function HomePage() {
             See how our rugproof technology compares to other platforms
           </p>
 
-          <div className="overflow-x-auto rounded-xl border border-[#6C5CE7]/20">
+          <div className="overflow-x-auto rounded-xl border border-[#ffae5c]/20">
             <table className="w-full min-w-[900px]">
               <thead>
-                <tr className="bg-[#6C5CE7]/10">
-                  <th className="p-5 text-left text-white font-medium border-b border-[#6C5CE7]/20">
+                <tr className="bg-[#ffae5c]/10">
+                  <th className="p-5 text-left text-white font-medium border-b border-[#ffae5c]/20">
                     Features
                   </th>
-                  <th className="p-5 text-left text-white font-medium border-b border-[#6C5CE7]/20">
+                  <th className="p-5 text-left text-white font-medium border-b border-[#ffae5c]/20">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#ffae5c] to-[#4834D4] flex items-center justify-center">
                         <Lock className="w-4 h-4 text-white" />
                       </div>
                       <span>Clampify</span>
                     </div>
                   </th>
-                  <th className="p-5 text-left text-white font-medium border-b border-[#6C5CE7]/20">
+                  <th className="p-5 text-left text-white font-medium border-b border-[#ffae5c]/20">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center">
                         <span className="text-pink-500">🚀</span>
@@ -828,7 +802,7 @@ export default function HomePage() {
                       <span>Pump.fun</span>
                     </div>
                   </th>
-                  <th className="p-5 text-left text-white font-medium border-b border-[#6C5CE7]/20">
+                  <th className="p-5 text-left text-white font-medium border-b border-[#ffae5c]/20">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-pink-700/20 flex items-center justify-center">
                         <span className="text-pink-600">🔒</span>
@@ -836,7 +810,7 @@ export default function HomePage() {
                       <span>PinkSale</span>
                     </div>
                   </th>
-                  <th className="p-5 text-left text-white font-medium border-b border-[#6C5CE7]/20">
+                  <th className="p-5 text-left text-white font-medium border-b border-[#ffae5c]/20">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-gray-500/20 flex items-center justify-center">
                         <Repeat className="w-4 h-4 text-gray-400" />
@@ -970,7 +944,7 @@ export default function HomePage() {
                 ].map((row, i) => (
                   <motion.tr
                     key={i}
-                    className="border-b border-[#6C5CE7]/10 hover:bg-[#6C5CE7]/5"
+                    className="border-b border-[#ffae5c]/10 hover:bg-[#ffae5c]/5"
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -1080,7 +1054,7 @@ export default function HomePage() {
               className="inline-block"
             >
               <Link href="/launch">
-                <Button className="bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] hover:opacity-90 text-white px-8 py-3 rounded-xl text-lg">
+                <Button className="bg-gradient-to-r from-[#ffae5c] to-[#4834D4] hover:opacity-90 text-white px-8 py-3 rounded-xl text-lg">
                   Launch with Clampify
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
@@ -1125,7 +1099,7 @@ export default function HomePage() {
             ].map((feature, i) => (
               <motion.div
                 key={i}
-                className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-6 border border-[#6C5CE7]/20"
+                className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-6 border border-[#ffae5c]/20"
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
@@ -1137,7 +1111,7 @@ export default function HomePage() {
                 }}
               >
                 <motion.div
-                  className="w-12 h-12 rounded-xl bg-[#6C5CE7]/20 border border-[#6C5CE7]/30 
+                  className="w-12 h-12 rounded-xl bg-[#ffae5c]/20 border border-[#ffae5c]/30 
           flex items-center justify-center mb-4"
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 5, repeat: Infinity, delay: i * 0.5 }}
@@ -1161,7 +1135,7 @@ export default function HomePage() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#6C5CE7]/20 to-transparent rounded-xl blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#ffae5c]/20 to-transparent rounded-xl blur-3xl" />
           <div className="relative">
             <h2 className="text-4xl font-bold text-center mb-14 text-white">
               Protocol Analytics
@@ -1184,7 +1158,7 @@ export default function HomePage() {
               ].map((stat, i) => (
                 <motion.div
                   key={i}
-                  className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-6 border border-[#6C5CE7]/20"
+                  className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-6 border border-[#ffae5c]/20"
                   initial={{ scale: 0.9, opacity: 0 }}
                   whileInView={{ scale: 1, opacity: 1 }}
                   whileHover={{ scale: 1.05 }}
@@ -1192,7 +1166,7 @@ export default function HomePage() {
                   transition={{ delay: i * 0.1 }}
                 >
                   <motion.div
-                    className="text-[#6C5CE7] mb-4"
+                    className="text-[#ffae5c] mb-4"
                     animate={{ rotate: [0, 10, -10, 0] }}
                     transition={{
                       duration: 2,
@@ -1231,7 +1205,7 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold text-white">Latest Launches</h2>
             <Link
               href="/tokens"
-              className="text-[#6C5CE7] hover:underline flex items-center"
+              className="text-[#ffae5c] hover:underline flex items-center"
             >
               View All <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
@@ -1240,7 +1214,7 @@ export default function HomePage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[800px]">
               <thead>
-                <tr className="border-b border-[#6C5CE7]/20">
+                <tr className="border-b border-[#ffae5c]/20">
                   <th className="text-left p-4 text-white/70 font-medium">
                     Token
                   </th>
@@ -1304,7 +1278,7 @@ export default function HomePage() {
                 ].map((token, i) => (
                   <motion.tr
                     key={i}
-                    className="border-b border-[#6C5CE7]/10 hover:bg-[#6C5CE7]/5"
+                    className="border-b border-[#ffae5c]/10 hover:bg-[#ffae5c]/5"
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -1312,7 +1286,7 @@ export default function HomePage() {
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#6C5CE7]/30 to-[#4834D4]/30 flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#ffae5c]/30 to-[#4834D4]/30 flex items-center justify-center">
                           <span className="text-white/90 font-medium">
                             {token.symbol.slice(0, 1)}
                           </span>
@@ -1346,7 +1320,7 @@ export default function HomePage() {
                       <div className="flex items-center gap-2">
                         <div className="relative w-20 h-2 bg-white/10 rounded-full overflow-hidden">
                           <motion.div
-                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#6C5CE7] to-[#4834D4]"
+                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#ffae5c] to-[#4834D4]"
                             style={{ width: token.locked }}
                             initial={{ width: "0%" }}
                             whileInView={{ width: token.locked }}
@@ -1359,7 +1333,7 @@ export default function HomePage() {
                     </td>
                     <td className="p-4 text-white/70">{token.date}</td>
                     <td className="p-4">
-                      <Button className="bg-[#6C5CE7]/20 hover:bg-[#6C5CE7]/30 text-white">
+                      <Button className="bg-[#ffae5c]/20 hover:bg-[#ffae5c]/30 text-white">
                         Trade
                       </Button>
                     </td>
@@ -1410,14 +1384,14 @@ export default function HomePage() {
             ].map((testimonial, i) => (
               <motion.div
                 key={i}
-                className="bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl p-8 border border-[#6C5CE7]/20 relative"
+                className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-8 border border-[#ffae5c]/20 relative"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.2 }}
                 whileHover={{ scale: 1.03 }}
               >
-                <div className="absolute top-6 left-6 text-[#6C5CE7] opacity-20 text-6xl font-serif">
+                <div className="absolute top-6 left-6 text-[#ffae5c] opacity-20 text-6xl font-serif">
                   &quot;
                 </div>
                 <div className="relative">
@@ -1426,7 +1400,7 @@ export default function HomePage() {
                   </p>
 
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#6C5CE7]/20 flex items-center justify-center text-2xl">
+                    <div className="w-12 h-12 rounded-full bg-[#ffae5c]/20 flex items-center justify-center text-2xl">
                       {testimonial.avatar}
                     </div>
                     <div>
@@ -1446,7 +1420,7 @@ export default function HomePage() {
 
         {/* Call to Action */}
         <motion.div
-          className="rounded-xl bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] p-[1px] mb-20"
+          className="rounded-xl bg-gradient-to-r from-[#ffae5c] to-[#4834D4] p-[1px] mb-20"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -1487,7 +1461,7 @@ export default function HomePage() {
                 >
                   <Link href="/launch">
                     <Button
-                      className=" md:h-14 px-4 md:px-8 bg-white text-[#6C5CE7] hover:bg-white/90 
+                      className=" md:h-14 px-4 md:px-8 bg-white text-[#ffae5c] hover:bg-white/90 
                         rounded-xl text-sm md:text-lg font-medium group"
                     >
                       Launch Token
@@ -1540,7 +1514,7 @@ export default function HomePage() {
       {[...Array(6)].map((_, i) => (
         <motion.div
           key={i}
-          className="fixed w-6 h-6 text-[#6C5CE7]/30 pointer-events-none z-10"
+          className="fixed w-6 h-6 text-[#ffae5c]/30 pointer-events-none z-10"
           initial={{
             x: Math.random() * window.innerWidth,
             y: Math.random() * window.innerHeight,

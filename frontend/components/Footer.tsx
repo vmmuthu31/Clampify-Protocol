@@ -134,7 +134,7 @@ function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-[#6C5CE7]/20 flex flex-col md:flex-row justify-between items-center">
+        <div className="mt-10 pt-6 border-t border-[#ffae5c]/20 flex flex-col md:flex-row justify-between items-center">
           <p className="text-[#ffae5c]/50 mb-4 md:mb-0">
             © 2025 Clampify Protocol. All rights reserved.
           </p>
@@ -145,7 +145,7 @@ function Footer() {
               href="https://x.com/Clampifydotfun"
               className="text-[#ffae5c]/50 hover:text-[#ffae5c]"
             >
-              <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full border border-[#ffae5c]/20 flex items-center justify-center">
                 <span className="text-lg">𝕏</span>
               </div>
             </Link>
@@ -154,7 +154,7 @@ function Footer() {
               href="https://www.clampify.fun/"
               className="text-[#ffae5c]/50 hover:text-[#ffae5c]"
             >
-              <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full border border-[#ffae5c]/20 flex items-center justify-center">
                 <span className="text-lg">🌐</span>
               </div>
             </Link>

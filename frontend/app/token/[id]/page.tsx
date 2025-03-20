@@ -32,7 +32,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
 import { TokenInfo } from "@/services/tokenCreation";
 import { ethers } from "ethers";
-import { buyTokens, getRecentTransactions, getTokenBalance, getTokenPrice, sellTokens, TokenReturnOnBuy, TokenReturnOnSell } from "@/services/trade";
+import {
+  buyTokens,
+  getRecentTransactions,
+  getTokenBalance,
+  getTokenPrice,
+  sellTokens,
+  TokenReturnOnBuy,
+  TokenReturnOnSell,
+} from "@/services/trade";
 import { recordTransaction, getTokenTransactions } from "@/services/api";
 import { usePrivy } from "@privy-io/react-auth";
 
@@ -153,7 +161,7 @@ export default function TokenPage() {
   const [isCalculating, setIsCalculating] = useState(false);
   const [isTransacting, setIsTransacting] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState<{
-    status: 'success' | 'error' | null;
+    status: "success" | "error" | null;
     hash?: string;
     error?: string;
   }>({ status: null });
@@ -194,11 +202,13 @@ export default function TokenPage() {
 
         const recentTransactions = await getRecentTransactions(tokenId, 10);
         console.log("Recent Transactions:", recentTransactions);
-        setRecentTransactions(recentTransactions);  
+        setRecentTransactions(recentTransactions);
 
         // const tokenBalance = await getTokenBalance(tokenId);
         // console.log("Token Balance:", tokenBalance);
-        const formattedTokenBalance = ethers.utils.formatEther(tokenInfo.balance.toString());
+        const formattedTokenBalance = ethers.utils.formatEther(
+          tokenInfo.balance.toString()
+        );
         setTokenBalance(formattedTokenBalance);
       }
     };
@@ -245,13 +255,18 @@ export default function TokenPage() {
   };
 
   // Add this helper function at component level
-  const calculateEstimatedReturn = async (value: string, contractAddress: string) => {
+  const calculateEstimatedReturn = async (
+    value: string,
+    contractAddress: string
+  ) => {
     if (value && contractAddress) {
       setIsCalculating(true);
       try {
         const tokenReturnOnBuy = await TokenReturnOnBuy(contractAddress, value);
         // Format the token amount from Wei to ETH
-        const formattedAmount = ethers.utils.formatEther(tokenReturnOnBuy.tokenAmount);
+        const formattedAmount = ethers.utils.formatEther(
+          tokenReturnOnBuy.tokenAmount
+        );
         setEstimatedReturn(formattedAmount);
       } catch (error: any) {
         console.error("Error calculating return:", error);
@@ -267,13 +282,16 @@ export default function TokenPage() {
   // Update the input handler
   const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    
-    if (value === '' || isValidNumber(value)) {
+
+    if (value === "" || isValidNumber(value)) {
       if (tradeType === "buy") {
         setCoreAmount(value);
         if (value && tokenDetails?.contractAddress) {
           const amountInWei = ethers.utils.parseEther(value);
-          await calculateEstimatedReturn(amountInWei.toString(), tokenDetails.contractAddress);
+          await calculateEstimatedReturn(
+            amountInWei.toString(),
+            tokenDetails.contractAddress
+          );
         } else {
           setEstimatedReturn("0");
         }
@@ -283,7 +301,10 @@ export default function TokenPage() {
         if (value && tokenDetails?.contractAddress) {
           setIsCalculating(true);
           try {
-            const sellReturn = await TokenReturnOnSell(tokenDetails.contractAddress, value);
+            const sellReturn = await TokenReturnOnSell(
+              tokenDetails.contractAddress,
+              value
+            );
             setEstimatedReturn(sellReturn.ethAmount);
             setCoreAmount(sellReturn.ethAmount);
           } catch (error: any) {
@@ -331,70 +352,81 @@ export default function TokenPage() {
       setTransactionStatus({ status: null });
 
       if (tradeType === "buy") {
-        console.log(coreAmount , "coreAmount"); 
-        console.log(estimatedReturn , "estimatedReturn");
+        console.log(coreAmount, "coreAmount");
+        console.log(estimatedReturn, "estimatedReturn");
         if (!coreAmount || !estimatedReturn) {
           console.log("Invalid amount");
           return;
         }
         const coreAmountInWei = ethers.utils.parseEther(coreAmount);
 
-        const tokenReturnOnBuy = await TokenReturnOnBuy(tokenDetails?.contractAddress || "", coreAmountInWei.toString());
+        const tokenReturnOnBuy = await TokenReturnOnBuy(
+          tokenDetails?.contractAddress || "",
+          coreAmountInWei.toString()
+        );
         console.log(tokenReturnOnBuy);
         setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
-        
-        const buy = await buyTokens(tokenDetails?.contractAddress || "", estimatedReturn, coreAmount );
+
+        const buy = await buyTokens(
+          tokenDetails?.contractAddress || "",
+          estimatedReturn,
+          coreAmount
+        );
         if (buy.hash) {
           // Record the buy transaction
           await recordTransaction({
             address: tokenDetails?.contractAddress,
             creator: user?.wallet?.address,
-            type: 'BUY',
+            type: "BUY",
             amount: estimatedReturn,
             price: currentPrice,
             txHash: buy.hash,
             name: tokenDetails?.name,
-            symbol: tokenDetails?.symbol
+            symbol: tokenDetails?.symbol,
           });
 
-          setTransactionStatus({ 
-            status: 'success', 
-            hash: buy.hash 
+          setTransactionStatus({
+            status: "success",
+            hash: buy.hash,
           });
           await fetchCurrentPrice();
         }
       } else {
-      
-
-        const tokenReturnOnBuy = await TokenReturnOnSell(tokenDetails?.contractAddress || "", tokenAmount);
+        const tokenReturnOnBuy = await TokenReturnOnSell(
+          tokenDetails?.contractAddress || "",
+          tokenAmount
+        );
         setEstimatedReturn(tokenReturnOnBuy.ethAmount.toString());
 
-        const sell = await sellTokens(tokenDetails?.contractAddress || "", tokenAmount);
+        const sell = await sellTokens(
+          tokenDetails?.contractAddress || "",
+          tokenAmount
+        );
         if (sell.hash) {
           // Record the sell transaction
           await recordTransaction({
             address: tokenDetails?.contractAddress,
             creator: user?.wallet?.address,
-            type: 'SELL',
+            type: "SELL",
             amount: tokenAmount,
             price: currentPrice,
             txHash: sell.hash,
             name: tokenDetails?.name,
-            symbol: tokenDetails?.symbol
+            symbol: tokenDetails?.symbol,
           });
 
-          setTransactionStatus({ 
-            status: 'success', 
-            hash: sell.hash 
+          setTransactionStatus({
+            status: "success",
+            hash: sell.hash,
           });
           await fetchCurrentPrice();
         }
       }
     } catch (error: any) {
       console.error("Transaction failed:", error);
-      setTransactionStatus({ 
-        status: 'error', 
-        error: error?.message || "Transaction failed" 
+      setTransactionStatus({
+        status: "error",
+        error: error?.message || "Transaction failed",
       });
     } finally {
       setIsTransacting(false);
@@ -428,16 +460,16 @@ export default function TokenPage() {
     const fetchData = async () => {
       if (tokenId) {
         // ... existing token info fetch ...
-        
+
         // Fetch recent transactions
         const { transactions } = await getTokenTransactions(tokenId);
         setRecentTransactions({
           accounts: transactions.map((tx: any) => tx.userAddress),
-          isBuys: transactions.map((tx: any) => tx.type === 'BUY'),
+          isBuys: transactions.map((tx: any) => tx.type === "BUY"),
           tokenAmounts: transactions.map((tx: any) => tx.amount),
           ethAmounts: transactions.map((tx: any) => tx.amount),
           prices: transactions.map((tx: any) => tx.price),
-          timestamps: transactions.map((tx: any) => tx.timestamp)
+          timestamps: transactions.map((tx: any) => tx.timestamp),
         });
       }
     };
@@ -457,7 +489,7 @@ export default function TokenPage() {
         {/* Token Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#6C5CE7]/30 to-[#4834D4]/30 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#ffae5c]/30 to-[#4834D4]/30 flex items-center justify-center">
               <span className="text-3xl">🐸</span>
             </div>
             <div>
@@ -470,8 +502,8 @@ export default function TokenPage() {
                 </span>
               </div>
               <div className="flex items-center gap-2 mt-1">
-                <div className="px-2 py-1 rounded-md bg-[#6C5CE7]/10 border border-[#6C5CE7]/20 text-white/80 text-xs flex items-center gap-1">
-                  <Shield className="w-3 h-3 text-[#6C5CE7]" />
+                <div className="px-2 py-1 rounded-md bg-[#ffae5c]/10 border border-[#ffae5c]/20 text-white/80 text-xs flex items-center gap-1">
+                  <Shield className="w-3 h-3 text-[#ffae5c]" />
                   <span>Clampify Verified</span>
                 </div>
                 <div className="px-2 py-1 rounded-md bg-green-500/10 border border-green-500/20 text-green-400 text-xs">
@@ -488,7 +520,7 @@ export default function TokenPage() {
               }
               variant="outline"
               size="icon"
-              className="border-[#6C5CE7]/30 bg-[#6C5CE7]/5 hover:bg-[#6C5CE7]/10"
+              className="border-[#ffae5c]/30 bg-[#ffae5c]/5 hover:bg-[#ffae5c]/10"
             >
               <Share2 className="w-5 h-5 text-white" />
             </Button>
@@ -500,13 +532,13 @@ export default function TokenPage() {
           {/* Left Column (2/3 width on large screens) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Price Card with GeckoTerminal Integration */}
-            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#6C5CE7]/20 p-6">
+            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#ffae5c]/20 p-6">
               <div className="flex flex-col md:flex-row justify-between md:items-center mb-6">
                 <div className="mb-4 md:mb-0">
                   <div className="text-white/70 text-sm">Price</div>
                   <div className="flex items-baseline gap-3">
                     <div className="text-white text-3xl font-bold">
-                      ${(currentPrice)}
+                      ${currentPrice}
                     </div>
                   </div>
                 </div>
@@ -519,8 +551,8 @@ export default function TokenPage() {
                       variant="ghost"
                       className={`px-3 py-1 rounded-lg ${
                         activeTimeframe === timeframe
-                          ? "bg-[#6C5CE7]/20 text-white"
-                          : "text-white/60 hover:text-white hover:bg-[#6C5CE7]/10"
+                          ? "bg-[#ffae5c]/20 text-white"
+                          : "text-white/60 hover:text-white hover:bg-[#ffae5c]/10"
                       }`}
                       onClick={() => setActiveTimeframe(timeframe)}
                     >
@@ -544,7 +576,7 @@ export default function TokenPage() {
             </div>
 
             {/* Token Metrics Tabs */}
-            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#6C5CE7]/20 p-6">
+            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#ffae5c]/20 p-6">
               <div className="mb-6">
                 <div className="flex overflow-x-auto scrollbar-hide px-1 py-1 gap-1 bg-black/30 rounded-xl">
                   {[
@@ -568,7 +600,7 @@ export default function TokenPage() {
                       key={tab.value}
                       className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg whitespace-nowrap transition-all duration-200 ${
                         activeTab === tab.value
-                          ? "bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] text-white shadow-md shadow-[#6C5CE7]/20 font-medium"
+                          ? "bg-gradient-to-r from-[#ffae5c] to-[#4834D4] text-white shadow-md shadow-[#ffae5c]/20 font-medium"
                           : "text-white/60 hover:text-white hover:bg-white/5"
                       }`}
                       onClick={() => setActiveTab(tab.value)}
@@ -577,7 +609,7 @@ export default function TokenPage() {
                         className={
                           activeTab === tab.value
                             ? "text-white"
-                            : "text-[#6C5CE7]"
+                            : "text-[#ffae5c]"
                         }
                       >
                         {tab.icon}
@@ -635,9 +667,9 @@ export default function TokenPage() {
                         Total Supply Distribution
                       </div>
                       <div className="flex items-center">
-                        <div className="w-full h-5 bg-[#6C5CE7]/10 rounded-full overflow-hidden">
+                        <div className="w-full h-5 bg-[#ffae5c]/10 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-[#6C5CE7]/80 to-[#4834D4]/80"
+                            className="h-full bg-gradient-to-r from-[#ffae5c]/80 to-[#4834D4]/80"
                             style={{
                               width: `${
                                 100 -
@@ -650,7 +682,7 @@ export default function TokenPage() {
                       </div>
                       <div className="flex justify-between mt-2 text-sm">
                         <div className="text-white/60">
-                          <span className="inline-block w-3 h-3 rounded-full bg-[#6C5CE7]/80 mr-2"></span>
+                          <span className="inline-block w-3 h-3 rounded-full bg-[#ffae5c]/80 mr-2"></span>
                           Circulating:{" "}
                           {formatNumber(parseInt(tokenData.circulatingSupply))}(
                           {100 -
@@ -659,7 +691,7 @@ export default function TokenPage() {
                           %)
                         </div>
                         <div className="text-white/60">
-                          <span className="inline-block w-3 h-3 rounded-full bg-[#6C5CE7]/20 mr-2"></span>
+                          <span className="inline-block w-3 h-3 rounded-full bg-[#ffae5c]/20 mr-2"></span>
                           Locked:{" "}
                           {formatNumber(
                             (parseInt(tokenDetails?.totalSupply || "0") *
@@ -690,9 +722,9 @@ export default function TokenPage() {
                       : "opacity-0 absolute inset-0 pointer-events-none"
                   }`}
                 >
-                  <div className="p-4 bg-[#6C5CE7]/10 rounded-xl flex items-start gap-3">
+                  <div className="p-4 bg-[#ffae5c]/10 rounded-xl flex items-start gap-3">
                     <div className="mt-1">
-                      <Shield className="w-5 h-5 text-[#6C5CE7]" />
+                      <Shield className="w-5 h-5 text-[#ffae5c]" />
                     </div>
                     <div>
                       <div className="text-white font-medium">
@@ -708,7 +740,7 @@ export default function TokenPage() {
                   <div className="space-y-6 mt-6">
                     <div>
                       <div className="text-white font-medium mb-2 flex items-center">
-                        <Lock className="w-4 h-4 mr-2 text-[#6C5CE7]" />
+                        <Lock className="w-4 h-4 mr-2 text-[#ffae5c]" />
                         Supply Lock Status
                       </div>
                       <div className="bg-black/30 rounded-xl p-4 space-y-4">
@@ -746,9 +778,9 @@ export default function TokenPage() {
                               {percentUnlocked.toFixed(1)}%
                             </span>
                           </div>
-                          <div className="w-full h-3 bg-[#6C5CE7]/10 rounded-full overflow-hidden">
+                          <div className="w-full h-3 bg-[#ffae5c]/10 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-[#6C5CE7] to-[#4834D4]"
+                              className="h-full bg-gradient-to-r from-[#ffae5c] to-[#4834D4]"
                               style={{ width: `${percentUnlocked}%` }}
                             />
                           </div>
@@ -758,7 +790,7 @@ export default function TokenPage() {
 
                     <div>
                       <div className="text-white font-medium mb-2 flex items-center">
-                        <Shield className="w-4 h-4 mr-2 text-[#6C5CE7]" />
+                        <Shield className="w-4 h-4 mr-2 text-[#ffae5c]" />
                         Anti-Rug Protection
                       </div>
                       <div className="bg-black/30 rounded-xl p-4 space-y-4">
@@ -816,7 +848,7 @@ export default function TokenPage() {
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-4">
-                    <Users className="w-5 h-5 text-[#6C5CE7]" />
+                    <Users className="w-5 h-5 text-[#ffae5c]" />
                     <h3 className="text-lg font-medium text-white">
                       Top Token Holders
                     </h3>
@@ -857,7 +889,7 @@ export default function TokenPage() {
                         className="flex items-center justify-between p-3 bg-black/20 rounded-xl hover:bg-black/30 transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#6C5CE7]/20 flex items-center justify-center text-white/70">
+                          <div className="w-8 h-8 rounded-full bg-[#ffae5c]/20 flex items-center justify-center text-white/70">
                             {i + 1}
                           </div>
                           <div>
@@ -866,7 +898,7 @@ export default function TokenPage() {
                               {holder.address.slice(-4)}
                             </div>
                             {holder.tag && (
-                              <div className="text-[#6C5CE7] text-xs">
+                              <div className="text-[#ffae5c] text-xs">
                                 {holder.tag}
                               </div>
                             )}
@@ -883,7 +915,7 @@ export default function TokenPage() {
                   </div>
 
                   <div className="text-center mt-4">
-                    <Button variant="link" className="text-[#6C5CE7]">
+                    <Button variant="link" className="text-[#ffae5c]">
                       View All Holders <ChevronDown className="w-4 h-4 ml-1" />
                     </Button>
                   </div>
@@ -892,15 +924,15 @@ export default function TokenPage() {
             </div>
 
             {/* Recent Transactions Section */}
-            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#6C5CE7]/20 p-6">
+            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#ffae5c]/20 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-[#6C5CE7]" />
+                  <BarChart3 className="w-5 h-5 text-[#ffae5c]" />
                   <h3 className="text-lg font-medium text-white">
                     Recent Transactions
                   </h3>
                 </div>
-                <Button variant="link" className="text-[#6C5CE7]">
+                <Button variant="link" className="text-[#ffae5c]">
                   View All
                 </Button>
               </div>
@@ -997,13 +1029,13 @@ export default function TokenPage() {
           {/* Right Column (1/3 width on large screens) */}
           <div className="space-y-6">
             {/* Trading Card */}
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-[#6C5CE7]/20 overflow-hidden top-24">
+            <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-[#ffae5c]/20 overflow-hidden top-24">
               {/* Buy/Sell Header */}
               <div className="grid grid-cols-2">
                 <button
                   className={`py-4 text-center font-medium text-lg transition-colors ${
                     tradeType === "buy"
-                      ? "bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] text-white"
+                      ? "bg-gradient-to-r from-[#ffae5c] to-[#4834D4] text-white"
                       : "bg-black/40 text-white/60 hover:text-white hover:bg-black/50"
                   }`}
                   onClick={() => handleTradeTypeToggle("buy")}
@@ -1013,7 +1045,7 @@ export default function TokenPage() {
                 <button
                   className={`py-4 text-center font-medium text-lg transition-colors ${
                     tradeType === "sell"
-                      ? "bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] text-white"
+                      ? "bg-gradient-to-r from-[#ffae5c] to-[#4834D4] text-white"
                       : "bg-black/40 text-white/60 hover:text-white hover:bg-black/50"
                   }`}
                   onClick={() => handleTradeTypeToggle("sell")}
@@ -1029,16 +1061,15 @@ export default function TokenPage() {
                   <div className="flex justify-between text-white/60 text-sm mb-2 px-1">
                     <span>{tradeType === "buy" ? "You Pay" : "You Sell"}</span>
                     {tradeType === "sell" && (
-                      <div className="flex items-center gap-1 text-[#6C5CE7]">
+                      <div className="flex items-center gap-1 text-[#ffae5c]">
                         <Wallet className="w-3.5 h-3.5" />
                         <span>
-                          {tokenBalance}{" "}
-                          {tokenDetails?.symbol || "..."}
+                          {tokenBalance} {tokenDetails?.symbol || "..."}
                         </span>
                       </div>
                     )}
                   </div>
-                  <div className="bg-black/40 rounded-xl border border-[#6C5CE7]/10 focus-within:border-[#6C5CE7]/30 transition-colors overflow-hidden">
+                  <div className="bg-black/40 rounded-xl border border-[#ffae5c]/10 focus-within:border-[#ffae5c]/30 transition-colors overflow-hidden">
                     <div className="flex">
                       <input
                         type="text"
@@ -1050,17 +1081,17 @@ export default function TokenPage() {
                         pattern="[0-9]*[.]?[0-9]*"
                       />
                       <div className="flex items-center px-4 text-white">
-                        <div className="flex items-center gap-2 bg-[#6C5CE7]/20 px-3 py-2 rounded-lg">
+                        <div className="flex items-center gap-2 bg-[#ffae5c]/20 px-3 py-2 rounded-lg">
                           {tradeType === "buy" ? (
                             <>
-                              <div className="w-6 h-6 rounded-full bg-[#6C5CE7]/30 flex items-center justify-center">
+                              <div className="w-6 h-6 rounded-full bg-[#ffae5c]/30 flex items-center justify-center">
                                 C
                               </div>
                               <span>CoreDAO</span>
                             </>
                           ) : (
                             <>
-                              <div className="w-6 h-6 rounded-full bg-[#6C5CE7]/30 flex items-center justify-center">
+                              <div className="w-6 h-6 rounded-full bg-[#ffae5c]/30 flex items-center justify-center">
                                 🐸
                               </div>
                               <span>{tokenDetails?.symbol || "..."}</span>
@@ -1075,7 +1106,7 @@ export default function TokenPage() {
                 {/* Quick Amount Buttons */}
                 <div className="grid grid-cols-4 gap-2 mb-6">
                   <button
-                    className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#6C5CE7]/10 rounded-lg text-sm font-medium transition-colors"
+                    className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#ffae5c]/10 rounded-lg text-sm font-medium transition-colors"
                     onClick={() => {
                       if (tradeType === "buy") {
                         setCoreAmount("");
@@ -1091,19 +1122,19 @@ export default function TokenPage() {
                     // Core amount buttons
                     <>
                       <button
-                        className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#6C5CE7]/10 rounded-lg text-sm font-medium transition-colors"
+                        className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#ffae5c]/10 rounded-lg text-sm font-medium transition-colors"
                         onClick={() => setCoreAmount("1")}
                       >
                         1
                       </button>
                       <button
-                        className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#6C5CE7]/10 rounded-lg text-sm font-medium transition-colors"
+                        className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#ffae5c]/10 rounded-lg text-sm font-medium transition-colors"
                         onClick={() => setCoreAmount("5")}
                       >
                         5
                       </button>
                       <button
-                        className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#6C5CE7]/10 rounded-lg text-sm font-medium transition-colors"
+                        className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#ffae5c]/10 rounded-lg text-sm font-medium transition-colors"
                         onClick={() => setCoreAmount("10")}
                       >
                         10
@@ -1113,7 +1144,7 @@ export default function TokenPage() {
                     // Token percentage buttons
                     <>
                       <button
-                        className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#6C5CE7]/10 rounded-lg text-sm font-medium transition-colors"
+                        className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#ffae5c]/10 rounded-lg text-sm font-medium transition-colors"
                         onClick={() => {
                           const maxAmount =
                             parseInt(tokenDetails?.totalSupply || "0") *
@@ -1125,7 +1156,7 @@ export default function TokenPage() {
                         25%
                       </button>
                       <button
-                        className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#6C5CE7]/10 rounded-lg text-sm font-medium transition-colors"
+                        className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#ffae5c]/10 rounded-lg text-sm font-medium transition-colors"
                         onClick={() => {
                           const maxAmount =
                             parseInt(tokenDetails?.totalSupply || "0") *
@@ -1137,7 +1168,7 @@ export default function TokenPage() {
                         50%
                       </button>
                       <button
-                        className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#6C5CE7]/10 rounded-lg text-sm font-medium transition-colors"
+                        className="py-2 bg-black/30 text-white/60 hover:text-white hover:bg-[#ffae5c]/10 rounded-lg text-sm font-medium transition-colors"
                         onClick={() => {
                           const maxAmount =
                             parseInt(tokenDetails?.totalSupply || "0") *
@@ -1153,7 +1184,7 @@ export default function TokenPage() {
                 </div>
 
                 {/* Estimated Receive Amount */}
-                <div className="bg-black/20 rounded-xl p-4 mb-6 border border-[#6C5CE7]/10">
+                <div className="bg-black/20 rounded-xl p-4 mb-6 border border-[#ffae5c]/10">
                   <div className="flex justify-between text-white/60 text-sm mb-1">
                     <span>You&apos;ll Receive (estimated)</span>
                   </div>
@@ -1162,11 +1193,15 @@ export default function TokenPage() {
                       {tradeType === "buy" ? (
                         isCalculating ? (
                           <span className="text-white/50">Calculating...</span>
+                        ) : estimatedReturn ? (
+                          parseFloat(estimatedReturn).toFixed(2)
                         ) : (
-                          estimatedReturn ? parseFloat(estimatedReturn).toFixed(2) : "0"
+                          "0"
                         )
+                      ) : coreAmount ? (
+                        parseFloat(coreAmount)
                       ) : (
-                        coreAmount ? parseFloat(coreAmount) : "0"
+                        "0"
                       )}
                     </div>
                     <div className="text-white/80">
@@ -1200,7 +1235,7 @@ export default function TokenPage() {
                 {/* Slippage Settings Modal */}
                 {showSlippageSettings && (
                   <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-                    <div className="bg-[#0D0B15] rounded-xl p-6 border border-[#6C5CE7]/30 max-w-sm w-full">
+                    <div className="bg-[#0D0B15] rounded-xl p-6 border border-[#ffae5c]/30 max-w-sm w-full">
                       <div className="flex justify-between items-center mb-6">
                         <h3 className="text-white text-lg font-medium">
                           Set Slippage Tolerance
@@ -1218,7 +1253,7 @@ export default function TokenPage() {
                             key={value}
                             className={`px-4 py-2 rounded-lg text-sm ${
                               slippage === value
-                                ? "bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] text-white"
+                                ? "bg-gradient-to-r from-[#ffae5c] to-[#4834D4] text-white"
                                 : "bg-black/40 text-white/60 hover:text-white"
                             }`}
                             onClick={() => setSlippage(value)}
@@ -1230,7 +1265,7 @@ export default function TokenPage() {
                       <div className="relative mb-6">
                         <input
                           type="number"
-                          className="w-full bg-black/40 border border-[#6C5CE7]/20 text-white h-12 pl-3 pr-8 py-2 rounded-lg"
+                          className="w-full bg-black/40 border border-[#ffae5c]/20 text-white h-12 pl-3 pr-8 py-2 rounded-lg"
                           placeholder="Custom"
                           value={slippage}
                           onChange={(e) =>
@@ -1242,7 +1277,7 @@ export default function TokenPage() {
                         </div>
                       </div>
                       <Button
-                        className="w-full py-3 rounded-lg bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] text-white font-medium"
+                        className="w-full py-3 rounded-lg bg-gradient-to-r from-[#ffae5c] to-[#4834D4] text-white font-medium"
                         onClick={() => setShowSlippageSettings(false)}
                       >
                         Save Settings
@@ -1254,11 +1289,9 @@ export default function TokenPage() {
                 {/* Trade Button */}
                 <button
                   className={`w-full py-4 rounded-xl text-center font-medium text-lg ${
-                 
-                    !coreAmount ||
-                    parseFloat(coreAmount) <= 0
-                      ? "bg-[#6C5CE7]/40 text-white/70 cursor-not-allowed"
-                      : "bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] text-white hover:opacity-90"
+                    !coreAmount || parseFloat(coreAmount) <= 0
+                      ? "bg-[#ffae5c]/40 text-white/70 cursor-not-allowed"
+                      : "bg-gradient-to-r from-[#ffae5c] to-[#4834D4] text-white hover:opacity-90"
                   }`}
                   onClick={handleTrade}
                   // disabled={
@@ -1273,7 +1306,7 @@ export default function TokenPage() {
 
                 {/* Tax Info */}
                 <div className="mt-3 text-center">
-                  <span className="px-3 py-1 bg-[#6C5CE7]/10 text-white/70 text-sm rounded-full">
+                  <span className="px-3 py-1 bg-[#ffae5c]/10 text-white/70 text-sm rounded-full">
                     {tradeType === "buy"
                       ? `Buy Tax: ${tokenData.buyTax}%`
                       : `Sell Tax: ${tokenData.sellTax}%`}
@@ -1283,7 +1316,7 @@ export default function TokenPage() {
             </div>
 
             {/* Token Info Card */}
-            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#6C5CE7]/20 p-6">
+            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#ffae5c]/20 p-6">
               <h3 className="text-lg font-medium text-white mb-4">
                 Token Information
               </h3>
@@ -1300,7 +1333,7 @@ export default function TokenPage() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 rounded-md hover:bg-[#6C5CE7]/10"
+                      className="h-8 w-8 rounded-md hover:bg-[#ffae5c]/10"
                       onClick={() =>
                         copyToClipboard(
                           tokenDetails?.contractAddress || "",
@@ -1339,15 +1372,15 @@ export default function TokenPage() {
             </div>
 
             {/* Supply Lock Card */}
-            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#6C5CE7]/20 p-6">
+            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#ffae5c]/20 p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Lock className="w-5 h-5 text-[#6C5CE7]" />
+                <Lock className="w-5 h-5 text-[#ffae5c]" />
                 <h3 className="text-lg font-medium text-white">Supply Lock</h3>
               </div>
 
-              <div className="bg-[#6C5CE7]/10 rounded-xl p-4 mb-6">
+              <div className="bg-[#ffae5c]/10 rounded-xl p-4 mb-6">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-4 h-4 text-[#6C5CE7]" />
+                  <Clock className="w-4 h-4 text-[#ffae5c]" />
                   <div className="text-white font-medium">Unlock Schedule</div>
                 </div>
                 <p className="text-white/70 text-sm mb-4">
@@ -1365,7 +1398,7 @@ export default function TokenPage() {
 
                 <div className="w-full h-3 bg-black/30 rounded-full overflow-hidden mb-1">
                   <div
-                    className="h-full bg-gradient-to-r from-[#6C5CE7] to-[#4834D4]"
+                    className="h-full bg-gradient-to-r from-[#ffae5c] to-[#4834D4]"
                     style={{
                       width: `${
                         ((tokenData.lockDuration - daysLeft) /
@@ -1425,9 +1458,9 @@ export default function TokenPage() {
             </div>
 
             {/* Anti-Rug Protections Card */}
-            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#6C5CE7]/20 p-6">
+            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#ffae5c]/20 p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Shield className="w-5 h-5 text-[#6C5CE7]" />
+                <Shield className="w-5 h-5 text-[#ffae5c]" />
                 <h3 className="text-lg font-medium text-white">
                   Anti-Rug Safeguards
                 </h3>
@@ -1436,11 +1469,11 @@ export default function TokenPage() {
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem
                   value="wallet-limit"
-                  className="border-b border-[#6C5CE7]/10"
+                  className="border-b border-[#ffae5c]/10"
                 >
                   <AccordionTrigger className="text-white hover:no-underline py-3">
                     <div className="flex items-center gap-2">
-                      <Wallet className="w-4 h-4 text-[#6C5CE7]" />
+                      <Wallet className="w-4 h-4 text-[#ffae5c]" />
                       <span>Wallet Size Limit</span>
                     </div>
                   </AccordionTrigger>
@@ -1453,11 +1486,11 @@ export default function TokenPage() {
 
                 <AccordionItem
                   value="tx-limit"
-                  className="border-b border-[#6C5CE7]/10"
+                  className="border-b border-[#ffae5c]/10"
                 >
                   <AccordionTrigger className="text-white hover:no-underline py-3">
                     <div className="flex items-center gap-2">
-                      <ArrowUpRight className="w-4 h-4 text-[#6C5CE7]" />
+                      <ArrowUpRight className="w-4 h-4 text-[#ffae5c]" />
                       <span>Transaction Limit</span>
                     </div>
                   </AccordionTrigger>
@@ -1470,11 +1503,11 @@ export default function TokenPage() {
 
                 <AccordionItem
                   value="tax"
-                  className="border-b border-[#6C5CE7]/10"
+                  className="border-b border-[#ffae5c]/10"
                 >
                   <AccordionTrigger className="text-white hover:no-underline py-3">
                     <div className="flex items-center gap-2">
-                      <BarChart3 className="w-4 h-4 text-[#6C5CE7]" />
+                      <BarChart3 className="w-4 h-4 text-[#ffae5c]" />
                       <span>Transaction Taxes</span>
                     </div>
                   </AccordionTrigger>
@@ -1490,7 +1523,7 @@ export default function TokenPage() {
                 <AccordionItem value="liquidity" className="border-0">
                   <AccordionTrigger className="text-white hover:no-underline py-3">
                     <div className="flex items-center gap-2">
-                      <PieChart className="w-4 h-4 text-[#6C5CE7]" />
+                      <PieChart className="w-4 h-4 text-[#ffae5c]" />
                       <span>Liquidity Protection</span>
                     </div>
                   </AccordionTrigger>
@@ -1506,9 +1539,9 @@ export default function TokenPage() {
         </div>
 
         {/* Additional Information or Warning */}
-        <div className="mt-8 p-5 bg-[#6C5CE7]/5 backdrop-blur-sm rounded-xl border border-[#6C5CE7]/20">
+        <div className="mt-8 p-5 bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl border border-[#ffae5c]/20">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-[#6C5CE7] mt-1 flex-shrink-0" />
+            <AlertTriangle className="w-5 h-5 text-[#ffae5c] mt-1 flex-shrink-0" />
             <div>
               <div className="text-white font-medium mb-1">Disclaimer</div>
               <p className="text-white/70">
@@ -1524,8 +1557,8 @@ export default function TokenPage() {
 
         {isTransacting && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50">
-            <div className="text-center p-6 bg-[#0D0B15] rounded-xl border border-[#6C5CE7]/20">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-[#6C5CE7]/20 border-t-[#6C5CE7] animate-spin"></div>
+            <div className="text-center p-6 bg-[#0D0B15] rounded-xl border border-[#ffae5c]/20">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-[#ffae5c]/20 border-t-[#ffae5c] animate-spin"></div>
               <p className="text-white">Transaction in progress...</p>
             </div>
           </div>
@@ -1533,16 +1566,23 @@ export default function TokenPage() {
 
         {!isTransacting && transactionStatus.status && (
           <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50">
-            <div className="text-center p-6 bg-[#0D0B15] rounded-xl border border-[#6C5CE7]/20 max-w-md w-full">
-              {transactionStatus.status === 'success' ? (
+            <div className="text-center p-6 bg-[#0D0B15] rounded-xl border border-[#ffae5c]/20 max-w-md w-full">
+              {transactionStatus.status === "success" ? (
                 <>
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
                     <Check className="w-8 h-8 text-green-500" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">Transaction Successful!</h3>
-                  <Button 
-                    className="mt-4 bg-[#6C5CE7]"
-                    onClick={() => window.open(`https://scan.test2.btcs.network/tx/${transactionStatus.hash}`, '_blank')}
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    Transaction Successful!
+                  </h3>
+                  <Button
+                    className="mt-4 bg-[#ffae5c]"
+                    onClick={() =>
+                      window.open(
+                        `https://scan.test2.btcs.network/tx/${transactionStatus.hash}`,
+                        "_blank"
+                      )
+                    }
                   >
                     View on Explorer
                   </Button>
@@ -1552,12 +1592,14 @@ export default function TokenPage() {
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
                     <X className="w-8 h-8 text-red-500" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">Transaction Failed</h3>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    Transaction Failed
+                  </h3>
                   <p className="text-white/70">{transactionStatus.error}</p>
                 </>
               )}
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="mt-4"
                 onClick={() => setTransactionStatus({ status: null })}
               >

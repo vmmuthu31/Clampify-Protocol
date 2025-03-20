@@ -65,7 +65,7 @@ export function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-black/80 border-b border-[#6C5CE7]/20"
+          ? "bg-black/80 border-b border-[#ffae5c]/20"
           : "bg-transparent"
       } backdrop-blur-lg`}
     >
@@ -291,7 +291,7 @@ export function Navbar() {
                         <div
                           className={`p-4 rounded-xl text-white/80 hover:text-white ${
                             pathname === item.href
-                              ? "bg-[#6C5CE7]/10 text-white"
+                              ? "bg-[#ffae5c]/10 text-white"
                               : ""
                           }`}
                         >
