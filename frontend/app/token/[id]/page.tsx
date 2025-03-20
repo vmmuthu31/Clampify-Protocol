@@ -1494,7 +1494,7 @@ export default function TokenPage() {
                   <h3 className="text-xl font-bold text-white mb-2">Transaction Successful!</h3>
                   <Button 
                     className="mt-4 bg-[#6C5CE7]"
-                    onClick={() => window.open(`https://scan.test.btcs.network/tx/${transactionStatus.hash}`, '_blank')}
+                    onClick={() => window.open(`https://scan.test2.btcs.network/tx/${transactionStatus.hash}`, '_blank')}
                   >
                     View on Explorer
                   </Button>
