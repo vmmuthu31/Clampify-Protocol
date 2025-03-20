@@ -32,7 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
 import { TokenInfo } from "@/services/tokenCreation";
 import { ethers } from "ethers";
-import { buyTokens, TokenReturnOnBuy } from "@/app/services/trade";
+import { buyTokens, TokenReturnOnBuy } from "@/services/trade";
 
 interface TokenData {
   id: string;
@@ -149,6 +149,12 @@ export default function TokenPage() {
   } | null>(null);
   const [estimatedReturn, setEstimatedReturn] = useState<string>("");
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isTransacting, setIsTransacting] = useState(false);
+  const [transactionStatus, setTransactionStatus] = useState<{
+    status: 'success' | 'error' | null;
+    hash?: string;
+    error?: string;
+  }>({ status: null });
 
   // Calculate days left in lock
   const daysLeft = Math.ceil(
@@ -257,7 +263,7 @@ export default function TokenPage() {
       try {
         const tokenReturnOnBuy = await TokenReturnOnBuy(contractAddress, value);
         setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error calculating return:", error);
         setEstimatedReturn("0");
       } finally {
@@ -296,33 +302,48 @@ export default function TokenPage() {
   };
 
   const handleTrade = async () => {
-    console.log("Token Amount:", tokenAmount);
-    console.log("Core Amount:", coreAmount);
+    try {
+      setIsTransacting(true);
+      setTransactionStatus({ status: null });
 
-    if (tradeType === "buy") {
-      if (!tokenAmount || !coreAmount) {
-        console.log("Invalid amount");
-        return;
+      if (tradeType === "buy") {
+        if (!tokenAmount || !coreAmount) {
+          console.log("Invalid amount");
+          return;
+        }
+
+        const tokenReturnOnBuy = await TokenReturnOnBuy(tokenDetails?.contractAddress || "", coreAmount);
+        console.log(tokenReturnOnBuy);
+        setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
+        
+        const buy = await buyTokens(tokenDetails?.contractAddress || "", coreAmount);
+        if (buy.hash) {
+          setTransactionStatus({ 
+            status: 'success', 
+            hash: buy.hash 
+          });
+        }
+      } else {
+        if (!tokenAmount || !coreAmount) {
+          toast({
+            title: "Invalid amount",
+            description: "Please enter a valid amount",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const tokenReturnOnBuy = await TokenReturnOnBuy(tokenDetails?.contractAddress || "", tokenAmount);
+        setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
       }
-      console.log(tokenDetails?.contractAddress);
-
-      const tokenReturnOnBuy = await TokenReturnOnBuy(tokenDetails?.contractAddress || "", coreAmount);
-      console.log(tokenReturnOnBuy);
-      setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
-     const buy = await buyTokens(tokenDetails?.contractAddress || "", coreAmount);
-     console.log(buy);
-    } else {
-      if (!tokenAmount || !coreAmount) {
-        toast({
-          title: "Invalid amount",
-          description: "Please enter a valid amount",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const tokenReturnOnBuy = await TokenReturnOnBuy(tokenDetails?.contractAddress || "", tokenAmount);
-      setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
+    } catch (error: any) {
+      console.error("Transaction failed:", error);
+      setTransactionStatus({ 
+        status: 'error', 
+        error: error?.message || "Transaction failed" 
+      });
+    } finally {
+      setIsTransacting(false);
     }
   };
 
@@ -1428,6 +1449,51 @@ export default function TokenPage() {
             </div>
           </div>
         </div>
+
+        {isTransacting && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50">
+            <div className="text-center p-6 bg-[#0D0B15] rounded-xl border border-[#6C5CE7]/20">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-[#6C5CE7]/20 border-t-[#6C5CE7] animate-spin"></div>
+              <p className="text-white">Transaction in progress...</p>
+            </div>
+          </div>
+        )}
+
+        {!isTransacting && transactionStatus.status && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50">
+            <div className="text-center p-6 bg-[#0D0B15] rounded-xl border border-[#6C5CE7]/20 max-w-md w-full">
+              {transactionStatus.status === 'success' ? (
+                <>
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <Check className="w-8 h-8 text-green-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">Transaction Successful!</h3>
+                  <Button 
+                    className="mt-4 bg-[#6C5CE7]"
+                    onClick={() => window.open(`https://scan.test.btcs.network/tx/${transactionStatus.hash}`, '_blank')}
+                  >
+                    View on Explorer
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <X className="w-8 h-8 text-red-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">Transaction Failed</h3>
+                  <p className="text-white/70">{transactionStatus.error}</p>
+                </>
+              )}
+              <Button 
+                variant="ghost" 
+                className="mt-4"
+                onClick={() => setTransactionStatus({ status: null })}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
