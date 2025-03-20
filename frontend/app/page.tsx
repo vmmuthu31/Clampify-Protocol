@@ -26,6 +26,20 @@ export default function HomePage() {
   const [isClient, setIsClient] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
+  const [tokens, setTokens] = useState([]);
+
+  const fetchTokens = async () => {
+    const response = await fetch("/api/tokens");
+    const data = await response.json();
+    setTokens(data.tokens);
+  };
+
+  useEffect(() => {
+    fetchTokens();
+  }, []);
+
+  console.log("tokens", tokens);
+
   useEffect(() => {
     setIsClient(true);
     const handleMouseMove = (e: MouseEvent) => {

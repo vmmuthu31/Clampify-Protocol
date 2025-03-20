@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -36,6 +36,7 @@
     "ethers": "^5.7.2",
     "framer-motion": "^12.5.0",
     "lucide-react": "^0.482.0",
+    "mongoose": "^8.12.1",
     "next": "15.2.3",
     "progress": "^2.0.3",
     "react": "^19.0.0",
