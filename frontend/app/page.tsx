@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
+import Image from "next/image";
 
 export default function HomePage() {
   // Client-side state
@@ -49,8 +50,6 @@ export default function HomePage() {
   useEffect(() => {
     fetchTokens();
   }, []);
-
-  console.log("tokens", tokens);
 
   useEffect(() => {
     setIsClient(true);
@@ -111,7 +110,12 @@ export default function HomePage() {
                   }}
                   className="mr-2"
                 >
-                  🔒
+                  <Image
+                    src="/logo.png"
+                    alt="Clampify Logo"
+                    width={25}
+                    height={25}
+                  />
                 </motion.div>
                 Introducing Clampify Protocol
               </span>
@@ -215,7 +219,12 @@ export default function HomePage() {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.7, duration: 0.5 }}
                   >
-                    🔒
+                    <Image
+                      src="/logo.png"
+                      alt="Clampify Logo"
+                      width={200}
+                      height={200}
+                    />
                   </motion.div>
 
                   <motion.div
@@ -223,7 +232,12 @@ export default function HomePage() {
                     animate={{ rotate: [0, 360], scale: [1, 1.2, 1] }}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
-                    ✨
+                    <Image
+                      src="/btc.png"
+                      alt="Clampify Logo"
+                      width={100}
+                      height={100}
+                    />
                   </motion.div>
 
                   <motion.div
@@ -231,7 +245,12 @@ export default function HomePage() {
                     animate={{ rotate: [0, -360], scale: [1, 1.2, 1] }}
                     transition={{ duration: 4, repeat: Infinity, delay: 1 }}
                   >
-                    💰
+                    <Image
+                      src="/core.png"
+                      alt="Clampify Logo"
+                      width={100}
+                      height={100}
+                    />
                   </motion.div>
                 </motion.div>
               </div>
@@ -287,7 +306,12 @@ export default function HomePage() {
                       }}
                       className="inline-block mr-1"
                     >
-                      🔒
+                      <Image
+                        src="/logo.png"
+                        alt="Clampify Logo"
+                        width={25}
+                        height={25}
+                      />
                     </motion.span>
                     <span>CLAMP</span>
                   </span>
@@ -345,9 +369,6 @@ export default function HomePage() {
               />
             </div>
           </motion.div>
-
-          {/* Optional: Diagonal divider to create visual interest */}
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-r from-[#0D0B15] via-[#0D0B15]/95 to-transparent transform -skew-y-1 z-0 hidden md:block" />
 
           {/* Mobile-optimized animated background */}
           <motion.div
@@ -442,7 +463,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {tokens.map((token: Token, i: number) => (
+            {tokens.slice(0, 8).map((token: Token, i: number) => (
               <motion.div
                 key={token._id}
                 className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-6 border border-[#ffae5c]/20 hover:border-[#ffae5c]/40 transition-all duration-300"
@@ -788,16 +809,32 @@ export default function HomePage() {
                   </th>
                   <th className="p-5 text-left text-white font-medium border-b border-[#ffae5c]/20">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#ffae5c] to-[#4834D4] flex items-center justify-center">
-                        <Lock className="w-4 h-4 text-white" />
-                      </div>
-                      <span>Clampify</span>
+                      <motion.div
+                        className="w-10 h-10 rounded-full bg-gradient-to-r from-[#ffae5c] to-[#ff9021] flex items-center justify-center"
+                        whileHover={{ rotate: 180 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <Image
+                          src="/logo.png"
+                          alt="Clampify Logo"
+                          width={25}
+                          height={25}
+                        />
+                      </motion.div>
+                      <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#ffae5c] to-[#ff9021]">
+                        Clampify
+                      </span>
                     </div>
                   </th>
                   <th className="p-5 text-left text-white font-medium border-b border-[#ffae5c]/20">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center">
-                        <span className="text-pink-500">🚀</span>
+                        <Image
+                          src="/Pump_fun_logo.png"
+                          alt="Clampify Logo"
+                          width={25}
+                          height={25}
+                        />
                       </div>
                       <span>Pump.fun</span>
                     </div>
@@ -805,7 +842,12 @@ export default function HomePage() {
                   <th className="p-5 text-left text-white font-medium border-b border-[#ffae5c]/20">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-pink-700/20 flex items-center justify-center">
-                        <span className="text-pink-600">🔒</span>
+                        <Image
+                          src="/pinksale.png"
+                          alt="Clampify Logo"
+                          width={25}
+                          height={25}
+                        />
                       </div>
                       <span>PinkSale</span>
                     </div>
@@ -1461,7 +1503,7 @@ export default function HomePage() {
                 >
                   <Link href="/launch">
                     <Button
-                      className=" md:h-14 px-4 md:px-8 bg-white text-[#ffae5c] hover:bg-white/90 
+                      className=" md:h-14 px-4 md:px-8 bg-gradient-to-r from-[#ffae5c] to-[#4834D4] text-white hover:bg-white/90 
                         rounded-xl text-sm md:text-lg font-medium group"
                     >
                       Launch Token
