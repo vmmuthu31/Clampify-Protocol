@@ -26,6 +26,7 @@ import { Mint } from "@/services/tokenCreation";
 import { useRouter } from "next/navigation";
 import { ethers } from "ethers";
 import { usePrivy } from "@privy-io/react-auth";
+import { createTokenRecord } from "@/services/api";
 
 // Lock period options in seconds
 const CREATOR_LOCK_PERIODS = [
@@ -80,7 +81,7 @@ const formatDuration = (seconds: number): string => {
 export default function LaunchPage() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [launchSuccess, setLaunchSuccess] = useState(false);
-  const { ready, authenticated, login } = usePrivy();
+  const { ready, authenticated, login, user } = usePrivy();
   const router = useRouter();
 
   // Form state
@@ -160,10 +161,21 @@ export default function LaunchPage() {
         tokenForm.liquidityLockPeriod
       );
 
-      if (tokenAddress) {
-        router.push(`/token/${tokenAddress}`);
-        return;
-      }
+      // Record the token creation in database
+      await createTokenRecord({
+        address: tokenAddress,
+        name: tokenForm.name,
+        symbol: tokenForm.symbol,
+        type: 'CREATE',
+        creator: user?.wallet?.address, // from usePrivy
+        initialSupply: tokenForm.initialSupply,
+        maxSupply: tokenForm.maxSupply,
+        initialPrice: tokenForm.initialPrice,
+        txHash: tokenAddress // or get the actual tx hash if available
+      });
+
+      setLaunchSuccess(true);
+      router.push(`/token/${tokenAddress}`);
     } catch (error) {
       console.error("Error creating token:", error);
       setIsLaunching(false);

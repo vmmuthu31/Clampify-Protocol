@@ -33,6 +33,8 @@ import { useParams } from "next/navigation";
 import { TokenInfo } from "@/services/tokenCreation";
 import { ethers } from "ethers";
 import { buyTokens, getRecentTransactions, getTokenBalance, getTokenPrice, sellTokens, TokenReturnOnBuy, TokenReturnOnSell } from "@/services/trade";
+import { recordTransaction, getTokenTransactions } from "@/services/api";
+import { usePrivy } from "@privy-io/react-auth";
 
 interface TokenData {
   id: string;
@@ -165,6 +167,7 @@ export default function TokenPage() {
   } | null>(null);
   const [tokenBalance, setTokenBalance] = useState<string>("");
   const [currentPrice, setCurrentPrice] = useState<string>("0");
+  const { user } = usePrivy();
 
   // Calculate days left in lock
   const daysLeft = Math.ceil(
@@ -342,6 +345,18 @@ export default function TokenPage() {
         
         const buy = await buyTokens(tokenDetails?.contractAddress || "", estimatedReturn, coreAmount );
         if (buy.hash) {
+          // Record the buy transaction
+          await recordTransaction({
+            address: tokenDetails?.contractAddress,
+            creator: user?.wallet?.address,
+            type: 'BUY',
+            amount: estimatedReturn,
+            price: currentPrice,
+            txHash: buy.hash,
+            name: tokenDetails?.name,
+            symbol: tokenDetails?.symbol
+          });
+
           setTransactionStatus({ 
             status: 'success', 
             hash: buy.hash 
@@ -356,6 +371,18 @@ export default function TokenPage() {
 
         const sell = await sellTokens(tokenDetails?.contractAddress || "", tokenAmount);
         if (sell.hash) {
+          // Record the sell transaction
+          await recordTransaction({
+            address: tokenDetails?.contractAddress,
+            creator: user?.wallet?.address,
+            type: 'SELL',
+            amount: tokenAmount,
+            price: currentPrice,
+            txHash: sell.hash,
+            name: tokenDetails?.name,
+            symbol: tokenDetails?.symbol
+          });
+
           setTransactionStatus({ 
             status: 'success', 
             hash: sell.hash 
@@ -396,6 +423,27 @@ export default function TokenPage() {
   const formatCurrency = (num: number) => {
     return `$${formatNumber(num)}`;
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (tokenId) {
+        // ... existing token info fetch ...
+        
+        // Fetch recent transactions
+        const { transactions } = await getTokenTransactions(tokenId);
+        setRecentTransactions({
+          accounts: transactions.map((tx: any) => tx.userAddress),
+          isBuys: transactions.map((tx: any) => tx.type === 'BUY'),
+          tokenAmounts: transactions.map((tx: any) => tx.amount),
+          ethAmounts: transactions.map((tx: any) => tx.amount),
+          prices: transactions.map((tx: any) => tx.price),
+          timestamps: transactions.map((tx: any) => tx.timestamp)
+        });
+      }
+    };
+
+    fetchData();
+  }, [tokenId]);
 
   if (!isClient) {
     return null;
@@ -1115,10 +1163,10 @@ export default function TokenPage() {
                         isCalculating ? (
                           <span className="text-white/50">Calculating...</span>
                         ) : (
-                          estimatedReturn ? estimatedReturn : "0"
+                          estimatedReturn ? parseFloat(estimatedReturn).toFixed(2) : "0"
                         )
                       ) : (
-                        coreAmount ? parseFloat(coreAmount).toFixed(4) : "0"
+                        coreAmount ? parseFloat(coreAmount) : "0"
                       )}
                     </div>
                     <div className="text-white/80">
