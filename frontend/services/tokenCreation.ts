@@ -97,7 +97,7 @@ export const TokenInfo = async (tokenAddress: string): Promise<TokenInfo> => {
     const totalSupply = await contract.totalSupply();
     const decimals = await contract.decimals();
     const initialSupply = await contract.initialSupply();
-    const initialPrice = await contract.initialPrice();
+    const initialPrice = await contract.getCurrentPrice();
     const creatorLockupPeriod = await contract.creatorLockupPeriod();
     const balance = await contract.balanceOf(userAddress);
 

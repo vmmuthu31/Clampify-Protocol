@@ -73,7 +73,6 @@ export const Mint = async (
     throw error;
   }
 };
-
 export const TokenReturnOnBuy = async (tokenAddress: string , amount: string): Promise<TokenInfo> => {
   console.log(tokenAddress, amount);
   try {
@@ -94,8 +93,11 @@ export const TokenReturnOnBuy = async (tokenAddress: string , amount: string): P
     const symbol = await contract.symbol();
     const totalSupply = await contract.totalSupply();
 
-    const amountInWei = ethers.utils.parseEther(amount);
-    const tokenAmount = await contract.calculatePurchaseReturn(amountInWei);
+
+
+    
+    // Add gas limit to prevent out of gas error
+    const tokenAmount = await contract.calculatePurchaseReturn(amount);
 
     return {
       name,
@@ -110,14 +112,16 @@ export const TokenReturnOnBuy = async (tokenAddress: string , amount: string): P
   }
 };
 
-export const buyTokens = async (tokenAddress: string, amount: string): Promise<{ hash: string }> => {
+export const buyTokens = async (tokenAddress: string, amount: string, tokenAmount: string): Promise<{ hash: string }> => {
   try {
-    console.log(tokenAddress, amount);
+    console.log(tokenAddress, amount, tokenAmount);
     console.log("at buy tokens");
     
     const provider = ethereum != null
-      ? new ethers.providers.Web3Provider(ethereum)
-      : new ethers.providers.JsonRpcProvider(RPC_URL);
+      ? new ethers.providers.Web3Provider(ethereum) : new ethers.providers.JsonRpcProvider(RPC_URL);
+    
+
+    console.log(provider);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -128,7 +132,8 @@ export const buyTokens = async (tokenAddress: string, amount: string): Promise<{
     console.log(amountInWei);
     console.log(amountInWei);
     const contract = new ethers.Contract(tokenAddress, ClampifyToken, signer);
-    
+    const tokenAmountInWei = ethers.utils.parseEther(tokenAmount);
+
     console.log(contract);
 
     // Convert amount to Wei
@@ -136,7 +141,7 @@ export const buyTokens = async (tokenAddress: string, amount: string): Promise<{
 
     // Execute buy transaction
     const tx = await contract.buyTokens(amountInWei, {
-      value: amountInWei    
+      value: tokenAmountInWei    
     });
 
     // Wait for transaction confirmation
@@ -146,6 +151,153 @@ export const buyTokens = async (tokenAddress: string, amount: string): Promise<{
     return { hash: receipt.transactionHash };
   } catch (error) {
     console.error("Buy tokens error:", error);
+    throw error;
+  }
+};
+
+
+
+export const getRecentTransactions = async (tokenAddress: string, count: number) => {
+  try {
+    const provider = ethereum != null
+      ? new ethers.providers.Web3Provider(ethereum)
+      : new ethers.providers.JsonRpcProvider(RPC_URL);
+
+    const signer = ethereum != null ? provider.getSigner() : null;
+
+    if (!signer) {
+      throw new Error("No wallet connected");
+    }
+
+    const contract = new ethers.Contract(tokenAddress, ClampifyToken, signer);
+
+    const transactions = await contract.getRecentTransactions(count);
+
+    console.log(transactions);
+
+    return {
+      accounts: transactions[0],
+      isBuys: transactions[1], 
+      tokenAmounts: transactions[2],
+      ethAmounts: transactions[3],
+      prices: transactions[4],
+      timestamps: transactions[5]
+    };
+
+  } catch (error) {
+    console.error("Get recent transactions error:", error);
+    throw error;
+  }
+};
+
+
+export const getTokenBalance = async (tokenAddress: string) => {
+  try {
+    const provider = ethereum != null
+      ? new ethers.providers.Web3Provider(ethereum)
+      : new ethers.providers.JsonRpcProvider(RPC_URL);
+
+    const signer = ethereum != null ? provider.getSigner() : null;
+
+    if (!signer) {
+      throw new Error("No wallet connected");
+    }
+
+    const userAddress = await signer.getAddress();
+    const contract = new ethers.Contract(tokenAddress, ClampifyToken, provider);
+
+    const balance = await contract.balanceOf(userAddress);
+    
+    return balance.toString();
+
+  } catch (error) {
+    console.error("Get token balance error:", error);
+    throw error;
+  }
+};
+
+
+export const TokenReturnOnSell = async (tokenAddress: string, amount: string) => {
+  try {
+    console.log(tokenAddress, amount);
+    const provider = ethereum != null 
+      ? new ethers.providers.Web3Provider(ethereum)
+      : new ethers.providers.JsonRpcProvider(RPC_URL);
+
+    const contract = new ethers.Contract(tokenAddress, ClampifyToken, provider);
+
+    const ethAmount = await contract.calculateSaleReturn(ethers.utils.parseEther(amount));
+
+    console.log(ethAmount);
+    console.log(ethers.utils.formatEther(ethAmount));
+    return {
+      ethAmount: ethers.utils.formatEther(ethAmount)
+    };
+
+  } catch (error) {
+    console.error("Calculate sale return error:", error);
+    throw error;
+  }
+};
+
+
+export const sellTokens = async (tokenAddress: string, amount: string) => {
+  try {
+    console.log(tokenAddress, amount);
+    const provider = ethereum != null 
+      ? new ethers.providers.Web3Provider(ethereum)
+      : new ethers.providers.JsonRpcProvider(RPC_URL);
+
+    console.log(provider);
+    const signer = ethereum != null ? provider.getSigner() : null;
+
+    console.log(signer);
+
+    if (!signer) {
+      throw new Error("No wallet connected");
+    }
+
+    const userAddress = await signer.getAddress();
+    const contract = new ethers.Contract(tokenAddress, ClampifyToken, signer);
+
+    console.log(contract);
+
+    const amountInWei = ethers.utils.parseEther(amount);
+
+    const tx = await contract.sellTokens(amountInWei);
+
+    const receipt = await tx.wait();
+    console.log("Sell transaction confirmed:", receipt);
+
+    return { hash: receipt.transactionHash };
+
+  } catch (error) {
+    console.error("Sell tokens error:", error);
+    throw error;
+  }
+};
+
+
+
+
+
+
+export const getTokenPrice = async (tokenAddress: string): Promise<string> => {
+  try {
+    const provider = ethereum != null
+      ? new ethers.providers.Web3Provider(ethereum) 
+      : new ethers.providers.JsonRpcProvider(RPC_URL);
+
+    const contract = new ethers.Contract(tokenAddress, ClampifyToken, provider);
+
+    const price = await contract.getCurrentPrice();
+    console.log(price);
+    console.log(price.toString());
+    console.log(ethers.utils.formatEther(price));
+    return ethers.utils.formatEther(price);
+
+  } catch (error) {
+    console.error("Get token price error:", error);
     throw error;
   }
 };

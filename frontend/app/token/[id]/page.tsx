@@ -32,7 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
 import { TokenInfo } from "@/services/tokenCreation";
 import { ethers } from "ethers";
-import { buyTokens, TokenReturnOnBuy } from "@/services/trade";
+import { buyTokens, getRecentTransactions, getTokenBalance, getTokenPrice, sellTokens, TokenReturnOnBuy, TokenReturnOnSell } from "@/services/trade";
 
 interface TokenData {
   id: string;
@@ -155,6 +155,16 @@ export default function TokenPage() {
     hash?: string;
     error?: string;
   }>({ status: null });
+  const [recentTransactions, setRecentTransactions] = useState<{
+    accounts: string[];
+    isBuys: boolean[];
+    tokenAmounts: string[];
+    ethAmounts: string[];
+    prices: string[];
+    timestamps: string[];
+  } | null>(null);
+  const [tokenBalance, setTokenBalance] = useState<string>("");
+  const [currentPrice, setCurrentPrice] = useState<string>("0");
 
   // Calculate days left in lock
   const daysLeft = Math.ceil(
@@ -178,6 +188,15 @@ export default function TokenPage() {
 
         console.log("Token Info:", formattedInfo);
         setTokenDetails(formattedInfo);
+
+        const recentTransactions = await getRecentTransactions(tokenId, 10);
+        console.log("Recent Transactions:", recentTransactions);
+        setRecentTransactions(recentTransactions);  
+
+        // const tokenBalance = await getTokenBalance(tokenId);
+        // console.log("Token Balance:", tokenBalance);
+        const formattedTokenBalance = ethers.utils.formatEther(tokenInfo.balance.toString());
+        setTokenBalance(formattedTokenBalance);
       }
     };
 
@@ -222,47 +241,15 @@ export default function TokenPage() {
     }
   };
 
-  // Update Token amount when Core amount changes
-  useEffect(() => {
-    if (coreAmount && parseFloat(coreAmount) > 0) {
-      // This is a simplified inverse calculation
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { initialPrice, reserveRatio, currentReserve } =
-        tokenData.bondingCurve;
-      const supply = parseFloat(tokenData.circulatingSupply);
-
-      let estimatedTokens;
-      if (tradeType === "buy") {
-        // Buying tokens increases price
-        const newReserve = currentReserve + parseFloat(coreAmount);
-        const newSupply =
-          supply * Math.pow(newReserve / currentReserve, reserveRatio);
-        estimatedTokens = newSupply - supply;
-      } else {
-        // Selling tokens decreases price
-        const newReserve = currentReserve - parseFloat(coreAmount);
-        if (newReserve <= 0) {
-          estimatedTokens = supply; // Can't reduce reserve below 0
-        } else {
-          const newSupply =
-            supply * Math.pow(newReserve / currentReserve, reserveRatio);
-          estimatedTokens = supply - newSupply;
-        }
-      }
-
-      setTokenAmount(estimatedTokens.toFixed(0));
-    } else {
-      setTokenAmount("");
-    }
-  }, [coreAmount, tradeType]);
-
   // Add this helper function at component level
   const calculateEstimatedReturn = async (value: string, contractAddress: string) => {
     if (value && contractAddress) {
       setIsCalculating(true);
       try {
         const tokenReturnOnBuy = await TokenReturnOnBuy(contractAddress, value);
-        setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
+        // Format the token amount from Wei to ETH
+        const formattedAmount = ethers.utils.formatEther(tokenReturnOnBuy.tokenAmount);
+        setEstimatedReturn(formattedAmount);
       } catch (error: any) {
         console.error("Error calculating return:", error);
         setEstimatedReturn("0");
@@ -278,18 +265,35 @@ export default function TokenPage() {
   const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     
-    // Only allow valid numbers
     if (value === '' || isValidNumber(value)) {
       if (tradeType === "buy") {
         setCoreAmount(value);
-        if (tokenDetails?.contractAddress) {
-          const amount = ethers.utils.parseEther(value);
-          await calculateEstimatedReturn( amount.toString(), tokenDetails.contractAddress);
+        if (value && tokenDetails?.contractAddress) {
+          const amountInWei = ethers.utils.parseEther(value);
+          await calculateEstimatedReturn(amountInWei.toString(), tokenDetails.contractAddress);
+        } else {
+          setEstimatedReturn("0");
         }
       } else {
+        // For sell, only update token amount and calculate return once
         setTokenAmount(value);
-        setCoreAmount(value);
-        setEstimatedReturn(value);
+        if (value && tokenDetails?.contractAddress) {
+          setIsCalculating(true);
+          try {
+            const sellReturn = await TokenReturnOnSell(tokenDetails.contractAddress, value);
+            setEstimatedReturn(sellReturn.ethAmount);
+            setCoreAmount(sellReturn.ethAmount);
+          } catch (error: any) {
+            console.error("Error calculating sell return:", error);
+            setEstimatedReturn("0");
+            setCoreAmount("0");
+          } finally {
+            setIsCalculating(false);
+          }
+        } else {
+          setEstimatedReturn("0");
+          setCoreAmount("0");
+        }
       }
     }
   };
@@ -301,40 +305,63 @@ export default function TokenPage() {
     setCoreAmount("");
   };
 
+  const fetchCurrentPrice = async () => {
+    if (tokenDetails?.contractAddress) {
+      try {
+        const price = await getTokenPrice(tokenDetails.contractAddress);
+        setCurrentPrice(price);
+      } catch (error) {
+        console.error("Error fetching price:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (tokenDetails?.contractAddress) {
+      fetchCurrentPrice();
+    }
+  }, [tokenDetails?.contractAddress]);
+
   const handleTrade = async () => {
     try {
       setIsTransacting(true);
       setTransactionStatus({ status: null });
 
       if (tradeType === "buy") {
-        if (!tokenAmount || !coreAmount) {
+        console.log(coreAmount , "coreAmount"); 
+        console.log(estimatedReturn , "estimatedReturn");
+        if (!coreAmount || !estimatedReturn) {
           console.log("Invalid amount");
           return;
         }
+        const coreAmountInWei = ethers.utils.parseEther(coreAmount);
 
-        const tokenReturnOnBuy = await TokenReturnOnBuy(tokenDetails?.contractAddress || "", coreAmount);
+        const tokenReturnOnBuy = await TokenReturnOnBuy(tokenDetails?.contractAddress || "", coreAmountInWei.toString());
         console.log(tokenReturnOnBuy);
         setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
         
-        const buy = await buyTokens(tokenDetails?.contractAddress || "", coreAmount);
+        const buy = await buyTokens(tokenDetails?.contractAddress || "", estimatedReturn, coreAmount );
         if (buy.hash) {
           setTransactionStatus({ 
             status: 'success', 
             hash: buy.hash 
           });
+          await fetchCurrentPrice();
         }
       } else {
-        if (!tokenAmount || !coreAmount) {
-          toast({
-            title: "Invalid amount",
-            description: "Please enter a valid amount",
-            variant: "destructive",
-          });
-          return;
-        }
+      
 
-        const tokenReturnOnBuy = await TokenReturnOnBuy(tokenDetails?.contractAddress || "", tokenAmount);
-        setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
+        const tokenReturnOnBuy = await TokenReturnOnSell(tokenDetails?.contractAddress || "", tokenAmount);
+        setEstimatedReturn(tokenReturnOnBuy.ethAmount.toString());
+
+        const sell = await sellTokens(tokenDetails?.contractAddress || "", tokenAmount);
+        if (sell.hash) {
+          setTransactionStatus({ 
+            status: 'success', 
+            hash: sell.hash 
+          });
+          await fetchCurrentPrice();
+        }
       }
     } catch (error: any) {
       console.error("Transaction failed:", error);
@@ -431,7 +458,7 @@ export default function TokenPage() {
                   <div className="text-white/70 text-sm">Price</div>
                   <div className="flex items-baseline gap-3">
                     <div className="text-white text-3xl font-bold">
-                      ${tokenData.price.toFixed(5)}
+                      ${(currentPrice)}
                     </div>
                   </div>
                 </div>
@@ -957,9 +984,7 @@ export default function TokenPage() {
                       <div className="flex items-center gap-1 text-[#6C5CE7]">
                         <Wallet className="w-3.5 h-3.5" />
                         <span>
-                          {formatNumber(
-                            parseInt(tokenData.circulatingSupply) * 0.001
-                          )}{" "}
+                          {tokenBalance}{" "}
                           {tokenDetails?.symbol || "..."}
                         </span>
                       </div>
@@ -1090,7 +1115,7 @@ export default function TokenPage() {
                         isCalculating ? (
                           <span className="text-white/50">Calculating...</span>
                         ) : (
-                          estimatedReturn ? formatNumber(parseInt(estimatedReturn)) : "0"
+                          estimatedReturn ? estimatedReturn : "0"
                         )
                       ) : (
                         coreAmount ? parseFloat(coreAmount).toFixed(4) : "0"
@@ -1181,20 +1206,19 @@ export default function TokenPage() {
                 {/* Trade Button */}
                 <button
                   className={`w-full py-4 rounded-xl text-center font-medium text-lg ${
-                    !tokenAmount ||
-                    parseFloat(tokenAmount) <= 0 ||
+                 
                     !coreAmount ||
                     parseFloat(coreAmount) <= 0
                       ? "bg-[#6C5CE7]/40 text-white/70 cursor-not-allowed"
                       : "bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] text-white hover:opacity-90"
                   }`}
                   onClick={handleTrade}
-                  disabled={
-                    !tokenAmount ||
-                    parseFloat(tokenAmount) <= 0 ||
-                    !coreAmount ||
-                    parseFloat(coreAmount) <= 0
-                  }
+                  // disabled={
+                  //   !tokenAmount ||
+                  //   parseFloat(tokenAmount) <= 0 ||
+                  //   !coreAmount ||
+                  //   parseFloat(coreAmount) <= 0
+                  // }
                 >
                   Place Trade
                 </button>
