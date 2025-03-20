@@ -142,10 +142,10 @@ export default function LaunchPage() {
     }));
 
     // Clear the error for this field if it exists
-    if (errors[field]) {
+    if (errors[field as keyof FormErrors]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
-        delete newErrors[field];
+        delete newErrors[field as keyof FormErrors];
         return newErrors;
       });
     }
@@ -160,9 +160,9 @@ export default function LaunchPage() {
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setImagePreview(base64String);
-        setTokenForm(prev => ({
+        setTokenForm((prev) => ({
           ...prev,
-          image: base64String
+          image: base64String,
         }));
       };
       reader.readAsDataURL(file);
@@ -174,7 +174,10 @@ export default function LaunchPage() {
     setIsLaunching(true);
 
     try {
-      const priceInEth = ethers.utils.formatUnits(tokenForm.initialPrice, "gwei");
+      const priceInEth = ethers.utils.formatUnits(
+        tokenForm.initialPrice,
+        "gwei"
+      );
       const tokenAddress = await Mint(
         tokenForm.name,
         tokenForm.symbol,
@@ -438,7 +441,7 @@ export default function LaunchPage() {
                       <button
                         onClick={() => {
                           setImagePreview("");
-                          setTokenForm(prev => ({ ...prev, image: "" }));
+                          setTokenForm((prev) => ({ ...prev, image: "" }));
                         }}
                         className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
                       >
