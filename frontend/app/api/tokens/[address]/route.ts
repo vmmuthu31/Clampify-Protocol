@@ -3,12 +3,13 @@ import dbConnect from "@/lib/mongodb";
 import Token from "@/models/Token";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { address: string } }
+  request: Request,
+  { params }: { params: { address: Promise<string> | string } }
 ) {
   try {
     await dbConnect();
-    const token = await Token.findOne({ address: params.address });
+    const address = typeof params.address === 'string' ? params.address : await params.address;
+    const token = await Token.findOne({ address });
 
     if (!token) {
       return NextResponse.json(
