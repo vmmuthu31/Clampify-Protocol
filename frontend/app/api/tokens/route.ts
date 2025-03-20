@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Token from "@/models/Token";
-import Transaction from "@/models/Transaction";
 
 export async function POST(req: Request) {
   try {
@@ -17,7 +16,6 @@ export async function POST(req: Request) {
       maxSupply: body.maxSupply,
       initialPrice: body.initialPrice,
     });
-
 
     return NextResponse.json({ success: true, token });
   } catch (error) {
