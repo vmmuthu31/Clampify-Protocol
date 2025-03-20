@@ -65,7 +65,7 @@ function WalletButton() {
     return (
       <Button
         onClick={login}
-        className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white transition-all"
+        className="bg-gradient-to-r rounded-full from-[#ffae5c] to-[#ff9021] border-[#ffae5c]  hover:text-black hover:bg-gradient-to-r hover:from-[#ffae5c] hover:to-[#ff9021] text-white transition-all"
       >
         <Wallet className="mr-2 h-4 w-4" />
         Connect Wallet
@@ -78,16 +78,19 @@ function WalletButton() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-100 text-indigo-700 hover:text-indigo-800 hover:bg-gradient-to-r hover:from-indigo-100 hover:to-purple-100"
+          className="bg-gradient-to-r rounded-full from-[#ffae5c] to-[#ff9021] border-[#ffae5c] text-[#ffae5c] hover:text-[#ffae5c] hover:bg-gradient-to-r hover:from-[#ffae5c] hover:to-[#ff9021]"
         >
-          <div className="h-6 w-6 rounded-full bg-indigo-100 mr-2 flex items-center justify-center">
-            <Wallet className="h-3 w-3 text-indigo-700" />
+          <div className="h-6 w-6 rounded-full bg-[#ffae5c] border border-[#ffae5c] text-white mr-2 flex items-center justify-center">
+            <Wallet className="h-3 w-3 text-white" />
           </div>
-          <span className="font-medium">{truncatedAddress}</span>
+          <span className="font-medium text-white">{truncatedAddress}</span>
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-56 bg-black/20">
+      <DropdownMenuContent
+        align="end"
+        className="w-56 border-gray-700 rounded-lg bg-black/20"
+      >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm text-gray-500">Connected Wallet</p>

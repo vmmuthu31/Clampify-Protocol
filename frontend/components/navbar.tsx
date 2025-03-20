@@ -15,6 +15,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import WalletButton from "./WalletButton";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -64,7 +65,7 @@ export function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-black/80 border-b border-[#6C5CE7]/20"
+          ? "bg-black/80 border-b border-[#ffae5c]/20"
           : "bg-transparent"
       } backdrop-blur-lg`}
     >
@@ -78,13 +79,18 @@ export function Navbar() {
             className="flex items-center gap-2"
           >
             <motion.div
-              className="w-10 h-10 rounded-full bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] flex items-center justify-center"
+              className="w-10 h-10 rounded-full bg-gradient-to-r from-[#ffae5c] to-[#ff9021] flex items-center justify-center"
               whileHover={{ rotate: 180 }}
               transition={{ duration: 0.5 }}
             >
-              <Lock className="w-5 h-5 text-white" />
+              <Image
+                src="/logo.png"
+                alt="Clampify Logo"
+                width={25}
+                height={25}
+              />
             </motion.div>
-            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#6C5CE7] to-[#4834D4]">
+            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#ffae5c] to-[#ff9021]">
               Clampify
             </span>
           </Link>
@@ -97,7 +103,7 @@ export function Navbar() {
                   <div>
                     <Button
                       variant="ghost"
-                      className={`text-white/80 hover:text-white hover:bg-[#6C5CE7]/10 px-4 py-2 h-12 rounded-xl`}
+                      className={`text-white/80 hover:text-white hover:bg-[#ffae5c]/10 px-4 py-2 h-12 rounded-xl`}
                       onClick={() =>
                         setProductsDropdownOpen(!productsDropdownOpen)
                       }
@@ -113,7 +119,7 @@ export function Navbar() {
                     <AnimatePresence>
                       {productsDropdownOpen && (
                         <motion.div
-                          className="absolute top-full left-0 mt-2 w-56 bg-black/90 border border-[#6C5CE7]/20 rounded-xl backdrop-blur-xl overflow-hidden z-50"
+                          className="absolute top-full left-0 mt-2 w-56 bg-black/90 border border-[#ffae5c]/20 rounded-xl backdrop-blur-xl overflow-hidden z-50"
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
@@ -130,13 +136,13 @@ export function Navbar() {
                                 }}
                               >
                                 <div
-                                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white/70 hover:text-white hover:bg-[#6C5CE7]/10 transition-colors ${
+                                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white/70 hover:text-white hover:bg-[#ffae5c]/10 transition-colors ${
                                     pathname === dropdownItem.href
-                                      ? "bg-[#6C5CE7]/10 text-white"
+                                      ? "bg-[#ffae5c]/10 text-white"
                                       : ""
                                   }`}
                                 >
-                                  <div className="text-[#6C5CE7]">
+                                  <div className="text-[#ffae5c]">
                                     {dropdownItem.icon}
                                   </div>
                                   <span>{dropdownItem.label}</span>
@@ -156,9 +162,9 @@ export function Navbar() {
                   >
                     <Button
                       variant="ghost"
-                      className={`text-white/80 hover:text-white hover:bg-[#6C5CE7]/10 px-4 py-2 h-12 rounded-xl ${
+                      className={`text-white/80 hover:text-white hover:bg-[#ffae5c]/10 px-4 py-2 h-12 rounded-xl ${
                         pathname === item.href
-                          ? "bg-[#6C5CE7]/10 text-white"
+                          ? "bg-[#ffae5c]/10 text-white"
                           : ""
                       }`}
                     >
@@ -176,12 +182,12 @@ export function Navbar() {
           {/* Network Badge */}
           <div className="hidden md:flex items-center">
             <motion.div
-              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[#6C5CE7]/30 bg-[#6C5CE7]/5"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[#ffae5c]/30 bg-[#ffae5c]/5"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
               <div className="relative">
-                <Shield className="w-4 h-4 text-[#6C5CE7]" />
+                <Shield className="w-4 h-4 text-[#ffae5c]" />
                 <motion.div
                   className="absolute -right-1 -top-1 w-2 h-2 rounded-full bg-green-400"
                   animate={{ scale: [1, 1.3, 1] }}
@@ -199,7 +205,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden text-white hover:bg-[#6C5CE7]/10"
+            className="lg:hidden text-white hover:bg-[#ffae5c]/10"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? (
@@ -229,7 +235,7 @@ export function Navbar() {
                       <div>
                         <div
                           className={`flex items-center justify-between p-4 rounded-xl text-white/80 hover:text-white ${
-                            productsDropdownOpen ? "bg-[#6C5CE7]/10" : ""
+                            productsDropdownOpen ? "bg-[#ffae5c]/10" : ""
                           }`}
                           onClick={() =>
                             setProductsDropdownOpen(!productsDropdownOpen)
@@ -248,7 +254,7 @@ export function Navbar() {
                         <AnimatePresence>
                           {productsDropdownOpen && (
                             <motion.div
-                              className="ml-4 mt-1 space-y-1 border-l-2 border-[#6C5CE7]/30 pl-4"
+                              className="ml-4 mt-1 space-y-1 border-l-2 border-[#ffae5c]/30 pl-4"
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: "auto" }}
                               exit={{ opacity: 0, height: 0 }}
@@ -262,13 +268,13 @@ export function Navbar() {
                                     onClick={closeMobileMenu}
                                   >
                                     <div
-                                      className={`flex items-center gap-3 p-4 rounded-xl text-white/70 hover:text-white hover:bg-[#6C5CE7]/10 ${
+                                      className={`flex items-center gap-3 p-4 rounded-xl text-white/70 hover:text-white hover:bg-[#ffae5c]/10 ${
                                         pathname === dropdownItem.href
-                                          ? "bg-[#6C5CE7]/10 text-white"
+                                          ? "bg-[#ffae5c]/10 text-white"
                                           : ""
                                       }`}
                                     >
-                                      <div className="text-[#6C5CE7]">
+                                      <div className="text-[#ffae5c]">
                                         {dropdownItem.icon}
                                       </div>
                                       <span>{dropdownItem.label}</span>
@@ -285,7 +291,7 @@ export function Navbar() {
                         <div
                           className={`p-4 rounded-xl text-white/80 hover:text-white ${
                             pathname === item.href
-                              ? "bg-[#6C5CE7]/10 text-white"
+                              ? "bg-[#ffae5c]/10 text-white"
                               : ""
                           }`}
                         >
@@ -300,10 +306,10 @@ export function Navbar() {
               </div>
 
               {/* Network Badge (Mobile) */}
-              <div className="mt-8 p-4 border-t border-[#6C5CE7]/20">
+              <div className="mt-8 p-4 border-t border-[#ffae5c]/20">
                 <div className="flex items-center gap-2 mb-6">
                   <div className="relative">
-                    <Shield className="w-5 h-5 text-[#6C5CE7]" />
+                    <Shield className="w-5 h-5 text-[#ffae5c]" />
                     <div className="absolute -right-1 -top-1 w-2 h-2 rounded-full bg-green-400" />
                   </div>
                   <span className="text-white/80">
@@ -317,7 +323,7 @@ export function Navbar() {
                     href="https://coredao.org"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-xl bg-[#6C5CE7]/5 text-white/70 hover:text-white border border-[#6C5CE7]/20"
+                    className="flex items-center justify-between p-3 rounded-xl bg-[#ffae5c]/5 text-white/70 hover:text-white border border-[#ffae5c]/20"
                   >
                     <span>CoreDAO Explorer</span>
                     <ExternalLink className="w-4 h-4" />
@@ -325,7 +331,7 @@ export function Navbar() {
                   <Link
                     href="/faq"
                     onClick={closeMobileMenu}
-                    className="flex items-center justify-between p-3 rounded-xl bg-[#6C5CE7]/5 text-white/70 hover:text-white border border-[#6C5CE7]/20"
+                    className="flex items-center justify-between p-3 rounded-xl bg-[#ffae5c]/5 text-white/70 hover:text-white border border-[#ffae5c]/20"
                   >
                     <span>FAQs & Help</span>
                     <ChevronDown className="w-4 h-4" />
