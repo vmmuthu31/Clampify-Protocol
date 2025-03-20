@@ -44,7 +44,16 @@ import {
 } from "@/services/trade";
 import { recordTransaction, getTokenTransactions, getTokenDetails } from "@/services/api";
 import { usePrivy } from "@privy-io/react-auth";
-import { createChart, ColorType, IChartApi, CrosshairMode, LineStyle } from 'lightweight-charts';
+import {
+  createChart,
+  ColorType,
+  CrosshairMode,
+  LineStyle,
+  LineSeries,
+  LineWidth,
+  Time,
+  CandlestickData,
+} from "lightweight-charts";
 
 interface TokenData {
   id: string;
@@ -161,6 +170,15 @@ const getTimeAgo = (timestamp: string) => {
   return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
 };
 
+interface CandleDataPoint {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
 export default function TokenPage() {
   const params = useParams();
   const tokenId = params.id as string; // Get the ID from URL
@@ -209,14 +227,16 @@ export default function TokenPage() {
   const [tokenBalance, setTokenBalance] = useState<string>("");
   const [currentPrice, setCurrentPrice] = useState<string>("0");
   const { user } = usePrivy();
-  const [candleData, setCandleData] = useState<{
-    time: number;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-    volume: number;
-  }[]>([]);
+  const [candleData, setCandleData] = useState<
+    {
+      time: 0;
+      open: 0;
+      high: 0;
+      low: 0;
+      close: 0;
+      volume: 0;
+    }[]
+  >([]);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [tokenImage, setTokenImage] = useState<string>("");
   const [tokenLockDetails, setTokenLockDetails] = useState<{
@@ -488,10 +508,6 @@ export default function TokenPage() {
     });
   };
 
-  const formatCurrency = (num: number) => {
-    return `$${formatNumber(num)}`;
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       if (tokenId) {
@@ -535,105 +551,106 @@ export default function TokenPage() {
 
     const chartOptions = {
       layout: {
-        background: { type: ColorType.Solid, color: '#0D0B15' },
-        textColor: '#d1d4dc',
+        background: { type: ColorType.Solid, color: "#0D0B15" },
+        textColor: "#d1d4dc",
       },
       grid: {
-        vertLines: { color: 'rgba(42, 46, 57, 0.6)' },
-        horzLines: { color: 'rgba(42, 46, 57, 0.6)' },
+        vertLines: { color: "rgba(42, 46, 57, 0.6)" },
+        horzLines: { color: "rgba(42, 46, 57, 0.6)" },
       },
       width: chartContainerRef.current.clientWidth,
       height: 400,
       timeScale: {
         timeVisible: true,
         secondsVisible: false,
-        borderColor: 'rgba(42, 46, 57, 0.6)',
-        textColor: '#d1d4dc',
+        borderColor: "rgba(42, 46, 57, 0.6)",
+        textColor: "#d1d4dc",
       },
       rightPriceScale: {
-        borderColor: 'rgba(42, 46, 57, 0.6)',
-        textColor: '#d1d4dc',
+        borderColor: "rgba(42, 46, 57, 0.6)",
+        textColor: "#d1d4dc",
       },
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: {
-          color: '#758696',
-          width: 1,
+          color: "#758696",
+          width: 1 as LineWidth,
           style: LineStyle.Dashed,
         },
         horzLine: {
-          color: '#758696',
-          width: 1,
+          color: "#758696",
+          width: 1 as LineWidth,
           style: LineStyle.Dashed,
         },
       },
     };
 
     const chart = createChart(chartContainerRef.current, chartOptions);
-
     // Create series with professional styling
-    const mainSeries = chart.addCandlestickSeries({
-      upColor: '#26a69a',
-      downColor: '#ef5350',
-      borderUpColor: '#26a69a',
-      borderDownColor: '#ef5350',
-      wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
+    const mainSeries = chart.addSeries(LineSeries, {
+      title: "Price",
+      lastValueVisible: true,
+      priceLineVisible: false,
+      baseLineVisible: false,
+      color: "#26a69a",
     });
 
     // Set the data
-    mainSeries.setData(candleData);
+    mainSeries.setData(
+      candleData
+        .sort((a, b) => a.time - b.time)
+        .map((d) => ({
+          time: d.time as Time,
+          value: d.close,
+        }))
+    );
 
-    // Add volume series with better styling
-    const volumeSeries = chart.addHistogramSeries({
-      priceFormat: {
-        type: 'volume',
-      },
-      priceScaleId: '', // Set as an overlay
-      scaleMargins: {
-        top: 0.8, // Keep volumes in the lower 20% of the chart
-        bottom: 0,
-      },
+    // Add volume series
+    const volumeSeries = chart.addSeries(LineSeries, {
+      title: "Volume",
+      lastValueVisible: true,
+      priceLineVisible: false,
+      baseLineVisible: false,
+      color: "rgba(38, 166, 154, 0.5)",
+      priceScaleId: "",
     });
 
-    // Set volume data with color coordination to candles
+    // Set volume data
     volumeSeries.setData(
-      candleData.map((d) => ({
-        time: d.time,
-        value: d.volume,
-        color: d.open > d.close 
-          ? 'rgba(239, 83, 80, 0.5)'  // Red with opacity
-          : 'rgba(38, 166, 154, 0.5)', // Green with opacity
-      }))
+      candleData
+        .sort((a, b) => a.time - b.time)
+        .map((d) => ({
+          time: d.time as Time,
+          value: d.volume,
+        }))
     );
 
     // Handle legend updates
-    let legend = document.createElement('div');
-    legend.style.position = 'absolute';
-    legend.style.left = '12px';
-    legend.style.top = '12px';
-    legend.style.zIndex = '1';
-    legend.style.fontSize = '12px';
-    legend.style.color = '#d1d4dc';
-    legend.style.fontFamily = 'sans-serif';
+    const legend = document.createElement("div");
+    legend.style.position = "absolute";
+    legend.style.left = "12px";
+    legend.style.top = "12px";
+    legend.style.zIndex = "1";
+    legend.style.fontSize = "12px";
+    legend.style.color = "#d1d4dc";
+    legend.style.fontFamily = "sans-serif";
     chartContainerRef.current.appendChild(legend);
 
-    chart.subscribeCrosshairMove(param => {
+    chart.subscribeCrosshairMove((param) => {
       if (param.time) {
-        const data = param.seriesData.get(mainSeries);
+        const data = param.seriesData.get(mainSeries) as CandlestickData;
         if (data) {
-          const price = data as any;
           legend.innerHTML = `
             <div style="font-size: 13px; margin: 4px 0;">
-              O <span style="color: #d1d4dc">${price.open.toFixed(6)}</span> 
-              H <span style="color: #d1d4dc">${price.high.toFixed(6)}</span> 
-              L <span style="color: #d1d4dc">${price.low.toFixed(6)}</span> 
-              C <span style="color: #d1d4dc">${price.close.toFixed(6)}</span>
+              O <span style="color: #d1d4dc">${data.open.toFixed(6)}</span> 
+              H <span style="color: #d1d4dc">${data.high.toFixed(6)}</span> 
+              L <span style="color: #d1d4dc">${data.low.toFixed(6)}</span> 
+              C <span style="color: #d1d4dc">${data.close.toFixed(6)}</span>
             </div>
           `;
         }
       } else {
-        legend.innerHTML = '';
+        legend.innerHTML = "";
       }
     });
 
@@ -648,11 +665,11 @@ export default function TokenPage() {
         });
       }
     };
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     // Cleanup
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       chart.remove();
     };
   }, [candleData]);
@@ -664,8 +681,8 @@ export default function TokenPage() {
         try {
           const data = await getCandleData(tokenId);
           // Format the data for the chart
-          const formattedData = data.map((d: any) => ({
-            time: Math.floor(d.time / 1000), // Convert to seconds for the chart
+          const formattedData = data.map((d: CandleDataPoint) => ({
+            time: Math.floor(d.time / 1000) as Time,
             open: d.open,
             high: d.high,
             low: d.low,
@@ -699,8 +716,8 @@ export default function TokenPage() {
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [initializeChart]);
 
   // Add helper function to format duration
@@ -779,7 +796,9 @@ export default function TokenPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="w-5 h-5 text-[#ffae5c]" />
-                    <h3 className="text-lg font-medium text-white">Price Chart</h3>
+                    <h3 className="text-lg font-medium text-white">
+                      Price Chart
+                    </h3>
                   </div>
                   <div className="flex gap-2">
                     {["1H", "1D", "1W", "1M"].map((timeframe) => (
@@ -863,21 +882,29 @@ export default function TokenPage() {
                     <div>
                       <div className="text-white/60 text-sm">Market Cap</div>
                       <div className="text-white font-bold text-lg">
-                        {parseFloat(ethers.utils.formatEther(tokenDetails?.marketCap.toString() || "0")).toFixed(4)}
+                        {parseFloat(
+                          ethers.utils.formatEther(
+                            tokenDetails?.marketCap.toString() || "0"
+                          )
+                        )?.toFixed(4)}
                       </div>
                     </div>
                     <div>
                       <div className="text-white/60 text-sm">24h Volume</div>
                       <div className="text-white font-bold text-lg">
-                        {parseFloat(ethers.utils.formatEther(tokenDetails?.volume24h.toString() || "0")).toFixed(4)}
+                        {parseFloat(
+                          ethers.utils.formatEther(
+                            tokenDetails?.volume24h.toString() || "0"
+                          )
+                        )?.toFixed(4)}
                       </div>
                     </div>
                     <div>
                       <div className="text-white/60 text-sm">Total Supply</div>
                       <div className="text-white font-bold text-lg">
-                        {
-                         parseFloat(tokenDetails?.totalSupply || "0").toFixed(4)
-                        }
+                        {parseFloat(tokenDetails?.totalSupply || "0")?.toFixed(
+                          4
+                        )}
                       </div>
                     </div>
                     <div>
@@ -1028,7 +1055,7 @@ export default function TokenPage() {
                               Unlock Progress:
                             </span>
                             <span className="text-white">
-                              {percentUnlocked.toFixed(1)}%
+                              {percentUnlocked?.toFixed(1)}%
                             </span>
                           </div>
                           <div className="w-full h-3 bg-[#ffae5c]/10 rounded-full overflow-hidden">
@@ -1226,7 +1253,7 @@ export default function TokenPage() {
                               {recentTransactions?.type[i]}{" "}
                               {parseFloat(
                                 recentTransactions?.tokenAmounts[i] || "0"
-                              ).toFixed(2)}{" "}
+                              )?.toFixed(2)}{" "}
                               {tokenDetails?.symbol}
                             </>
                           )}
@@ -1260,7 +1287,7 @@ export default function TokenPage() {
                         <div className="text-white">
                           {parseFloat(
                             recentTransactions?.prices[i] || "0"
-                          ).toFixed(10)}{" "}
+                          )?.toFixed(10)}{" "}
                           tCORE
                         </div>
                       )}
@@ -1401,7 +1428,7 @@ export default function TokenPage() {
                             parseInt(tokenDetails?.totalSupply || "0") *
                             0.001 *
                             0.25;
-                          setTokenAmount(maxAmount.toFixed(0));
+                          setTokenAmount(maxAmount?.toFixed(0));
                         }}
                       >
                         25%
@@ -1413,7 +1440,7 @@ export default function TokenPage() {
                             parseInt(tokenDetails?.totalSupply || "0") *
                             0.001 *
                             0.5;
-                          setTokenAmount(maxAmount.toFixed(0));
+                          setTokenAmount(maxAmount?.toFixed(0));
                         }}
                       >
                         50%
@@ -1425,7 +1452,7 @@ export default function TokenPage() {
                             parseInt(tokenDetails?.totalSupply || "0") *
                             0.001 *
                             0.75;
-                          setTokenAmount(maxAmount.toFixed(0));
+                          setTokenAmount(maxAmount?.toFixed(0));
                         }}
                       >
                         75%
@@ -1445,7 +1472,7 @@ export default function TokenPage() {
                         isCalculating ? (
                           <span className="text-white/50">Calculating...</span>
                         ) : estimatedReturn ? (
-                          parseFloat(estimatedReturn).toFixed(2)
+                          parseFloat(estimatedReturn)?.toFixed(2)
                         ) : (
                           "0"
                         )
@@ -1680,9 +1707,9 @@ export default function TokenPage() {
                 <div className="flex justify-between">
                   <span className="text-white/70">Currently Locked:</span>
                   <span className="text-white font-medium">
-                    {(tokenData.supplyLockPercentage - percentUnlocked).toFixed(
-                      1
-                    )}
+                    {(
+                      tokenData.supplyLockPercentage - percentUnlocked
+                    )?.toFixed(1)}
                     % (
                     {formatNumber(
                       (parseInt(tokenDetails?.totalSupply || "0") *
@@ -1696,7 +1723,7 @@ export default function TokenPage() {
                 <div className="flex justify-between">
                   <span className="text-white/70">Already Unlocked:</span>
                   <span className="text-white font-medium">
-                    {percentUnlocked.toFixed(1)}% (
+                    {percentUnlocked?.toFixed(1)}% (
                     {formatNumber(
                       (parseInt(tokenDetails?.totalSupply || "0") *
                         percentUnlocked) /

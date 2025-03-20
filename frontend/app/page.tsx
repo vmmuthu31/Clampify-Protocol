@@ -464,39 +464,39 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {tokens.slice(0, 8).map((token: Token, i: number) => (
-              <motion.div
-                key={token._id}
-                className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-6 border border-[#ffae5c]/20 hover:border-[#ffae5c]/40 transition-all duration-300"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{
-                  scale: 1.03,
-                  backgroundColor: "rgba(108, 92, 231, 0.08)",
-                }}
-              >
-                <div className="flex items-center gap-4 mb-5">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#ffae5c]/30 to-[#4834D4]/30 flex items-center justify-center">
-                    <span className="text-white/90 font-medium">
-                      {token.symbol}
-                    </span>
+              <Link href={`/token/${token.address}`} key={token.address}>
+                <motion.div
+                  className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-6 border border-[#ffae5c]/20 hover:border-[#ffae5c]/40 transition-all duration-300"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  whileHover={{
+                    scale: 1.03,
+                    backgroundColor: "rgba(108, 92, 231, 0.08)",
+                  }}
+                >
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#ffae5c]/30 to-[#4834D4]/30 flex items-center justify-center">
+                      <span className="text-white/90 font-medium">
+                        {token.symbol}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">{token.name}</div>
+                      <div className="text-white/50 text-sm">Secure</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-white font-medium">{token.name}</div>
-                    <div className="text-white/50 text-sm">Secure</div>
-                  </div>
-                </div>
 
-                {/* TODO: Add lock indicator */}
-                {/* Lock indicator */}
-                <div className="relative pt-1">
-                  <div className="text-white/60 text-xs flex justify-between mb-1">
-                    <span>Supply Locked</span>
-                    <span className="text-white/90 font-medium">
-                      {/* {token.locked} */}
-                    </span>
-                  </div>
-                  {/* <div className="overflow-hidden h-2 text-xs flex rounded-full bg-white/10">
+                  {/* TODO: Add lock indicator */}
+                  {/* Lock indicator */}
+                  <div className="relative pt-1">
+                    <div className="text-white/60 text-xs flex justify-between mb-1">
+                      <span>Supply Locked</span>
+                      <span className="text-white/90 font-medium">
+                        {/* {token.locked} */}
+                      </span>
+                    </div>
+                    {/* <div className="overflow-hidden h-2 text-xs flex rounded-full bg-white/10">
                     <motion.div
                       style={{ width: token.locked }}
                       className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-[#ffae5c] to-[#4834D4]"
@@ -505,8 +505,9 @@ export default function HomePage() {
                       transition={{ duration: 1, delay: i * 0.1 + 0.5 }}
                     ></motion.div>
                   </div> */}
-                </div>
-              </motion.div>
+                  </div>
+                </motion.div>
+              </Link>
             ))}
           </div>
         </motion.div>

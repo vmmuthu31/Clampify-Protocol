@@ -204,7 +204,7 @@ export default function LaunchPage() {
       await recordTransaction({
         address: tokenAddress,
         creator: user?.wallet?.address,
-        type: 'CREATE',
+        type: "CREATE",
         amount: tokenForm.initialSupply,
         price: tokenForm.initialPrice,
         txHash: tokenAddress,
@@ -341,7 +341,11 @@ export default function LaunchPage() {
                 </SelectTrigger>
                 <SelectContent className="bg-[#0D0B15] border-[#ffae5c]/20 focus:border-[#ffae5c] text-white">
                   {CREATOR_LOCK_PERIODS.map((period) => (
-                    <SelectItem key={period.value} value={period.value}>
+                    <SelectItem
+                      className="text-white hover:bg-[#ffae5c]/10 cursor-pointer"
+                      key={period.value}
+                      value={period.value}
+                    >
                       {period.label}
                     </SelectItem>
                   ))}
@@ -394,7 +398,11 @@ export default function LaunchPage() {
                   </SelectTrigger>
                   <SelectContent className="bg-[#0D0B15] border-[#ffae5c]/20 focus:border-[#ffae5c] text-white">
                     {LIQUIDITY_LOCK_PERIODS.map((period) => (
-                      <SelectItem key={period.value} value={period.value}>
+                      <SelectItem
+                        className="text-white hover:bg-[#ffae5c]/10 cursor-pointer"
+                        key={period.value}
+                        value={period.value}
+                      >
                         {period.label}
                       </SelectItem>
                     ))}
