@@ -87,8 +87,8 @@ export default function LaunchPage() {
   const [tokenForm, setTokenForm] = useState<TokenForm>({
     name: "",
     symbol: "",
-    initialSupply: "10000000", // mint 10m tokens
-    maxSupply: "10000000000", // max 10b tokens
+    initialSupply: "1000000000000000000000000", // mint 10m tokens
+    maxSupply: "10000000000000000000000000000000000000000000000000000", // max 10b tokens
     initialPrice: "1", // 1 Gwei (0.000000001 ETH)
     creatorLockupPeriod: "86400", // 24 hours in seconds
     lockLiquidity: true,

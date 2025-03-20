@@ -110,7 +110,7 @@ export const TokenReturnOnBuy = async (tokenAddress: string , amount: string): P
   }
 };
 
-export const buyTokens = async (tokenAddress: string, amount: string): Promise<boolean> => {
+export const buyTokens = async (tokenAddress: string, amount: string): Promise<{ hash: string }> => {
   try {
     console.log(tokenAddress, amount);
     console.log("at buy tokens");
@@ -135,14 +135,15 @@ export const buyTokens = async (tokenAddress: string, amount: string): Promise<b
     // const amountInWei = ethers.utils.parseEther("0.001");
 
     // Execute buy transaction
-    const tx = await contract.buyTokens(amountInWei,{
-      value: amountInWei    });
+    const tx = await contract.buyTokens(amountInWei, {
+      value: amountInWei    
+    });
 
     // Wait for transaction confirmation
     const receipt = await tx.wait();
     console.log("Buy transaction confirmed:", receipt);
 
-    return true;
+    return { hash: receipt.transactionHash };
   } catch (error) {
     console.error("Buy tokens error:", error);
     throw error;
