@@ -1,5 +1,5 @@
 {
-  "name": "core-paymaster-sdk",
+  "name": "core-paymastersdk",
   "version": "0.1.0",
   "description": "SDK for interacting with Core Paymaster on Core Testnet",
   "main": "dist/index.js",
