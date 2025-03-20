@@ -1,14 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Token from "@/models/Token";
 
-export async function GET(
-  request: Request,
-  { params }: { params: { address: Promise<string> | string } }
-) {
+export const GET = async (
+  req: NextRequest,
+  { params }: { params: Promise<{ address: string }> }
+): Promise<NextResponse> => {
   try {
     await dbConnect();
-    const address = typeof params.address === 'string' ? params.address : await params.address;
+    const { address } = await params;
     const token = await Token.findOne({ address });
 
     if (!token) {
@@ -26,4 +26,4 @@ export async function GET(
       { status: 500 }
     );
   }
-} 
+};
