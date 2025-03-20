@@ -1,19 +1,29 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import WalletButtonProvider from "@/providers/WalletButtonProvider";
 import Footer from "@/components/Footer";
 import { Navbar } from "@/components/navbar";
 import { WalletProvider } from "@/providers/WalletProvider";
+import Loader from "@/components/Loader";
 
 function ClientBody({ children }: { children: ReactNode }) {
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+  }, []);
   return (
     <div>
-      <Navbar />
+      {isLoading && <Loader />}
       <WalletProvider>
-        <WalletButtonProvider>{children}</WalletButtonProvider>
+        <WalletButtonProvider>
+          <Navbar />
+          {children}
+          <Footer />
+        </WalletButtonProvider>
       </WalletProvider>
-      <Footer />
     </div>
   );
 }
