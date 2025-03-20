@@ -301,3 +301,50 @@ export const getTokenPrice = async (tokenAddress: string): Promise<string> => {
     throw error;
   }
 };
+
+
+export const getTopHolders = async (tokenAddress: string) => {
+  try {
+    const provider = ethereum != null
+      ? new ethers.providers.Web3Provider(ethereum)
+      : new ethers.providers.JsonRpcProvider(RPC_URL);
+
+    const contract = new ethers.Contract(tokenAddress, ClampifyToken, provider);
+
+    const [holders, balances, percentages] = await contract.getTopHolders();
+
+    return holders.length;
+
+  } catch (error) {
+    console.error("Get top holders error:", error);
+    throw error;
+  }
+};
+
+export const getCandleData = async (tokenAddress: string, count: number = 24) => {
+  try {
+    const provider = ethereum != null
+      ? new ethers.providers.Web3Provider(ethereum)
+      : new ethers.providers.JsonRpcProvider(RPC_URL);
+
+    const contract = new ethers.Contract(tokenAddress, ClampifyToken, provider);
+
+    const [timestamps, opens, highs, lows, closes, volumes] = await contract.getCandleData(count);
+
+    // Format the data for TradingView
+    const candleData = timestamps.map((timestamp: any, i: number) => ({
+      time: Number(timestamp) * 1000, // Convert to milliseconds
+      open: parseFloat(ethers.utils.formatEther(opens[i])),
+      high: parseFloat(ethers.utils.formatEther(highs[i])),
+      low: parseFloat(ethers.utils.formatEther(lows[i])),
+      close: parseFloat(ethers.utils.formatEther(closes[i])),
+      volume: parseFloat(ethers.utils.formatEther(volumes[i]))
+    }));
+
+    return candleData;
+
+  } catch (error) {
+    console.error("Get candle data error:", error);
+    throw error;
+  }
+};

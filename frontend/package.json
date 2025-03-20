@@ -35,6 +35,7 @@
     "dropdown": "^0.2.0",
     "ethers": "^5.7.2",
     "framer-motion": "^12.5.0",
+    "lightweight-charts": "^4.2.3",
     "lucide-react": "^0.482.0",
     "mongoose": "^8.12.1",
     "next": "15.2.3",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Navbar } from "@/components/navbar";
 import {
   ArrowUpRight,
@@ -36,12 +36,15 @@ import { ethers } from "ethers";
 import {
   buyTokens,
   getTokenPrice,
+  getTopHolders,
   sellTokens,
   TokenReturnOnBuy,
   TokenReturnOnSell,
+  getCandleData,
 } from "@/services/trade";
 import { recordTransaction, getTokenTransactions } from "@/services/api";
 import { usePrivy } from "@privy-io/react-auth";
+import { createChart, ColorType, IChartApi, CrosshairMode, LineStyle } from 'lightweight-charts';
 
 interface TokenData {
   id: string;
@@ -171,6 +174,7 @@ export default function TokenPage() {
   const [slippage, setSlippage] = useState(0.5);
   const [showSlippageSettings, setShowSlippageSettings] = useState(false);
   const { toast } = useToast();
+  const [topHolders, setTopHolders] = useState<number>(0);
   const [tokenDetails, setTokenDetails] = useState<{
     name: string;
     symbol: string;
@@ -205,6 +209,15 @@ export default function TokenPage() {
   const [tokenBalance, setTokenBalance] = useState<string>("");
   const [currentPrice, setCurrentPrice] = useState<string>("0");
   const { user } = usePrivy();
+  const [candleData, setCandleData] = useState<{
+    time: number;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+  }[]>([]);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
 
   // Calculate days left in lock
   const daysLeft = Math.ceil(
@@ -230,6 +243,9 @@ export default function TokenPage() {
         console.log("Token Info:", formattedInfo);
         setTokenDetails(formattedInfo);
 
+        const topHolders = await getTopHolders(tokenInfo.contractAddress);
+        console.log("Top Holders:", topHolders);
+        setTopHolders(topHolders);
         const formattedTokenBalance = ethers.utils.formatEther(
           tokenInfo.balance.toString()
         );
@@ -492,6 +508,180 @@ export default function TokenPage() {
     fetchData();
   }, [tokenId]);
 
+  // Update the initializeChart function
+  const initializeChart = useCallback(() => {
+    if (!chartContainerRef.current || candleData.length === 0) return;
+
+    const chartOptions = {
+      layout: {
+        background: { type: ColorType.Solid, color: '#0D0B15' },
+        textColor: '#d1d4dc',
+      },
+      grid: {
+        vertLines: { color: 'rgba(42, 46, 57, 0.6)' },
+        horzLines: { color: 'rgba(42, 46, 57, 0.6)' },
+      },
+      width: chartContainerRef.current.clientWidth,
+      height: 400,
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: false,
+        borderColor: 'rgba(42, 46, 57, 0.6)',
+        textColor: '#d1d4dc',
+      },
+      rightPriceScale: {
+        borderColor: 'rgba(42, 46, 57, 0.6)',
+        textColor: '#d1d4dc',
+      },
+      crosshair: {
+        mode: CrosshairMode.Normal,
+        vertLine: {
+          color: '#758696',
+          width: 1,
+          style: LineStyle.Dashed,
+        },
+        horzLine: {
+          color: '#758696',
+          width: 1,
+          style: LineStyle.Dashed,
+        },
+      },
+    };
+
+    const chart = createChart(chartContainerRef.current, chartOptions);
+
+    // Create series with professional styling
+    const mainSeries = chart.addCandlestickSeries({
+      upColor: '#26a69a',
+      downColor: '#ef5350',
+      borderUpColor: '#26a69a',
+      borderDownColor: '#ef5350',
+      wickUpColor: '#26a69a',
+      wickDownColor: '#ef5350',
+    });
+
+    // Set the data
+    mainSeries.setData(candleData);
+
+    // Add volume series with better styling
+    const volumeSeries = chart.addHistogramSeries({
+      priceFormat: {
+        type: 'volume',
+      },
+      priceScaleId: '', // Set as an overlay
+      scaleMargins: {
+        top: 0.8, // Keep volumes in the lower 20% of the chart
+        bottom: 0,
+      },
+    });
+
+    // Set volume data with color coordination to candles
+    volumeSeries.setData(
+      candleData.map((d) => ({
+        time: d.time,
+        value: d.volume,
+        color: d.open > d.close 
+          ? 'rgba(239, 83, 80, 0.5)'  // Red with opacity
+          : 'rgba(38, 166, 154, 0.5)', // Green with opacity
+      }))
+    );
+
+    // Handle legend updates
+    let legend = document.createElement('div');
+    legend.style.position = 'absolute';
+    legend.style.left = '12px';
+    legend.style.top = '12px';
+    legend.style.zIndex = '1';
+    legend.style.fontSize = '12px';
+    legend.style.color = '#d1d4dc';
+    legend.style.fontFamily = 'sans-serif';
+    chartContainerRef.current.appendChild(legend);
+
+    chart.subscribeCrosshairMove(param => {
+      if (param.time) {
+        const data = param.seriesData.get(mainSeries);
+        if (data) {
+          const price = data as any;
+          legend.innerHTML = `
+            <div style="font-size: 13px; margin: 4px 0;">
+              O <span style="color: #d1d4dc">${price.open.toFixed(6)}</span> 
+              H <span style="color: #d1d4dc">${price.high.toFixed(6)}</span> 
+              L <span style="color: #d1d4dc">${price.low.toFixed(6)}</span> 
+              C <span style="color: #d1d4dc">${price.close.toFixed(6)}</span>
+            </div>
+          `;
+        }
+      } else {
+        legend.innerHTML = '';
+      }
+    });
+
+    // Fit content and add margin
+    chart.timeScale().fitContent();
+
+    // Handle resize
+    const handleResize = () => {
+      if (chartContainerRef.current) {
+        chart.applyOptions({
+          width: chartContainerRef.current.clientWidth,
+        });
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      chart.remove();
+    };
+  }, [candleData]);
+
+  // Update the useEffect for fetching candle data
+  useEffect(() => {
+    const fetchCandleData = async () => {
+      if (tokenId) {
+        try {
+          const data = await getCandleData(tokenId);
+          // Format the data for the chart
+          const formattedData = data.map((d: any) => ({
+            time: Math.floor(d.time / 1000), // Convert to seconds for the chart
+            open: d.open,
+            high: d.high,
+            low: d.low,
+            close: d.close,
+            volume: d.volume,
+          }));
+          setCandleData(formattedData);
+        } catch (error) {
+          console.error("Error fetching candle data:", error);
+        }
+      }
+    };
+
+    fetchCandleData();
+  }, [tokenId]);
+
+  // Initialize chart when candle data changes
+  useEffect(() => {
+    const cleanup = initializeChart();
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, [initializeChart]);
+
+  // Add resize handler
+  useEffect(() => {
+    const handleResize = () => {
+      if (chartContainerRef.current) {
+        const cleanup = initializeChart();
+        if (cleanup) cleanup();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [initializeChart]);
+
   if (!isClient) {
     return null;
   }
@@ -547,46 +737,33 @@ export default function TokenPage() {
           {/* Left Column (2/3 width on large screens) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Price Card with GeckoTerminal Integration */}
-            <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#ffae5c]/20 p-6">
-              <div className="flex flex-col md:flex-row justify-between md:items-center mb-6">
-                <div className="mb-4 md:mb-0">
-                  <div className="text-white/70 text-sm">Price</div>
-                  <div className="flex items-baseline gap-3">
-                    <div className="text-white text-3xl font-bold">
-                      ${currentPrice}
-                    </div>
+            <div className="bg-[#0D0B15] rounded-xl overflow-hidden border border-[#2A2E39]">
+              <div className="p-4 border-b border-[#2A2E39]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-[#ffae5c]" />
+                    <h3 className="text-lg font-medium text-white">Price Chart</h3>
+                  </div>
+                  <div className="flex gap-2">
+                    {["1H", "1D", "1W", "1M"].map((timeframe) => (
+                      <Button
+                        key={timeframe}
+                        variant="ghost"
+                        className={`px-3 py-1 ${
+                          activeTimeframe === timeframe
+                            ? "bg-[#ffae5c] text-white"
+                            : "text-white/70 hover:text-white"
+                        }`}
+                        onClick={() => setActiveTimeframe(timeframe)}
+                      >
+                        {timeframe}
+                      </Button>
+                    ))}
                   </div>
                 </div>
-
-                <div className="flex gap-2">
-                  {["1H", "1D", "1W", "1M", "ALL"].map((timeframe) => (
-                    <Button
-                      key={timeframe}
-                      size="sm"
-                      variant="ghost"
-                      className={`px-3 py-1 rounded-lg ${
-                        activeTimeframe === timeframe
-                          ? "bg-[#ffae5c]/20 text-white"
-                          : "text-white/60 hover:text-white hover:bg-[#ffae5c]/10"
-                      }`}
-                      onClick={() => setActiveTimeframe(timeframe)}
-                    >
-                      {timeframe}
-                    </Button>
-                  ))}
-                </div>
               </div>
-
-              {/* GeckoTerminal Chart Embed */}
-              <div className="h-[500px] w-full rounded-xl overflow-hidden">
-                <iframe
-                  src={`https://www.geckoterminal.com/core/pools/0x624fa280ab435ff929f91dfb1aa3df1c9a077d42?embed=1&theme=dark&info=0&swaps=0`}
-                  frameBorder="0"
-                  width="100%"
-                  height="100%"
-                  className="border-0"
-                  title="GeckoTerminal Chart"
-                />
+              <div className="relative">
+                <div ref={chartContainerRef} className="h-[400px] w-full" />
               </div>
             </div>
 
@@ -669,7 +846,7 @@ export default function TokenPage() {
                     <div>
                       <div className="text-white/60 text-sm">Holders</div>
                       <div className="text-white font-bold text-lg">
-                        {formatNumber(tokenData.holders)}
+                        {topHolders}
                       </div>
                     </div>
                   </div>
