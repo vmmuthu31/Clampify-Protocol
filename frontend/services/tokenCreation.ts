@@ -21,6 +21,8 @@ interface TokenInfo {
   initialSupply: string;
   initialPrice: string;
   contractAddress: string;
+  marketCap: string;
+  volume24h: string;
 }
 
 export const Mint = async (
@@ -99,18 +101,22 @@ export const TokenInfo = async (tokenAddress: string): Promise<TokenInfo> => {
     const initialSupply = await contract.initialSupply();
     const initialPrice = await contract.getCurrentPrice();
     const creatorLockupPeriod = await contract.creatorLockupPeriod();
+    const marketCap = await contract.marketCap();
+    const volume24h = await contract.totalVolume();
     const balance = await contract.balanceOf(userAddress);
 
     return {
       name,
       symbol,
-      totalSupply,
+      totalSupply: ethers.utils.formatEther(totalSupply),
       decimals,
       balance,
       creatorLockupPeriod,
       initialSupply,
       initialPrice,
       contractAddress: tokenAddress,
+      marketCap,
+      volume24h,
     };
   } catch (error) {
     console.error("Detailed error:", error);

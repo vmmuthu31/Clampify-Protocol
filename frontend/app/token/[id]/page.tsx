@@ -218,6 +218,7 @@ export default function TokenPage() {
         console.log("Token ID from URL:", tokenId);
         const tokenInfo = await TokenInfo(tokenId);
 
+        console.log("Token Info:", tokenInfo);
         // Format BigNumber values
         const formattedInfo = {
           ...tokenInfo,
@@ -675,9 +676,9 @@ export default function TokenPage() {
                     <div>
                       <div className="text-white/60 text-sm">Total Supply</div>
                       <div className="text-white font-bold text-lg">
-                        {formatNumber(
-                          parseInt(tokenDetails?.totalSupply || "0")
-                        )}
+                        {
+                         tokenDetails?.totalSupply || "0"
+                        }
                       </div>
                     </div>
                     <div>
