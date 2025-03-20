@@ -18,7 +18,7 @@ export async function GET(
     }
 
     const tokens = await Token.find({ 
-      creator: address.toLowerCase() 
+      creator: { $regex: new RegExp(address, 'i') }
     });
 
     return NextResponse.json({ 

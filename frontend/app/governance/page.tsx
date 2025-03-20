@@ -225,7 +225,7 @@ export default function GovernancePage() {
         );
 
         const tokenInfo = await Promise.all(tokenInfoPromises);
-        setTokens(tokenInfo);
+        // setTokens(tokenInfo);
 
         // Select the first token by default if available
         if (tokenInfo.length > 0 && !selectedToken) {
@@ -239,6 +239,8 @@ export default function GovernancePage() {
     };
 
     loadTokens();
+
+    
     // eslint-disable-next-line
   }, [governanceContract, provider, signer, userAddress]);
 
@@ -343,6 +345,12 @@ export default function GovernancePage() {
 
     loadProposals();
   }, [selectedToken, governanceContract, provider, tokens, userAddress]);
+
+
+  useEffect(() => {
+    console.log("Tokens:", tokens);
+    fetchUserCreatedTokens(userAddress || "");
+  }, [userAddress]);
 
   // Form handler for creating new proposals
   const proposalForm = useForm<ProposalFormValues>({
@@ -533,9 +541,13 @@ export default function GovernancePage() {
       }
       
       const data = await response.json();
+
+      console.log("User created tokens:", data);
       if (data.success) {
         console.log("User created tokens:", data.tokens);
         setUserCreatedTokens(data.tokens);
+
+        setTokens(data.tokens);
         
         // Add user's created tokens to the tokens list if they're not already there
         setTokens(prevTokens => {
