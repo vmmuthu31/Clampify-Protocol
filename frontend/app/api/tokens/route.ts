@@ -15,6 +15,10 @@ export async function POST(req: Request) {
       initialSupply: body.initialSupply,
       maxSupply: body.maxSupply,
       initialPrice: body.initialPrice,
+      creatorLockupPeriod: body.creatorLockupPeriod,
+      lockLiquidity: body.lockLiquidity,
+      liquidityLockPeriod: body.liquidityLockPeriod,
+      image: body.image,
     });
 
     return NextResponse.json({ success: true, token });
@@ -40,3 +44,9 @@ export async function GET() {
     );
   }
 }
+
+
+
+
+
+

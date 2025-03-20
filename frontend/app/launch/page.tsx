@@ -11,6 +11,7 @@ import {
   X,
   AlertTriangle,
   Wallet,
+  UploadCloud,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,6 +54,7 @@ interface TokenForm {
   creatorLockupPeriod: string;
   lockLiquidity: boolean;
   liquidityLockPeriod: string;
+  image: string;
 }
 
 // Define errors type
@@ -94,10 +96,14 @@ export default function LaunchPage() {
     creatorLockupPeriod: "86400", // 24 hours in seconds
     lockLiquidity: true,
     liquidityLockPeriod: "2592000", // 30 days in seconds
+    image: "",
   });
 
   // Validation
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Add image preview state
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
@@ -120,6 +126,11 @@ export default function LaunchPage() {
     if (tokenForm.lockLiquidity && !tokenForm.liquidityLockPeriod)
       newErrors.liquidityLockPeriod = "Liquidity lock period is required";
 
+    // Add image validation if you want it to be required
+    // if (!tokenForm.image) {
+    //   newErrors.image = "Token image is required";
+    // }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -140,16 +151,30 @@ export default function LaunchPage() {
     }
   };
 
+  // Add image handling function
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setImagePreview(base64String);
+        setTokenForm(prev => ({
+          ...prev,
+          image: base64String
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleLaunch = async () => {
     if (!validateForm()) return;
     setIsLaunching(true);
 
     try {
-      const priceInEth = ethers.utils.formatUnits(
-        tokenForm.initialPrice,
-        "gwei"
-      );
-
+      const priceInEth = ethers.utils.formatUnits(tokenForm.initialPrice, "gwei");
       const tokenAddress = await Mint(
         tokenForm.name,
         tokenForm.symbol,
@@ -161,18 +186,19 @@ export default function LaunchPage() {
         tokenForm.liquidityLockPeriod
       );
 
-      // Record the token creation in database
+      // Create token record with all fields
       await createTokenRecord({
         address: tokenAddress,
         name: tokenForm.name,
         symbol: tokenForm.symbol,
-        type: "CREATE",
-        creator: user?.wallet?.address, // from usePrivy
+        creator: user?.wallet?.address || "",
         initialSupply: tokenForm.initialSupply,
         maxSupply: tokenForm.maxSupply,
-        initialPrice: tokenForm.initialPrice,
-        txHash: tokenAddress // or get the actual tx hash if available
-
+        initialPrice: priceInEth,
+        creatorLockupPeriod: tokenForm.creatorLockupPeriod,
+        lockLiquidity: tokenForm.lockLiquidity,
+        liquidityLockPeriod: tokenForm.liquidityLockPeriod,
+        image: tokenForm.image,
       });
 
       await recordTransaction({
@@ -184,9 +210,6 @@ export default function LaunchPage() {
         txHash: tokenAddress,
         name: tokenForm.name,
         symbol: tokenForm.symbol,
-        
-
-
       });
 
       setLaunchSuccess(true);
@@ -390,6 +413,58 @@ export default function LaunchPage() {
                 )}
               </div>
             )}
+
+            <div>
+              <Label htmlFor="tokenImage" className="text-white mb-2">
+                Token Image
+              </Label>
+              <div className="mt-2 flex justify-center rounded-lg border border-dashed border-[#ffae5c]/20 px-6 py-10">
+                <div className="text-center">
+                  {imagePreview ? (
+                    <div className="relative w-32 h-32 mx-auto">
+                      <img
+                        src={imagePreview}
+                        alt="Token preview"
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                      <button
+                        onClick={() => {
+                          setImagePreview("");
+                          setTokenForm(prev => ({ ...prev, image: "" }));
+                        }}
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <UploadCloud className="mx-auto h-12 w-12 text-[#ffae5c]" />
+                      <div className="mt-4 flex text-sm leading-6 text-white/70">
+                        <label
+                          htmlFor="tokenImage"
+                          className="relative cursor-pointer rounded-md bg-transparent font-semibold text-[#ffae5c] focus-within:outline-none focus-within:ring-2 focus-within:ring-[#ffae5c] focus-within:ring-offset-2 hover:text-[#ffae5c]/80"
+                        >
+                          <span>Upload a file</span>
+                          <input
+                            id="tokenImage"
+                            name="tokenImage"
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
+                            onChange={handleImageChange}
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs leading-5 text-white/50">
+                        PNG, JPG, GIF up to 5MB
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="mt-8 p-4 rounded-xl bg-[#ffae5c]/10 border border-[#ffae5c]/20">

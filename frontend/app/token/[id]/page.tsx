@@ -42,7 +42,7 @@ import {
   TokenReturnOnSell,
   getCandleData,
 } from "@/services/trade";
-import { recordTransaction, getTokenTransactions } from "@/services/api";
+import { recordTransaction, getTokenTransactions, getTokenDetails } from "@/services/api";
 import { usePrivy } from "@privy-io/react-auth";
 import { createChart, ColorType, IChartApi, CrosshairMode, LineStyle } from 'lightweight-charts';
 
@@ -218,6 +218,16 @@ export default function TokenPage() {
     volume: number;
   }[]>([]);
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const [tokenImage, setTokenImage] = useState<string>("");
+  const [tokenLockDetails, setTokenLockDetails] = useState<{
+    lockLiquidity: boolean;
+    liquidityLockPeriod: string;
+    creatorLockupPeriod: string;
+  }>({
+    lockLiquidity: false,
+    liquidityLockPeriod: "0",
+    creatorLockupPeriod: "0"
+  });
 
   // Calculate days left in lock
   const daysLeft = Math.ceil(
@@ -250,6 +260,17 @@ export default function TokenPage() {
           tokenInfo.balance.toString()
         );
         setTokenBalance(formattedTokenBalance);
+
+        // Get token details including image and lock info
+        const { token } = await getTokenDetails(tokenId);
+        if (token) {
+          setTokenImage(token.image);
+          setTokenLockDetails({
+            lockLiquidity: token.lockLiquidity,
+            liquidityLockPeriod: token.liquidityLockPeriod,
+            creatorLockupPeriod: token.creatorLockupPeriod
+          });
+        }
       }
     };
 
@@ -682,6 +703,16 @@ export default function TokenPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, [initializeChart]);
 
+  // Add helper function to format duration
+  const formatLockDuration = (seconds: string) => {
+    const days = Math.floor(parseInt(seconds) / 86400);
+    if (days > 0) {
+      return `${days} days`;
+    }
+    const hours = Math.floor(parseInt(seconds) / 3600);
+    return `${hours} hours`;
+  };
+
   if (!isClient) {
     return null;
   }
@@ -694,9 +725,15 @@ export default function TokenPage() {
         {/* Token Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#ffae5c]/30 to-[#4834D4]/30 flex items-center justify-center">
-              <span className="text-3xl">🐸</span>
-            </div>
+            {tokenImage && (
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#ffae5c]/20">
+                <img 
+                  src={tokenImage} 
+                  alt={tokenDetails?.name || "Token"} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-3xl font-bold text-white">
@@ -853,44 +890,68 @@ export default function TokenPage() {
 
                   <Separator className="bg-white/10 my-6" />
 
-                  <div className="space-y-4">
-                    <div>
-                      <div className="text-white font-medium mb-2">
-                        Total Supply Distribution
-                      </div>
-                      <div className="flex items-center">
-                        <div className="w-full h-5 bg-[#ffae5c]/10 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-[#ffae5c]/80 to-[#4834D4]/80"
-                            style={{
-                              width: `${
-                                100 -
-                                tokenData.supplyLockPercentage +
-                                percentUnlocked
-                              }%`,
-                            }}
-                          />
+                  {/* Supply Distribution Card */}
+                  <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#ffae5c]/20 p-6">
+                    <div className="flex items-center gap-2 mb-6">
+                      <PieChart className="w-5 h-5 text-[#ffae5c]" />
+                      <h3 className="text-lg font-medium text-white">Supply Distribution</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <div className="text-white font-medium mb-2">
+                          Total Supply Distribution
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-full h-5 bg-[#ffae5c]/10 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-[#ffae5c]/80 to-[#4834D4]/80"
+                              style={{
+                                width: `${((parseInt(tokenDetails?.initialSupply || "0") / 2 + 
+                                  (tokenLockDetails.lockLiquidity ? parseInt(tokenDetails?.initialSupply || "0") * 0.2 : 0)) / 
+                                  parseInt(tokenDetails?.totalSupply || "1") * 100)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-between mt-2 text-sm">
+                          <div className="text-white/60">
+                            <span className="inline-block w-3 h-3 rounded-full bg-[#ffae5c]/80 mr-2"></span>
+                            Circulating:{" "}
+                            {formatNumber(
+                              parseInt(tokenDetails?.initialSupply || "0")
+                            )}{" "}
+                            ({30}%)
+                          </div>
+                          <div className="text-white/60">
+                            <span className="inline-block w-3 h-3 rounded-full bg-[#ffae5c]/20 mr-2"></span>
+                            Locked:{" "}
+                            {formatNumber(
+                              (parseInt(tokenDetails?.initialSupply || "0") / 2) +
+                              (tokenLockDetails.lockLiquidity ? parseInt(tokenDetails?.initialSupply || "0") * 0.2 : 0)
+                            )}{" "}
+                            ({70}%)
+                          </div>
                         </div>
                       </div>
-                      <div className="flex justify-between mt-2 text-sm">
-                        <div className="text-white/60">
-                          <span className="inline-block w-3 h-3 rounded-full bg-[#ffae5c]/80 mr-2"></span>
-                          Circulating:{" "}
-                          {formatNumber(parseInt(tokenData.circulatingSupply))}(
-                          {100 -
-                            tokenData.supplyLockPercentage +
-                            percentUnlocked}
-                          %)
-                        </div>
-                        <div className="text-white/60">
-                          <span className="inline-block w-3 h-3 rounded-full bg-[#ffae5c]/20 mr-2"></span>
-                          Locked:{" "}
-                          {formatNumber(
-                            (parseInt(tokenDetails?.totalSupply || "0") *
-                              percentUnlocked) /
-                              100
+
+                      <div className="mt-4">
+                        <div className="text-white font-medium mb-2">Lock Details</div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-white/60">Creator Lock:</span>
+                            <span className="text-white">
+                              {formatNumber(parseInt(tokenDetails?.initialSupply || "0") / 2)} ({formatLockDuration(tokenLockDetails.creatorLockupPeriod)})
+                            </span>
+                          </div>
+                          {tokenLockDetails.lockLiquidity && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-white/60">Liquidity Lock:</span>
+                              <span className="text-white">
+                                {formatNumber(parseInt(tokenDetails?.initialSupply || "0") * 0.2)} ({formatLockDuration(tokenLockDetails.liquidityLockPeriod)})
+                              </span>
+                            </div>
                           )}
-                          ({tokenData.supplyLockPercentage - percentUnlocked}%)
                         </div>
                       </div>
                     </div>
