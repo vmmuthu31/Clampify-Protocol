@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import {
   ArrowUpRight,
@@ -35,8 +35,6 @@ import { TokenInfo } from "@/services/tokenCreation";
 import { ethers } from "ethers";
 import {
   buyTokens,
-  getRecentTransactions,
-  getTokenBalance,
   getTokenPrice,
   sellTokens,
   TokenReturnOnBuy,
@@ -81,6 +79,15 @@ interface TokenData {
   };
 }
 
+interface Transaction {
+  userAddress: string;
+  type: string;
+  amount: string;
+  price: string;
+  timestamp: string;
+  txHash: string;
+}
+
 // Simulated token data
 const tokenData: TokenData = {
   id: "clampfrog",
@@ -120,15 +127,6 @@ const tokenData: TokenData = {
   },
 };
 
-// Add this debounce utility function outside the component
-const debounce = (func: Function, wait: number) => {
-  let timeout: NodeJS.Timeout;
-  return (...args: any[]) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
-
 // Add input validation helper
 const isValidNumber = (value: string): boolean => {
   return /^\d*\.?\d*$/.test(value) && Number(value) >= 0;
@@ -140,24 +138,24 @@ const getTimeAgo = (timestamp: string) => {
   const txTime = new Date(timestamp);
   const diffInSeconds = Math.floor((now.getTime() - txTime.getTime()) / 1000);
 
-  if (isNaN(diffInSeconds)) return 'Just now';
+  if (isNaN(diffInSeconds)) return "Just now";
 
   if (diffInSeconds < 60) {
-    return `${diffInSeconds} ${diffInSeconds === 1 ? 'second' : 'seconds'} ago`;
+    return `${diffInSeconds} ${diffInSeconds === 1 ? "second" : "seconds"} ago`;
   }
 
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
-    return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+    return `${diffInMinutes} ${diffInMinutes === 1 ? "minute" : "minutes"} ago`;
   }
 
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
-    return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+    return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
   }
 
   const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+  return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
 };
 
 export default function TokenPage() {
@@ -229,7 +227,9 @@ export default function TokenPage() {
         console.log("Token Info:", formattedInfo);
         setTokenDetails(formattedInfo);
 
-        const formattedTokenBalance = ethers.utils.formatEther(tokenInfo.balance.toString());
+        const formattedTokenBalance = ethers.utils.formatEther(
+          tokenInfo.balance.toString()
+        );
         setTokenBalance(formattedTokenBalance);
       }
     };
@@ -250,31 +250,6 @@ export default function TokenPage() {
     setIsClient(true);
   }, []);
 
-  const calculatePriceFromCurve = (tokensToTrade: string, isBuy: boolean) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { initialPrice, reserveRatio, currentReserve } =
-      tokenData.bondingCurve;
-    const supply = parseFloat(tokenData.circulatingSupply);
-
-    // Convert to smaller units for calculation
-    const tokenAmount = parseFloat(tokensToTrade);
-
-    if (isBuy) {
-      // Price goes up when buying
-      const newSupply = supply + tokenAmount;
-      const newReserve =
-        currentReserve * Math.pow(newSupply / supply, 1 / reserveRatio);
-      return newReserve - currentReserve;
-    } else {
-      // Price goes down when selling
-      if (tokenAmount > supply) return 0; // Can't sell more than circulating supply
-      const newSupply = supply - tokenAmount;
-      const newReserve =
-        currentReserve * Math.pow(newSupply / supply, 1 / reserveRatio);
-      return currentReserve - newReserve;
-    }
-  };
-
   // Add this helper function at component level
   const calculateEstimatedReturn = async (
     value: string,
@@ -289,7 +264,7 @@ export default function TokenPage() {
           tokenReturnOnBuy.tokenAmount
         );
         setEstimatedReturn(formattedAmount);
-      } catch (error: any) {
+      } catch (error) {
         console.error("Error calculating return:", error);
         setEstimatedReturn("0");
       } finally {
@@ -328,7 +303,7 @@ export default function TokenPage() {
             );
             setEstimatedReturn(sellReturn.ethAmount);
             setCoreAmount(sellReturn.ethAmount);
-          } catch (error: any) {
+          } catch (error) {
             console.error("Error calculating sell return:", error);
             setEstimatedReturn("0");
             setCoreAmount("0");
@@ -443,11 +418,11 @@ export default function TokenPage() {
           await fetchCurrentPrice();
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Transaction failed:", error);
       setTransactionStatus({
         status: "error",
-        error: error?.message || "Transaction failed",
+        error: (error as Error).message || "Transaction failed",
       });
     } finally {
       setIsTransacting(false);
@@ -487,14 +462,22 @@ export default function TokenPage() {
 
           if (transactions && transactions.length > 0) {
             setRecentTransactions({
-              accounts: transactions.map((tx: any) => tx.userAddress || ''),
-              isBuys: transactions.map((tx: any) => tx.type === 'BUY'),
-              tokenAmounts: transactions.map((tx: any) => tx.amount || '0'),
-              ethAmounts: transactions.map((tx: any) => tx.amount || '0'),
-              prices: transactions.map((tx: any) => tx.price || '0'),
-              timestamps: transactions.map((tx: any) => tx.timestamp || new Date().toISOString()),
-              type: transactions.map((tx: any) => tx.type || ''),
-              txHashes: transactions.map((tx: any) => tx.txHash || '')
+              accounts: transactions.map(
+                (tx: Transaction) => tx.userAddress || ""
+              ),
+              isBuys: transactions.map((tx: Transaction) => tx.type === "BUY"),
+              tokenAmounts: transactions.map(
+                (tx: Transaction) => tx.amount || "0"
+              ),
+              ethAmounts: transactions.map(
+                (tx: Transaction) => tx.amount || "0"
+              ),
+              prices: transactions.map((tx: Transaction) => tx.price || "0"),
+              timestamps: transactions.map(
+                (tx: Transaction) => tx.timestamp || new Date().toISOString()
+              ),
+              type: transactions.map((tx: Transaction) => tx.type || ""),
+              txHashes: transactions.map((tx: Transaction) => tx.txHash || ""),
             });
           }
         } catch (error) {
@@ -975,9 +958,9 @@ export default function TokenPage() {
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-8 h-8 rounded-full ${
-                          recentTransactions?.type[i] === 'BUY' 
-                            ? "bg-green-500/20" 
-                            : recentTransactions?.type[i] === 'SELL'
+                          recentTransactions?.type[i] === "BUY"
+                            ? "bg-green-500/20"
+                            : recentTransactions?.type[i] === "SELL"
                             ? "bg-red-500/20"
                             : "bg-purple-500/20"
                         } flex items-center justify-center`}
@@ -993,28 +976,39 @@ export default function TokenPage() {
                       <div>
                         <div className="text-white font-medium">
                           {recentTransactions?.type[i] === "CREATE" ? (
-                            <>Token Created: {tokenDetails?.name || "Unknown Token"}</>
+                            <>
+                              Token Created:{" "}
+                              {tokenDetails?.name || "Unknown Token"}
+                            </>
                           ) : (
                             <>
                               {recentTransactions?.type[i]}{" "}
-                              {parseFloat(recentTransactions?.tokenAmounts[i] || "0").toFixed(2)}{" "}
+                              {parseFloat(
+                                recentTransactions?.tokenAmounts[i] || "0"
+                              ).toFixed(2)}{" "}
                               {tokenDetails?.symbol}
                             </>
                           )}
                         </div>
                         <div className="text-white/50 text-sm flex items-center gap-2">
-                          by {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Unknown'}
+                          by{" "}
+                          {account
+                            ? `${account.slice(0, 6)}...${account.slice(-4)}`
+                            : "Unknown"}
                           {recentTransactions?.txHashes?.[i] && (
-                            <a 
-                              href={recentTransactions?.type[i] === "CREATE" 
-                                ? `https://scan.test2.btcs.network/address/${recentTransactions.txHashes[i]}`
-                                : `https://scan.test2.btcs.network/tx/${recentTransactions.txHashes[i]}`
+                            <a
+                              href={
+                                recentTransactions?.type[i] === "CREATE"
+                                  ? `https://scan.test2.btcs.network/address/${recentTransactions.txHashes[i]}`
+                                  : `https://scan.test2.btcs.network/tx/${recentTransactions.txHashes[i]}`
                               }
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-[#6C5CE7] hover:underline"
                             >
-                              {recentTransactions?.type[i] === "CREATE" ? "View Contract" : "View Tx"}
+                              {recentTransactions?.type[i] === "CREATE"
+                                ? "View Contract"
+                                : "View Tx"}
                             </a>
                           )}
                         </div>
@@ -1023,11 +1017,17 @@ export default function TokenPage() {
                     <div className="text-right">
                       {recentTransactions?.type[i] !== "CREATE" && (
                         <div className="text-white">
-                          {parseFloat(recentTransactions?.prices[i] || "0").toFixed(6)} tCORE
+                          {parseFloat(
+                            recentTransactions?.prices[i] || "0"
+                          ).toFixed(6)}{" "}
+                          tCORE
                         </div>
                       )}
                       <div className="text-white/50 text-xs">
-                        {getTimeAgo(recentTransactions?.timestamps[i] || new Date().toISOString())}
+                        {getTimeAgo(
+                          recentTransactions?.timestamps[i] ||
+                            new Date().toISOString()
+                        )}
                       </div>
                     </div>
                   </div>
