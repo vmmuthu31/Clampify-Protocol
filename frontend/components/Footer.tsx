@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Lock } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 function Footer() {
@@ -10,7 +10,7 @@ function Footer() {
           <div className="mb-6 md:mb-0">
             <div className="flex items-center gap-2 mb-2">
               <motion.div
-                className="w-8 h-8 rounded-full bg-gradient-to-r from-[#6C5CE7] to-[#4834D4] flex items-center justify-center"
+                className="w-8 h-8 rounded-full bg-gradient-to-r from-[#ffae5c] to-[#ff9021] flex items-center justify-center"
                 animate={{ rotate: [0, 360] }}
                 transition={{
                   duration: 10,
@@ -18,21 +18,21 @@ function Footer() {
                   ease: "linear",
                 }}
               >
-                <Lock className="w-4 h-4 text-white" />
+                <Image src="/logo.png" alt="Clampify" width={32} height={32} />
               </motion.div>
-              <span className="text-white text-xl font-bold">Clampify</span>
+              <span className="text-[#ffae5c] text-xl font-bold">Clampify</span>
             </div>
-            <p className="text-white/60">The rugproof token platform</p>
+            <p className="text-[#ffae5c]/60">The rugproof token platform</p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>
-              <h4 className="text-white font-medium mb-3">Product</h4>
+              <h4 className="text-[#ffae5c] font-medium mb-3">Product</h4>
               <ul className="space-y-2">
                 <li>
                   <Link
                     href="/launch"
-                    className="text-white/60 hover:text-white"
+                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
                   >
                     Token Launch
                   </Link>
@@ -40,18 +40,24 @@ function Footer() {
                 <li>
                   <Link
                     href="/#features"
-                    className="text-white/60 hover:text-white"
+                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
                   >
                     Features
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-white/60 hover:text-white">
+                  <Link
+                    href="#"
+                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                  >
                     Security
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-white/60 hover:text-white">
+                  <Link
+                    href="#"
+                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                  >
                     Roadmap
                   </Link>
                 </li>
@@ -59,25 +65,37 @@ function Footer() {
             </div>
 
             <div>
-              <h4 className="text-white font-medium mb-3">Resources</h4>
+              <h4 className="text-[#ffae5c] font-medium mb-3">Resources</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/docs" className="text-white/60 hover:text-white">
+                  <Link
+                    href="/docs"
+                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                  >
                     Documentation
                   </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-white/60 hover:text-white">
+                  <a
+                    href="#"
+                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                  >
                     API
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-white/60 hover:text-white">
+                  <a
+                    href="#"
+                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                  >
                     Guides
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-white/60 hover:text-white">
+                  <a
+                    href="#"
+                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                  >
                     Blog
                   </a>
                 </li>
@@ -85,20 +103,29 @@ function Footer() {
             </div>
 
             <div>
-              <h4 className="text-white font-medium mb-3">Legal</h4>
+              <h4 className="text-[#ffae5c] font-medium mb-3">Legal</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="#" className="text-white/60 hover:text-white">
+                  <a
+                    href="#"
+                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                  >
                     Privacy
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-white/60 hover:text-white">
+                  <a
+                    href="#"
+                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                  >
                     Terms
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-white/60 hover:text-white">
+                  <a
+                    href="#"
+                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                  >
                     Security
                   </a>
                 </li>
@@ -108,7 +135,7 @@ function Footer() {
         </div>
 
         <div className="mt-10 pt-6 border-t border-[#6C5CE7]/20 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-white/50 mb-4 md:mb-0">
+          <p className="text-[#ffae5c]/50 mb-4 md:mb-0">
             © 2025 Clampify Protocol. All rights reserved.
           </p>
 
@@ -116,7 +143,7 @@ function Footer() {
             <Link
               target="_blank"
               href="https://x.com/Clampifydotfun"
-              className="text-white/50 hover:text-white"
+              className="text-[#ffae5c]/50 hover:text-[#ffae5c]"
             >
               <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
                 <span className="text-lg">𝕏</span>
@@ -125,7 +152,7 @@ function Footer() {
             <Link
               target="_blank"
               href="https://www.clampify.fun/"
-              className="text-white/50 hover:text-white"
+              className="text-[#ffae5c]/50 hover:text-[#ffae5c]"
             >
               <div className="w-10 h-10 rounded-full border border-[#6C5CE7]/20 flex items-center justify-center">
                 <span className="text-lg">🌐</span>
