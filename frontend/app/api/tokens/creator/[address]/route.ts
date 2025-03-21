@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Token from "@/models/Token";
 
 export async function GET(
-  request: NextRequest,
-  context: { params: { address: string } }
-): Promise<NextResponse> {
+  request: Request,
+  { params }: { params: Promise<{ address: string }> }
+) {
   try {
+    const address = (await params).address;
     await dbConnect();
-    const address = context.params.address;
     const token = await Token.findOne({ address });
 
     if (!token) {
