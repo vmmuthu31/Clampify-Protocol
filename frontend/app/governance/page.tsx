@@ -51,7 +51,13 @@ import {
   GovernanceProposalInfo,
   GovernanceTokenInfo,
   UserCreatedTokens,
+  createProposal,
+  activateGovernance,
 } from "@/services/tokenCreation";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { GovernanceProposalData } from "@/types/token";
 
 type IGovernanceTokenInfo = {
   address: string;
@@ -62,6 +68,7 @@ type IGovernanceTokenInfo = {
   quorum: number;
   votingPeriod: number;
   activeProposals: number;
+  isGovernanceActive: boolean;
 };
 // Form schema for creating proposals
 const proposalFormSchema = z.object({
@@ -111,7 +118,20 @@ interface Token {
   maxSupply: string;
   createdAt: string;
   __v: number;
+  balance?: string;
+  proposalThreshold?: string;
+  quorum?: number;
+  votingPeriod?: number;
 }
+
+// Add this near the top with other form schemas
+const activateFormSchema = z.object({
+  proposalThreshold: z.string().min(1, "Proposal threshold is required"),
+  quorum: z.string().min(1, "Quorum percentage is required"),
+  votingPeriod: z.string().min(1, "Voting period is required"),
+});
+
+type ActivateFormValues = z.infer<typeof activateFormSchema>;
 
 export default function GovernancePage() {
   const [tokens, setTokens] = useState<Token[]>([]);
@@ -122,12 +142,29 @@ export default function GovernancePage() {
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
   const { authenticated, login, user } = usePrivy();
   const userAddress = user?.wallet?.address;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [governanceInfo, setGovernanceInfo] = useState<IGovernanceTokenInfo | null>(null);
+  const [activateDialogOpen, setActivateDialogOpen] = useState(false);
+  const [isActivating, setIsActivating] = useState(false);
+
+  // Add this with other form declarations
+  const activateForm = useForm<ActivateFormValues>({
+    resolver: zodResolver(activateFormSchema),
+    defaultValues: {
+      proposalThreshold: "1000", // Default 1000 tokens
+      quorum: "51", // Default 51%
+      votingPeriod: "7", // Default 7 days
+    }
+  });
 
   // Fetch tokens from backend
   useEffect(() => {
     const fetchTokens = async () => {
       try {
         const response = await fetch('/api/tokens');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         if (data.success) {
           setTokens(data.tokens);
@@ -135,6 +172,7 @@ export default function GovernancePage() {
         }
       } catch (error) {
         console.error("Error fetching tokens:", error);
+        toast.error("Failed to fetch tokens");
       }
     };
 
@@ -147,6 +185,9 @@ export default function GovernancePage() {
       if (userAddress) {
         try {
           const response = await fetch(`/api/tokens/user/${userAddress}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
           const data = await response.json();
           if (data.success) {
             setUserCreatedTokens(data.tokens);
@@ -154,6 +195,7 @@ export default function GovernancePage() {
           }
         } catch (error) {
           console.error("Error fetching user tokens:", error);
+          toast.error("Failed to fetch user tokens");
         }
       }
     };
@@ -223,8 +265,89 @@ export default function GovernancePage() {
     }
   }, [selectedToken, proposalForm]);
 
+  // Add effect to fetch governance info when token is selected
+  useEffect(() => {
+    const fetchGovernanceInfo = async () => {
+      if (selectedToken) {
+        try {
+          const info = await GovernanceTokenInfo(selectedToken);
+          setGovernanceInfo(info);
+        } catch (error) {
+          console.error("Error fetching governance info:", error);
+          toast.error("Failed to fetch governance information");
+        }
+      }
+    };
+
+    fetchGovernanceInfo();
+  }, [selectedToken]);
+
   const onProposalSubmit = async (values: ProposalFormValues) => {
-    console.log(values);
+    if (!selectedToken) {
+      toast.error("Please select a token first");
+      return;
+    }
+
+    if (!governanceInfo?.isGovernanceActive) {
+      toast.error("Governance is not active for this token");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await createProposal(
+        values.tokenAddress,
+        values.title,
+        values.description,
+        values.targetContract,
+        values.callData
+      );
+
+      // Reset form and close dialog
+      proposalForm.reset();
+      setProposalDialogOpen(false);
+      
+      toast.success("Proposal created successfully!", {
+        description: "Your proposal has been submitted to the governance contract."
+      });
+
+      // Refresh proposals
+      if (selectedToken) {
+        const newProposalCount = await GovernanceProposalCount(selectedToken);
+        if (newProposalCount > 0) {
+          const proposalPromises = [];
+          for (let i = 1; i <= newProposalCount; i++) {
+            proposalPromises.push(GovernanceProposalInfo(selectedToken, i));
+          }
+          const newProposals = await Promise.all(proposalPromises);
+          setProposals(newProposals.map(p => ({
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            proposer: p.proposer,
+            createdAt: new Date(p.createdAt),
+            votingEndsAt: new Date(p.endTime),
+            isActive: p.active,
+            executed: p.executed,
+            targetContract: p.target,
+            yesVotes: p.forVotes,
+            noVotes: p.againstVotes,
+            yesPercentage: p.forPercentage,
+            noPercentage: p.againstPercentage,
+            quorumReached: p.quorumReached,
+            hasVoted: p.hasVoted,
+            userVoteDirection: p.userVoteDirection
+          })));
+        }
+      }
+    } catch (error) {
+      console.error("Error creating proposal:", error);
+      toast.error("Failed to create proposal", {
+        description: error instanceof Error ? error.message : "Please try again later"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Vote on a proposal
@@ -240,6 +363,36 @@ export default function GovernancePage() {
   // Handle token selection change
   const handleTokenChange = (value: string) => {
     setSelectedToken(value);
+  };
+
+  const handleActivateGovernance = async (values: ActivateFormValues) => {
+    if (!selectedToken) return;
+    
+    setIsActivating(true);
+    try {
+      await activateGovernance(
+        selectedToken,
+        values.proposalThreshold,
+        parseInt(values.quorum),
+        parseInt(values.votingPeriod) * 24 * 60 * 60 // Convert days to seconds
+      );
+      
+      toast.success("Governance activated successfully!");
+      setActivateDialogOpen(false);
+      activateForm.reset(); // Reset form after successful submission
+      
+      // Refresh governance info
+      const info = await GovernanceTokenInfo(selectedToken);
+      setGovernanceInfo(info);
+    } catch (error) {
+      console.error("Error activating governance:", error);
+      toast.error(
+        "Failed to activate governance",
+        { description: error instanceof Error ? error.message : "Please try again" }
+      );
+    } finally {
+      setIsActivating(false);
+    }
   };
 
   if (!authenticated) {
@@ -396,119 +549,107 @@ export default function GovernancePage() {
                     >
                       <DialogTrigger asChild>
                         <Button
-                          disabled={
-                            !userAddress ||
-                            parseFloat(
-                              tokens.find((t) => t.address === selectedToken)
-                                ?.balance || "0"
-                            ) <
-                              parseFloat(
-                                tokens.find((t) => t.address === selectedToken)
-                                  ?.proposalThreshold || "0"
-                              )
-                          }
+                          onClick={() => setProposalDialogOpen(true)}
+                          disabled={!governanceInfo?.isGovernanceActive}
                         >
-                          Create Proposal
+                          {!governanceInfo?.isGovernanceActive ? (
+                            "Governance Not Active"
+                          ) : (
+                            "Create Proposal"
+                          )}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[600px]">
                         <DialogHeader>
                           <DialogTitle>Create New Proposal</DialogTitle>
                           <DialogDescription>
-                            Submit a proposal for the community to vote on. You
-                            need at least{" "}
-                            {parseFloat(
-                              tokens.find((t) => t.address === selectedToken)
-                                ?.proposalThreshold || "0"
-                            ).toLocaleString()}{" "}
-                            {
-                              tokens.find((t) => t.address === selectedToken)
-                                ?.symbol
-                            }{" "}
-                            to create a proposal.
+                            Submit a new proposal for token governance
                           </DialogDescription>
                         </DialogHeader>
 
                         <Form {...proposalForm}>
-                          <form
-                            onSubmit={proposalForm.handleSubmit(
-                              onProposalSubmit
-                            )}
-                            className="space-y-4"
-                          >
-                            <FormField
-                              control={proposalForm.control}
-                              name="title"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Proposal Title</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      placeholder="Enter a descriptive title"
-                                      {...field}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                          <form onSubmit={proposalForm.handleSubmit(onProposalSubmit)}>
+                            <div className="space-y-4">
+                              <FormField
+                                control={proposalForm.control}
+                                name="title"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Title</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} placeholder="Proposal Title" />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={proposalForm.control}
-                              name="description"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Description</FormLabel>
-                                  <FormControl>
-                                    <Textarea
-                                      placeholder="Provide details about your proposal"
-                                      className="min-h-[120px]"
-                                      {...field}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                              <FormField
+                                control={proposalForm.control}
+                                name="description"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Description</FormLabel>
+                                    <FormControl>
+                                      <Textarea
+                                        {...field}
+                                        placeholder="Describe your proposal..."
+                                        className="min-h-[100px]"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={proposalForm.control}
-                              name="targetContract"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Target Contract</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="0x..." {...field} />
-                                  </FormControl>
-                                  <FormDescription>
-                                    The contract address that will be called if
-                                    the proposal passes
-                                  </FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                              <FormField
+                                control={proposalForm.control}
+                                name="targetContract"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Target Contract</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} placeholder="0x..." />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={proposalForm.control}
-                              name="callData"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Call Data</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="0x..." {...field} />
-                                  </FormControl>
-                                  <FormDescription>
-                                    The encoded function call data (use
-                                    ethers.utils.encodeFunctionData)
-                                  </FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                              <FormField
+                                control={proposalForm.control}
+                                name="callData"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Call Data</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} placeholder="0x..." />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
 
-                            <DialogFooter>
-                              <Button type="submit">Submit Proposal</Button>
+                            <DialogFooter className="mt-6">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setProposalDialogOpen(false)}
+                                disabled={isSubmitting}
+                              >
+                                Cancel
+                              </Button>
+                              <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Creating...
+                                  </>
+                                ) : (
+                                  'Create Proposal'
+                                )}
+                              </Button>
                             </DialogFooter>
                           </form>
                         </Form>
@@ -594,27 +735,53 @@ export default function GovernancePage() {
 
             {userCreatedTokens.length > 0 && (
               <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">
-                  Your Created Tokens
-                </h2>
+                <h2 className="text-xl font-semibold mb-4">Your Created Tokens</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {userCreatedTokens.map((token) => (
                     <div
                       key={token.address}
-                      className="p-4 border rounded-lg bg-black/20 backdrop-blur-sm"
+                      className="p-6 border rounded-lg bg-black/20 backdrop-blur-sm"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium">{token.name}</h3>
-                        <span className="text-sm text-muted-foreground">
-                          {token.symbol}
-                        </span>
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="font-medium text-lg">{token.name}</h3>
+                          <span className="text-sm text-muted-foreground">
+                            {token.symbol}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {governanceInfo?.isGovernanceActive && token.address === selectedToken ? (
+                            <Badge variant="outline" className="bg-green-500/10 text-green-500">
+                              Governance Active
+                            </Badge>
+                          ) : (
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  variant="outline"
+                                  className="bg-gradient-to-r from-[#ffae5c]/10 to-[#4834D4]/10 hover:from-[#ffae5c]/20 hover:to-[#4834D4]/20"
+                                  onClick={() => {
+                                    setSelectedToken(token.address);
+                                    setActivateDialogOpen(true);
+                                  }}
+                                >
+                                  Activate Governance
+                                </Button>
+                              </DialogTrigger>
+                            </Dialog>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        Address: {token.address.slice(0, 6)}...
-                        {token.address.slice(-4)}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Created: {new Date(token.createdAt).toLocaleDateString()}
+                      <div className="space-y-2">
+                        <div className="text-sm text-muted-foreground flex items-center gap-2">
+                          <span>Address: {token.address.slice(0, 6)}...{token.address.slice(-4)}</span>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Created: {new Date(token.createdAt).toLocaleDateString()}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Initial Supply: {parseFloat(token.initialSupply).toLocaleString()} {token.symbol}
+                        </div>
                       </div>
                     </div>
                   ))}

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import dbConnect from "@/lib/mongodb";
+import Token from "@/models/Token";
 
 export async function GET(
   request: Request,
@@ -6,19 +8,10 @@ export async function GET(
 ) {
   try {
     const address = params.address;
-    // Mock data
-    const tokens = [
-      {
-        _id: "1",
-        address: "0x123...",
-        name: "User Test Token",
-        symbol: "UTEST",
-        creator: address,
-        initialSupply: "1000000",
-        maxSupply: "10000000",
-        createdAt: new Date().toISOString(),
-      }
-    ];
+    
+    await dbConnect();
+    // Find tokens where creator matches the address
+    const tokens = await Token.find({ creator: address });
 
     return NextResponse.json({ success: true, tokens });
   } catch (error) {
