@@ -223,13 +223,19 @@ export default function GovernancePage() {
     }
   }, [selectedToken, proposalForm]);
 
-  const onProposalSubmit = async (values: ProposalFormValues) => {};
+  const onProposalSubmit = async (values: ProposalFormValues) => {
+    console.log(values);
+  };
 
   // Vote on a proposal
-  const handleVote = async (proposalId: number, support: boolean) => {};
+  const handleVote = async (proposalId: number, support: boolean) => {
+    console.log(proposalId, support);
+  };
 
   // Execute a proposal
-  const handleExecute = async (proposalId: number) => {};
+  const handleExecute = async (proposalId: number) => {
+    console.log(proposalId);
+  };
 
   // Handle token selection change
   const handleTokenChange = (value: string) => {
