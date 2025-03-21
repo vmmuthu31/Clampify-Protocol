@@ -264,3 +264,137 @@ export const GovernanceProposalInfo = async (
     throw error;
   }
 };
+
+
+
+export const hasVoted = async (
+  tokenAddress: string,
+  proposalId: number,
+  voterAddress: string
+): Promise<boolean> => {
+  try {
+    const provider =
+      ethereum != null
+        ? new ethers.providers.Web3Provider(ethereum)
+        : new ethers.providers.JsonRpcProvider(RPC_URL);
+
+    const signer = ethereum != null ? provider.getSigner() : null;
+
+    if (!signer) {
+      throw new Error("No wallet connected");
+    }
+
+    const contract = new ethers.Contract(
+      governance_address,
+      ClampifyGovernance,
+      signer
+    );
+
+    const voted = await contract.hasVoted(tokenAddress, proposalId, voterAddress);
+    return voted;
+
+  } catch (error) {
+    console.error("Error checking vote status:", error);
+    throw error;
+  }
+};
+
+export const createProposal = async (
+  tokenAddress: string,
+  title: string,
+  description: string,
+  targetContract: string,
+  callData: string
+): Promise<number> => {
+  try {
+    const provider =
+      ethereum != null
+        ? new ethers.providers.Web3Provider(ethereum)
+        : new ethers.providers.JsonRpcProvider(RPC_URL);
+
+    const signer = ethereum != null ? provider.getSigner() : null;
+
+    if (!signer) {
+      throw new Error("No wallet connected");
+    }
+
+    const contract = new ethers.Contract(
+      governance_address,
+      ClampifyGovernance,
+      signer
+    );
+
+    const proposalId = await contract.createProposal(
+      tokenAddress,
+      title,
+      description,
+      targetContract,
+      callData
+    );
+
+    return proposalId;
+  } catch (error) {
+    console.error("Error creating proposal:", error);
+    throw error;
+  }
+};
+
+export const castVote = async (
+  tokenAddress: string,
+  proposalId: number,
+  support: boolean
+): Promise<void> => {
+  try {
+    const provider =
+      ethereum != null
+        ? new ethers.providers.Web3Provider(ethereum)
+        : new ethers.providers.JsonRpcProvider(RPC_URL);
+
+    const signer = ethereum != null ? provider.getSigner() : null;
+
+    if (!signer) {
+      throw new Error("No wallet connected");
+    }
+
+    const contract = new ethers.Contract(
+      governance_address,
+      ClampifyGovernance,
+      signer
+    );
+
+    await contract.castVote(tokenAddress, proposalId, support);
+  } catch (error) {
+    console.error("Error casting vote:", error);
+    throw error;
+  }
+};
+
+export const executeProposal = async (
+  tokenAddress: string,
+  proposalId: number
+): Promise<void> => {
+  try {
+    const provider =
+      ethereum != null
+        ? new ethers.providers.Web3Provider(ethereum)
+        : new ethers.providers.JsonRpcProvider(RPC_URL);
+
+    const signer = ethereum != null ? provider.getSigner() : null;
+
+    if (!signer) {
+      throw new Error("No wallet connected");
+    }
+
+    const contract = new ethers.Contract(
+      governance_address,
+      ClampifyGovernance,
+      signer
+    );
+
+    await contract.executeProposal(tokenAddress, proposalId);
+  } catch (error) {
+    console.error("Error executing proposal:", error);
+    throw error;
+  }
+};
+
