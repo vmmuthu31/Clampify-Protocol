@@ -291,7 +291,7 @@ export const GovernanceProposalCount = async (
 export const GovernanceProposalInfo = async (
   tokenAddress: string,
   proposalId: number
-): Promise<GovernanceProposalInfo> => {
+): Promise<IGovernanceProposalInfo> => {
   try {
     const provider =
       ethereum != null

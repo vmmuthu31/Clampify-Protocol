@@ -30,7 +30,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -53,6 +52,7 @@ import {
   UserCreatedTokens,
   createProposal,
   activateGovernance,
+  IGovernanceProposalInfo,
 } from "@/services/tokenCreation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -112,6 +112,10 @@ interface Token {
   _id: string;
   address: string;
   name: string;
+  balance: string;
+  proposalThreshold: string;
+  quorum: number;
+  votingPeriod: number;
   symbol: string;
   creator: string;
   initialSupply: string;
@@ -143,7 +147,8 @@ export default function GovernancePage() {
   const { authenticated, login, user } = usePrivy();
   const userAddress = user?.wallet?.address;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [governanceInfo, setGovernanceInfo] = useState<IGovernanceTokenInfo | null>(null);
+  const [governanceInfo, setGovernanceInfo] =
+    useState<IGovernanceTokenInfo | null>(null);
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
   const [isActivating, setIsActivating] = useState(false);
 
@@ -154,14 +159,14 @@ export default function GovernancePage() {
       proposalThreshold: "1000", // Default 1000 tokens
       quorum: "51", // Default 51%
       votingPeriod: "7", // Default 7 days
-    }
+    },
   });
 
   // Fetch tokens from backend
   useEffect(() => {
     const fetchTokens = async () => {
       try {
-        const response = await fetch('/api/tokens');
+        const response = await fetch("/api/tokens");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -217,23 +222,24 @@ export default function GovernancePage() {
             }
             const proposals = await Promise.all(proposalPromises);
             setProposals(
-              (proposals as unknown as GovernanceProposalData[]).map((p) => ({
-                id: p.id,
+              (proposals as unknown as IGovernanceProposalInfo[]).map((p) => ({
+                id: Number(p) || 0,
                 title: p.title,
                 description: p.description,
                 proposer: p.proposer,
                 createdAt: new Date(p.createdAt),
-                votingEndsAt: new Date(p.endTime),
-                isActive: p.active,
+                votingEndsAt: new Date(p.votingEndsAt),
+                isActive: !p.executed,
                 executed: p.executed,
-                targetContract: p.target,
-                yesVotes: p.forVotes,
-                noVotes: p.againstVotes,
-                yesPercentage: p.forPercentage,
-                noPercentage: p.againstPercentage,
-                quorumReached: p.quorumReached,
-                hasVoted: p.hasVoted,
-                userVoteDirection: p.userVoteDirection,
+                targetContract: p.targetContract,
+                yesVotes: p.yesVotes.toString(),
+                noVotes: p.noVotes.toString(),
+                yesPercentage:
+                  (p.yesVotes / (p.yesVotes + p.noVotes)) * 100 || 0,
+                noPercentage: (p.noVotes / (p.yesVotes + p.noVotes)) * 100 || 0,
+                quorumReached: false,
+                hasVoted: null,
+                userVoteDirection: null,
               }))
             );
           }
@@ -292,7 +298,7 @@ export default function GovernancePage() {
       toast.error("Governance is not active for this token");
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       await createProposal(
@@ -306,9 +312,10 @@ export default function GovernancePage() {
       // Reset form and close dialog
       proposalForm.reset();
       setProposalDialogOpen(false);
-      
+
       toast.success("Proposal created successfully!", {
-        description: "Your proposal has been submitted to the governance contract."
+        description:
+          "Your proposal has been submitted to the governance contract.",
       });
 
       // Refresh proposals
@@ -320,30 +327,33 @@ export default function GovernancePage() {
             proposalPromises.push(GovernanceProposalInfo(selectedToken, i));
           }
           const newProposals = await Promise.all(proposalPromises);
-          setProposals(newProposals.map(p => ({
-            id: p.id,
-            title: p.title,
-            description: p.description,
-            proposer: p.proposer,
-            createdAt: new Date(p.createdAt),
-            votingEndsAt: new Date(p.endTime),
-            isActive: p.active,
-            executed: p.executed,
-            targetContract: p.target,
-            yesVotes: p.forVotes,
-            noVotes: p.againstVotes,
-            yesPercentage: p.forPercentage,
-            noPercentage: p.againstPercentage,
-            quorumReached: p.quorumReached,
-            hasVoted: p.hasVoted,
-            userVoteDirection: p.userVoteDirection
-          })));
+          setProposals(
+            newProposals.map((p) => ({
+              id: p.id,
+              title: p.title,
+              description: p.description,
+              proposer: p.proposer,
+              createdAt: new Date(p.createdAt),
+              votingEndsAt: new Date(p.endTime),
+              isActive: p.active,
+              executed: p.executed,
+              targetContract: p.target,
+              yesVotes: p.forVotes,
+              noVotes: p.againstVotes,
+              yesPercentage: p.forPercentage,
+              noPercentage: p.againstPercentage,
+              quorumReached: p.quorumReached,
+              hasVoted: p.hasVoted,
+              userVoteDirection: p.userVoteDirection,
+            }))
+          );
         }
       }
     } catch (error) {
       console.error("Error creating proposal:", error);
       toast.error("Failed to create proposal", {
-        description: error instanceof Error ? error.message : "Please try again later"
+        description:
+          error instanceof Error ? error.message : "Please try again later",
       });
     } finally {
       setIsSubmitting(false);
@@ -365,11 +375,16 @@ export default function GovernancePage() {
     setSelectedToken(value);
   };
 
+<<<<<<< HEAD
   const handleActivateGovernance = async () => {
     if (!selectedToken) {
       toast.error("No token selected");
       return;
     }
+=======
+  const handleActivateGovernance = async (values: ActivateFormValues) => {
+    if (!selectedToken) return;
+>>>>>>> c91e00ddd77b21927f1d46fbb0c988a07e699fbf
 
     setIsActivating(true);
     try {
@@ -381,20 +396,25 @@ export default function GovernancePage() {
         51, // Default quorum of 51%
         7 * 24 * 60 * 60 // Default voting period of 7 days in seconds
       );
-      
+
       toast.success("Governance activated successfully!");
       setActivateDialogOpen(false);
+<<<<<<< HEAD
       
+=======
+      activateForm.reset(); // Reset form after successful submission
+
+>>>>>>> c91e00ddd77b21927f1d46fbb0c988a07e699fbf
       // Refresh governance info
       const info = await GovernanceTokenInfo(selectedToken);
       setGovernanceInfo(info);
       
     } catch (error) {
       console.error("Error activating governance:", error);
-      toast.error(
-        "Failed to activate governance",
-        { description: error instanceof Error ? error.message : "Please try again" }
-      );
+      toast.error("Failed to activate governance", {
+        description:
+          error instanceof Error ? error.message : "Please try again",
+      });
     } finally {
       setIsActivating(false);
     }
@@ -455,8 +475,8 @@ export default function GovernancePage() {
                     </SelectTrigger>
                     <SelectContent className="bg-[#0D0B15] border border-[#ffae5c]/20 text-white shadow-lg shadow-black/50 backdrop-blur-xl">
                       {tokens.map((token) => (
-                        <SelectItem 
-                          key={token.address} 
+                        <SelectItem
+                          key={token.address}
                           value={token.address}
                           className="hover:bg-[#ffae5c]/10 focus:bg-[#ffae5c]/20 cursor-pointer text-white"
                         >
@@ -546,6 +566,7 @@ export default function GovernancePage() {
                           )
                         : "N/A"}
                     </span>
+<<<<<<< HEAD
                     {userCreatedTokens.some(t => t.address === selectedToken) && !governanceInfo?.isGovernanceActive && (
                       <Button
                         onClick={handleActivateGovernance}
@@ -562,6 +583,125 @@ export default function GovernancePage() {
                         )}
                       </Button>
                     )}
+=======
+                    <Dialog
+                      open={proposalDialogOpen}
+                      onOpenChange={setProposalDialogOpen}
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          onClick={() => setProposalDialogOpen(true)}
+                          disabled={!governanceInfo?.isGovernanceActive}
+                        >
+                          {!governanceInfo?.isGovernanceActive
+                            ? "Governance Not Active"
+                            : "Create Proposal"}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[600px]">
+                        <DialogHeader>
+                          <DialogTitle>Create New Proposal</DialogTitle>
+                          <DialogDescription>
+                            Submit a new proposal for token governance
+                          </DialogDescription>
+                        </DialogHeader>
+
+                        <Form {...proposalForm}>
+                          <form
+                            onSubmit={proposalForm.handleSubmit(
+                              onProposalSubmit
+                            )}
+                          >
+                            <div className="space-y-4">
+                              <FormField
+                                control={proposalForm.control}
+                                name="title"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Title</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="Proposal Title"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={proposalForm.control}
+                                name="description"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Description</FormLabel>
+                                    <FormControl>
+                                      <Textarea
+                                        {...field}
+                                        placeholder="Describe your proposal..."
+                                        className="min-h-[100px]"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={proposalForm.control}
+                                name="targetContract"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Target Contract</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} placeholder="0x..." />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={proposalForm.control}
+                                name="callData"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Call Data</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} placeholder="0x..." />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+
+                            <DialogFooter className="mt-6">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setProposalDialogOpen(false)}
+                                disabled={isSubmitting}
+                              >
+                                Cancel
+                              </Button>
+                              <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Creating...
+                                  </>
+                                ) : (
+                                  "Create Proposal"
+                                )}
+                              </Button>
+                            </DialogFooter>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+>>>>>>> c91e00ddd77b21927f1d46fbb0c988a07e699fbf
                   </CardFooter>
                 </Card>
               )}
@@ -592,16 +732,12 @@ export default function GovernancePage() {
                         .filter((p) => p.isActive)
                         .map((proposal) => (
                           <ProposalCard
-                            key={`${selectedToken}-${proposal.id}`}
+                            key={`${selectedToken}-${proposal.proposer}`}
                             proposal={proposal}
                             onVote={handleVote}
                             onExecute={handleExecute}
                             userAddress={userAddress}
                             selectedToken={selectedToken}
-                            quorum={
-                              tokens.find((t) => t.address === selectedToken)
-                                ?.quorum || 0
-                            }
                           />
                         ))
                     )}
@@ -628,10 +764,6 @@ export default function GovernancePage() {
                             onExecute={handleExecute}
                             userAddress={userAddress}
                             selectedToken={selectedToken}
-                            quorum={
-                              tokens.find((t) => t.address === selectedToken)
-                                ?.quorum || 0
-                            }
                           />
                         ))
                     )}
@@ -642,7 +774,9 @@ export default function GovernancePage() {
 
             {userCreatedTokens.length > 0 && (
               <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Your Created Tokens</h2>
+                <h2 className="text-xl font-semibold mb-4">
+                  Your Created Tokens
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {userCreatedTokens.map((token) => (
                     <div
@@ -656,23 +790,56 @@ export default function GovernancePage() {
                             {token.symbol}
                           </span>
                         </div>
+<<<<<<< HEAD
                         <div>
                           {governanceInfo?.isGovernanceActive && token.address === selectedToken && (
                             <Badge variant="outline" className="bg-green-500/10 text-green-500">
                               Governance Active
                             </Badge>
+=======
+                        <div className="flex items-center gap-2">
+                          {governanceInfo?.isGovernanceActive &&
+                          token.address === selectedToken ? (
+                            <Badge
+                              variant="outline"
+                              className="bg-green-500/10 text-green-500"
+                            >
+                              Governance Active
+                            </Badge>
+                          ) : (
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className="bg-gradient-to-r from-[#ffae5c]/10 to-[#4834D4]/10 hover:from-[#ffae5c]/20 hover:to-[#4834D4]/20"
+                                  onClick={() => {
+                                    setSelectedToken(token.address);
+                                    setActivateDialogOpen(true);
+                                  }}
+                                >
+                                  Activate Governance
+                                </Button>
+                              </DialogTrigger>
+                            </Dialog>
+>>>>>>> c91e00ddd77b21927f1d46fbb0c988a07e699fbf
                           )}
                         </div>
                       </div>
                       <div className="space-y-2">
                         <div className="text-sm text-muted-foreground flex items-center gap-2">
-                          <span>Address: {token.address.slice(0, 6)}...{token.address.slice(-4)}</span>
+                          <span>
+                            Address: {token.address.slice(0, 6)}...
+                            {token.address.slice(-4)}
+                          </span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Created: {new Date(token.createdAt).toLocaleDateString()}
+                          Created:{" "}
+                          {new Date(token.createdAt).toLocaleDateString()}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Initial Supply: {parseFloat(token.initialSupply).toLocaleString()} {token.symbol}
+                          Initial Supply:{" "}
+                          {parseFloat(token.initialSupply).toLocaleString()}{" "}
+                          {token.symbol}
                         </div>
                       </div>
                     </div>
@@ -693,14 +860,12 @@ function ProposalCard({
   onVote,
   onExecute,
   userAddress,
-  quorum,
 }: {
   proposal: ProposalInfo;
   onVote: (proposalId: number, support: boolean) => Promise<void>;
   onExecute: (proposalId: number) => Promise<void>;
   userAddress: string | undefined;
   selectedToken: string;
-  quorum: number;
 }) {
   return (
     <Card>
@@ -798,18 +963,6 @@ function ProposalCard({
             </div>
 
             <div className="mt-2 text-sm text-muted-foreground flex justify-between">
-              <span>
-                Quorum:{" "}
-                {proposal.quorumReached ? (
-                  <span className="text-green-600 dark:text-green-400">
-                    Reached
-                  </span>
-                ) : (
-                  <span className="text-amber-600 dark:text-amber-400">
-                    Needed: {quorum}% of total supply
-                  </span>
-                )}
-              </span>
               <span>
                 {proposal.hasVoted &&
                   `You voted: ${proposal.userVoteDirection ? "Yes" : "No"}`}
