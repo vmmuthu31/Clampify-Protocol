@@ -375,16 +375,11 @@ export default function GovernancePage() {
     setSelectedToken(value);
   };
 
-<<<<<<< HEAD
   const handleActivateGovernance = async () => {
     if (!selectedToken) {
       toast.error("No token selected");
       return;
     }
-=======
-  const handleActivateGovernance = async (values: ActivateFormValues) => {
-    if (!selectedToken) return;
->>>>>>> c91e00ddd77b21927f1d46fbb0c988a07e699fbf
 
     setIsActivating(true);
     try {
@@ -399,12 +394,7 @@ export default function GovernancePage() {
 
       toast.success("Governance activated successfully!");
       setActivateDialogOpen(false);
-<<<<<<< HEAD
       
-=======
-      activateForm.reset(); // Reset form after successful submission
-
->>>>>>> c91e00ddd77b21927f1d46fbb0c988a07e699fbf
       // Refresh governance info
       const info = await GovernanceTokenInfo(selectedToken);
       setGovernanceInfo(info);
@@ -566,7 +556,6 @@ export default function GovernancePage() {
                           )
                         : "N/A"}
                     </span>
-<<<<<<< HEAD
                     {userCreatedTokens.some(t => t.address === selectedToken) && !governanceInfo?.isGovernanceActive && (
                       <Button
                         onClick={handleActivateGovernance}
@@ -583,125 +572,6 @@ export default function GovernancePage() {
                         )}
                       </Button>
                     )}
-=======
-                    <Dialog
-                      open={proposalDialogOpen}
-                      onOpenChange={setProposalDialogOpen}
-                    >
-                      <DialogTrigger asChild>
-                        <Button
-                          onClick={() => setProposalDialogOpen(true)}
-                          disabled={!governanceInfo?.isGovernanceActive}
-                        >
-                          {!governanceInfo?.isGovernanceActive
-                            ? "Governance Not Active"
-                            : "Create Proposal"}
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[600px]">
-                        <DialogHeader>
-                          <DialogTitle>Create New Proposal</DialogTitle>
-                          <DialogDescription>
-                            Submit a new proposal for token governance
-                          </DialogDescription>
-                        </DialogHeader>
-
-                        <Form {...proposalForm}>
-                          <form
-                            onSubmit={proposalForm.handleSubmit(
-                              onProposalSubmit
-                            )}
-                          >
-                            <div className="space-y-4">
-                              <FormField
-                                control={proposalForm.control}
-                                name="title"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Title</FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        {...field}
-                                        placeholder="Proposal Title"
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              <FormField
-                                control={proposalForm.control}
-                                name="description"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Description</FormLabel>
-                                    <FormControl>
-                                      <Textarea
-                                        {...field}
-                                        placeholder="Describe your proposal..."
-                                        className="min-h-[100px]"
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              <FormField
-                                control={proposalForm.control}
-                                name="targetContract"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Target Contract</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} placeholder="0x..." />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              <FormField
-                                control={proposalForm.control}
-                                name="callData"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Call Data</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} placeholder="0x..." />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-
-                            <DialogFooter className="mt-6">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setProposalDialogOpen(false)}
-                                disabled={isSubmitting}
-                              >
-                                Cancel
-                              </Button>
-                              <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? (
-                                  <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Creating...
-                                  </>
-                                ) : (
-                                  "Create Proposal"
-                                )}
-                              </Button>
-                            </DialogFooter>
-                          </form>
-                        </Form>
-                      </DialogContent>
-                    </Dialog>
->>>>>>> c91e00ddd77b21927f1d46fbb0c988a07e699fbf
                   </CardFooter>
                 </Card>
               )}
@@ -790,38 +660,11 @@ export default function GovernancePage() {
                             {token.symbol}
                           </span>
                         </div>
-<<<<<<< HEAD
                         <div>
                           {governanceInfo?.isGovernanceActive && token.address === selectedToken && (
                             <Badge variant="outline" className="bg-green-500/10 text-green-500">
                               Governance Active
                             </Badge>
-=======
-                        <div className="flex items-center gap-2">
-                          {governanceInfo?.isGovernanceActive &&
-                          token.address === selectedToken ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-green-500/10 text-green-500"
-                            >
-                              Governance Active
-                            </Badge>
-                          ) : (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  className="bg-gradient-to-r from-[#ffae5c]/10 to-[#4834D4]/10 hover:from-[#ffae5c]/20 hover:to-[#4834D4]/20"
-                                  onClick={() => {
-                                    setSelectedToken(token.address);
-                                    setActivateDialogOpen(true);
-                                  }}
-                                >
-                                  Activate Governance
-                                </Button>
-                              </DialogTrigger>
-                            </Dialog>
->>>>>>> c91e00ddd77b21927f1d46fbb0c988a07e699fbf
                           )}
                         </div>
                       </div>
