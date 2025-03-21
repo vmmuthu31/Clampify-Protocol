@@ -24,12 +24,13 @@ interface Token {
 export default function StatsPage() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [loading, setLoading] = useState(false);
   const fetchTokens = async () => {
+    setLoading(true);
     try {
       const response = await fetch("/api/tokens");
       const data = await response.json();
-      
+
       // Fetch balance info for each token
       const tokensWithInfo = await Promise.all(
         data.tokens.map(async (token: Token) => {
@@ -38,18 +39,23 @@ export default function StatsPage() {
             return {
               ...token,
               balance: tokenInfo.balance,
-              totalSupply: tokenInfo.totalSupply
+              totalSupply: tokenInfo.totalSupply,
             };
           } catch (error) {
-            console.error(`Error fetching info for token ${token.address}:`, error);
+            console.error(
+              `Error fetching info for token ${token.address}:`,
+              error
+            );
             return token;
           }
         })
       );
-      
+
       setTokens(tokensWithInfo);
     } catch (error) {
       console.error("Error fetching tokens:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,9 +63,10 @@ export default function StatsPage() {
     fetchTokens();
   }, []);
 
-  const filteredTokens = tokens.filter((token) =>
-    token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTokens = tokens.filter(
+    (token) =>
+      token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -68,39 +75,46 @@ export default function StatsPage() {
         {/* Overall Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           {[
-            { 
-              label: "Total Volume", 
-              value: "$12.5M", 
+            {
+              label: "Total Volume",
+              value: "$12.5M",
               change: "+25%",
-              icon: <ChartBar className="w-5 h-5 text-[#618AFF]" />
+              icon: <ChartBar className="w-5 h-5 text-[#618AFF]" />,
             },
-            { 
-              label: "Total Tokens", 
-              value: "1,234", 
+            {
+              label: "Total Tokens",
+              value: "1,234",
               change: "+12",
-              icon: <TrendingUp className="w-5 h-5 text-[#00FFA3]" />
+              icon: <TrendingUp className="w-5 h-5 text-[#00FFA3]" />,
             },
-            { 
-              label: "Total Users", 
-              value: "45.2K", 
+            {
+              label: "Total Users",
+              value: "45.2K",
               change: "+1.2K",
-              icon: <Users className="w-5 h-5 text-[#FF3B69]" />
+              icon: <Users className="w-5 h-5 text-[#FF3B69]" />,
             },
-            { 
-              label: "Total Locked", 
-              value: "$5.8M", 
+            {
+              label: "Total Locked",
+              value: "$5.8M",
               change: "+$500K",
-              icon: <Lock className="w-5 h-5 text-[#FF3E9C]" />
-            }
+              icon: <Lock className="w-5 h-5 text-[#FF3E9C]" />,
+            },
           ].map((stat, i) => (
-            <div key={i} className="rounded-[24px] bg-gradient-to-b from-[#FF3B691A] to-[#FF3B6900] p-[1px]">
+            <div
+              key={i}
+              className="rounded-[24px] bg-gradient-to-b from-[#FF3B691A] to-[#FF3B6900] p-[1px]"
+            >
               <div className="rounded-[24px] bg-[#130B1D] p-6">
                 <div className="flex items-center gap-3 mb-4">
                   {stat.icon}
                   <span className="text-white/60">{stat.label}</span>
                 </div>
-                <div className="text-3xl font-bold text-white mb-2">{stat.value}</div>
-                <div className="text-sm text-[#00FFA3]">{stat.change} (24h)</div>
+                <div className="text-3xl font-bold text-white mb-2">
+                  {stat.value}
+                </div>
+                <div className="text-sm text-[#00FFA3]">
+                  {stat.change} (24h)
+                </div>
               </div>
             </div>
           ))}
@@ -154,11 +168,11 @@ export default function StatsPage() {
                     <div>
                       <div className="text-white font-medium">{token.name}</div>
                       <div className="text-white/50 text-sm">
-                        {token.balance ? (
-                          `${Number(ethers.utils.formatEther(token.balance)).toLocaleString()} ${token.symbol}`
-                        ) : (
-                          "Loading..."
-                        )}
+                        {token.balance
+                          ? `${Number(
+                              ethers.utils.formatEther(token.balance)
+                            ).toLocaleString()} ${token.symbol}`
+                          : "Loading..."}
                       </div>
                     </div>
                   </div>
@@ -168,14 +182,19 @@ export default function StatsPage() {
                       <div className="text-white/60 text-xs flex justify-between mb-1">
                         <span>Supply</span>
                         <span className="text-white/90 font-medium">
-                          {Number(token.totalSupply).toLocaleString()} {token.symbol}
+                          {Number(token.totalSupply).toLocaleString()}{" "}
+                          {token.symbol}
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
                         <div
                           className="bg-gradient-to-r from-[#ffae5c] to-[#4834D4] h-full rounded-full"
                           style={{
-                            width: `${(Number(ethers.utils.formatEther(token.balance)) / Number(token.totalSupply)) * 100}%`
+                            width: `${
+                              (Number(ethers.utils.formatEther(token.balance)) /
+                                Number(token.totalSupply)) *
+                              100
+                            }%`,
                           }}
                         />
                       </div>
@@ -186,7 +205,17 @@ export default function StatsPage() {
             ))}
           </div>
 
-          {filteredTokens.length === 0 && (
+          {loading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-8"
+            >
+              <p className="text-white/70">Fetching tokens...</p>
+            </motion.div>
+          )}
+
+          {filteredTokens.length === 0 && !loading && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -201,4 +230,4 @@ export default function StatsPage() {
       </div>
     </main>
   );
-} 
+}

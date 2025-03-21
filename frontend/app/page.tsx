@@ -28,7 +28,7 @@ export default function HomePage() {
   const [isClient, setIsClient] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [loading, setLoading] = useState(false);
   interface Token {
     _id: string;
     address: string;
@@ -44,9 +44,11 @@ export default function HomePage() {
   const [tokens, setTokens] = useState<Token[]>([]);
 
   const fetchTokens = async () => {
+    setLoading(true);
     const response = await fetch("/api/tokens");
     const data = await response.json();
     setTokens(data.tokens);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -534,7 +536,17 @@ export default function HomePage() {
             ))}
           </div>
 
-          {filteredTokens.length === 0 && (
+          {loading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-8"
+            >
+              <p className="text-white/70">Fetching tokens...</p>
+            </motion.div>
+          )}
+
+          {filteredTokens.length === 0 && !loading && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
