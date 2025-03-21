@@ -73,17 +73,6 @@ const proposalFormSchema = z.object({
 
 type ProposalFormValues = z.infer<typeof proposalFormSchema>;
 
-type GovernanceTokenInfo = {
-  address: string;
-  name: string;
-  symbol: string;
-  balance: string;
-  proposalThreshold: string;
-  quorum: number;
-  votingPeriod: number;
-  activeProposals: number;
-};
-
 type ProposalInfo = {
   id: number;
   title: string;
@@ -103,48 +92,69 @@ type ProposalInfo = {
   userVoteDirection: boolean | null;
 };
 
+interface Token {
+  _id: string;
+  address: string;
+  name: string;
+  symbol: string;
+  creator: string;
+  initialSupply: string;
+  maxSupply: string;
+  createdAt: string;
+  __v: number;
+}
+
 export default function GovernancePage() {
-  const [tokens, setTokens] = useState<GovernanceTokenInfo[]>([]);
+  const [tokens, setTokens] = useState<Token[]>([]);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState<boolean | null>(null);
   const [proposals, setProposals] = useState<ProposalInfo[]>([]);
-  const [userCreatedTokens, setUserCreatedTokens] = useState<
-    GovernanceTokenInfo[]
-  >([]);
+  const [userCreatedTokens, setUserCreatedTokens] = useState<Token[]>([]);
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
   const { authenticated, login, user } = usePrivy();
   const userAddress = user?.wallet?.address;
 
+  // Fetch tokens from backend
   useEffect(() => {
-    const fetchGovernanceTokens = async () => {
+    const fetchTokens = async () => {
       try {
-        const governanceTokens = await GovernanceTokenInfo();
-        console.log("Governance tokens:", governanceTokens);
-        setTokens(
-          Array.isArray(governanceTokens)
-            ? governanceTokens
-            : [governanceTokens]
-        );
+        const response = await fetch('/api/tokens');
+        const data = await response.json();
+        if (data.success) {
+          setTokens(data.tokens);
+          console.log("Fetched tokens:", data.tokens);
+        }
       } catch (error) {
-        console.error("Error fetching governance tokens:", error);
+        console.error("Error fetching tokens:", error);
       }
     };
 
-    const fetchUserCreatedTokens = async () => {
+    fetchTokens();
+  }, []);
+
+  // Fetch user's created tokens
+  useEffect(() => {
+    const fetchUserTokens = async () => {
       if (userAddress) {
         try {
-          const userCreatedTokens = await UserCreatedTokens(userAddress);
-          setUserCreatedTokens(
-            Array.isArray(userCreatedTokens)
-              ? (userCreatedTokens as GovernanceTokenInfo[])
-              : ([userCreatedTokens] as GovernanceTokenInfo[])
-          );
+          const response = await fetch(`/api/tokens/user/${userAddress}`);
+          const data = await response.json();
+          if (data.success) {
+            setUserCreatedTokens(data.tokens);
+            console.log("User created tokens:", data.tokens);
+          }
         } catch (error) {
-          console.error("Error fetching user created tokens:", error);
+          console.error("Error fetching user tokens:", error);
         }
       }
     };
 
+    if (userAddress) {
+      fetchUserTokens();
+    }
+  }, [userAddress]);
+
+  useEffect(() => {
     const fetchProposals = async () => {
       if (selectedToken) {
         try {
@@ -182,10 +192,8 @@ export default function GovernancePage() {
       }
     };
 
-    fetchGovernanceTokens();
-    fetchUserCreatedTokens();
     fetchProposals();
-  }, [userAddress]);
+  }, [selectedToken]);
 
   // Form handler for creating new proposals
   const proposalForm = useForm<ProposalFormValues>({
@@ -269,13 +277,29 @@ export default function GovernancePage() {
                     value={selectedToken || ""}
                     onValueChange={handleTokenChange}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full bg-black/30 border-[#ffae5c]/20 text-white hover:border-[#ffae5c]/40 focus:border-[#ffae5c] focus:ring-1 focus:ring-[#ffae5c]">
                       <SelectValue placeholder="Select a token" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-[#0D0B15] border border-[#ffae5c]/20 text-white shadow-lg shadow-black/50 backdrop-blur-xl">
                       {tokens.map((token) => (
-                        <SelectItem key={token.address} value={token.address}>
-                          {token.name} ({token.symbol})
+                        <SelectItem 
+                          key={token.address} 
+                          value={token.address}
+                          className="hover:bg-[#ffae5c]/10 focus:bg-[#ffae5c]/20 cursor-pointer text-white"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#ffae5c]/30 to-[#4834D4]/30 flex items-center justify-center">
+                              <span className="text-white/90 font-medium">
+                                {token.symbol.slice(0, 1)}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="font-medium">{token.name}</span>
+                              <span className="text-white/60 ml-2">
+                                ({token.symbol})
+                              </span>
+                            </div>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -573,6 +597,9 @@ export default function GovernancePage() {
                       <div className="text-sm text-muted-foreground">
                         Address: {token.address.slice(0, 6)}...
                         {token.address.slice(-4)}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Created: {new Date(token.createdAt).toLocaleDateString()}
                       </div>
                     </div>
                   ))}
