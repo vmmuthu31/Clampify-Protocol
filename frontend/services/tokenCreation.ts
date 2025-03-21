@@ -7,6 +7,7 @@ const isBrowser = (): boolean => typeof window !== "undefined";
 const { ethereum } = isBrowser() ? window : { ethereum: null };
 
 const contract_address: string = "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67"; // Clampify Factory Contract Address
+const governance_address: string = "0xE383A8EFDC5D0E7a5474da69EBA775ac506953e"; // Clampify Governance Contract Address
 
 // Add RPC URL for the network you're using (Core DAO testnet)
 const RPC_URL = "https://rpc.test2.btcs.network/";

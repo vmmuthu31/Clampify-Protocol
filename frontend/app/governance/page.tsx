@@ -46,6 +46,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { format, formatDistanceToNow } from "date-fns";
 import { Navbar } from "@/components/navbar";
+import { usePrivy } from "@privy-io/react-auth";
 
 // This would be imported from your contract artifacts
 const GOVERNANCE_ABI = [
@@ -119,223 +120,13 @@ type ProposalInfo = {
 
 export default function GovernancePage() {
   const [loading, setLoading] = useState(true);
-  const [provider, setProvider] =
-    useState<ethers.providers.Web3Provider | null>(null);
-  const [signer, setSigner] = useState<ethers.Signer | null>(null);
-  const [governanceContract, setGovernanceContract] =
-    useState<ethers.Contract | null>(null);
-  const [userAddress, setUserAddress] = useState<string | null>(null);
   const [tokens, setTokens] = useState<TokenInfo[]>([]);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
+  const [hasVoted, setHasVoted] = useState<boolean | null>(null);
   const [proposals, setProposals] = useState<ProposalInfo[]>([]);
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
-
-  // Connect wallet and set up contract instances
-  useEffect(() => {
-    const connect = async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        try {
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-          const web3Provider = new ethers.providers.Web3Provider(
-            window.ethereum
-          );
-          const web3Signer = web3Provider.getSigner();
-          const address = await web3Signer.getAddress();
-
-          const governance = new ethers.Contract(
-            GOVERNANCE_ADDRESS,
-            GOVERNANCE_ABI,
-            web3Signer
-          );
-
-          setProvider(web3Provider);
-          setSigner(web3Signer);
-          setGovernanceContract(governance);
-          setUserAddress(address);
-
-          // Listen for account changes
-          window.ethereum.on("accountsChanged", (accounts: string[]) => {
-            if (accounts.length === 0) {
-              setUserAddress(null);
-            } else {
-              setUserAddress(accounts[0]);
-            }
-          });
-        } catch (error) {
-          console.error("Error connecting wallet:", error);
-        }
-      } else {
-        console.error("Ethereum provider not found. Please install MetaMask.");
-      }
-    };
-
-    connect();
-  }, []);
-
-  // Load governance tokens after wallet connection
-  useEffect(() => {
-    const loadTokens = async () => {
-      if (!governanceContract || !provider || !signer) return;
-
-      setLoading(true);
-      try {
-        const tokenAddresses = await governanceContract.getGovernanceTokens();
-        const tokenInfoPromises = tokenAddresses.map(
-          async (address: string) => {
-            const tokenContract = new ethers.Contract(
-              address,
-              TOKEN_ABI,
-              provider
-            );
-            const tokenGovernanceInfo =
-              await governanceContract.tokenGovernance(address);
-            const proposalCount = await governanceContract.proposalCount(
-              address
-            );
-
-            const [name, symbol, balance] = await Promise.all([
-              tokenContract.name(),
-              tokenContract.symbol(),
-              userAddress
-                ? tokenContract.balanceOf(userAddress)
-                : ethers.BigNumber.from(0),
-            ]);
-
-            return {
-              address,
-              name,
-              symbol,
-              balance: ethers.utils.formatUnits(balance, 18),
-              proposalThreshold: ethers.utils.formatUnits(
-                tokenGovernanceInfo.proposalThreshold,
-                18
-              ),
-              quorum: tokenGovernanceInfo.quorum.toNumber(),
-              votingPeriod: tokenGovernanceInfo.votingPeriod.toNumber(),
-              activeProposals: proposalCount.toNumber(),
-            };
-          }
-        );
-
-        const tokenInfo = await Promise.all(tokenInfoPromises);
-        setTokens(tokenInfo);
-
-        // Select the first token by default if available
-        if (tokenInfo.length > 0 && !selectedToken) {
-          setSelectedToken(tokenInfo[0].address);
-        }
-      } catch (error) {
-        console.error("Error loading governance tokens:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTokens();
-    // eslint-disable-next-line
-  }, [governanceContract, provider, signer, userAddress]);
-
-  // Load proposals when a token is selected
-  useEffect(() => {
-    const loadProposals = async () => {
-      if (!selectedToken || !governanceContract || !provider) return;
-
-      setLoading(true);
-      try {
-        const proposalCount = await governanceContract.proposalCount(
-          selectedToken
-        );
-        const count = proposalCount.toNumber();
-
-        if (count === 0) {
-          setProposals([]);
-          setLoading(false);
-          return;
-        }
-
-        const tokenContract = new ethers.Contract(
-          selectedToken,
-          TOKEN_ABI,
-          provider
-        );
-        const totalSupply = await tokenContract.totalSupply();
-        const selectedTokenInfo = tokens.find(
-          (t) => t.address === selectedToken
-        );
-        const quorumThreshold = totalSupply
-          .mul(selectedTokenInfo?.quorum || 10)
-          .div(100);
-
-        const proposalPromises = [];
-        for (let i = 1; i <= count; i++) {
-          proposalPromises.push(
-            governanceContract.getProposalDetails(selectedToken, i)
-          );
-        }
-
-        const proposalDetails = await Promise.all(proposalPromises);
-
-        const formattedProposals = [];
-        for (let i = 0; i < proposalDetails.length; i++) {
-          const [
-            title,
-            description,
-            proposer,
-            createdAt,
-            votingEndsAt,
-            executed,
-            targetContract,
-            yesVotes,
-            noVotes,
-          ] = proposalDetails[i];
-
-          const totalVotes = yesVotes.add(noVotes);
-          const yesPercentage = totalVotes.gt(0)
-            ? yesVotes.mul(100).div(totalVotes).toNumber()
-            : 0;
-          const noPercentage = 100 - yesPercentage;
-
-          let hasVoted = null;
-          const userVoteDirection = null;
-
-          if (userAddress) {
-            hasVoted = await governanceContract.hasVoted(
-              selectedToken,
-              i + 1,
-              userAddress
-            );
-          }
-
-          formattedProposals.push({
-            id: i + 1,
-            title,
-            description,
-            proposer,
-            createdAt: new Date(createdAt.toNumber() * 1000),
-            votingEndsAt: new Date(votingEndsAt.toNumber() * 1000),
-            isActive: Date.now() < votingEndsAt.toNumber() * 1000,
-            executed,
-            targetContract,
-            yesVotes: ethers.utils.formatUnits(yesVotes, 18),
-            noVotes: ethers.utils.formatUnits(noVotes, 18),
-            yesPercentage,
-            noPercentage,
-            quorumReached: totalVotes.gte(quorumThreshold),
-            hasVoted,
-            userVoteDirection,
-          });
-        }
-
-        setProposals(formattedProposals.reverse()); // Most recent first
-      } catch (error) {
-        console.error("Error loading proposals:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProposals();
-  }, [selectedToken, governanceContract, provider, tokens, userAddress]);
+  const { authenticated, login, user } = usePrivy();
+  const userAddress = user?.wallet?.address;
 
   // Form handler for creating new proposals
   const proposalForm = useForm<ProposalFormValues>({
@@ -356,179 +147,27 @@ export default function GovernancePage() {
     }
   }, [selectedToken, proposalForm]);
 
-  const onProposalSubmit = async (values: ProposalFormValues) => {
-    if (!governanceContract) return;
-
-    try {
-      const tx = await governanceContract.createProposal(
-        values.tokenAddress,
-        values.title,
-        values.description,
-        values.targetContract,
-        values.callData
-      );
-
-      await tx.wait();
-      setProposalDialogOpen(false); // Reload proposals
-      const updatedProposalCount = await governanceContract.proposalCount(
-        values.tokenAddress
-      );
-      const newProposalId = updatedProposalCount.toNumber();
-
-      alert(`Proposal created successfully! Proposal ID: ${newProposalId}`);
-
-      // Refresh proposals
-      if (values.tokenAddress === selectedToken) {
-        // Load the new proposal
-        const [
-          title,
-          description,
-          proposer,
-          createdAt,
-          votingEndsAt,
-          executed,
-          targetContract,
-          yesVotes,
-          noVotes,
-        ] = await governanceContract.getProposalDetails(
-          selectedToken,
-          newProposalId
-        );
-
-        const newProposal = {
-          id: newProposalId,
-          title,
-          description,
-          proposer,
-          createdAt: new Date(createdAt.toNumber() * 1000),
-          votingEndsAt: new Date(votingEndsAt.toNumber() * 1000),
-          isActive: true,
-          executed,
-          targetContract,
-          yesVotes: ethers.utils.formatUnits(yesVotes, 18),
-          noVotes: ethers.utils.formatUnits(noVotes, 18),
-          yesPercentage: 0,
-          noPercentage: 0,
-          quorumReached: false,
-          hasVoted: false,
-          userVoteDirection: null,
-        };
-
-        setProposals([newProposal, ...proposals]);
-      }
-    } catch (error) {
-      console.error("Error creating proposal:", error);
-      alert(`Failed to create proposal: ${(error as Error).message}`);
-    }
-  };
+  const onProposalSubmit = async (values: ProposalFormValues) => {};
 
   // Vote on a proposal
-  const handleVote = async (proposalId: number, support: boolean) => {
-    if (!governanceContract || !selectedToken) return;
-
-    try {
-      const tx = await governanceContract.castVote(
-        selectedToken,
-        proposalId,
-        support
-      );
-      await tx.wait();
-
-      alert(`Vote cast successfully! ${support ? "Voted YES" : "Voted NO"}`);
-
-      // Update proposal in the UI
-      setProposals(
-        proposals.map((p) => {
-          if (p.id === proposalId) {
-            // Update vote counts (this is an approximation, we should refetch for accuracy)
-            const userBalance =
-              tokens.find((t) => t.address === selectedToken)?.balance || "0";
-            const userBalanceBN = ethers.utils.parseUnits(userBalance, 18);
-
-            let newYesVotes = ethers.utils.parseUnits(p.yesVotes, 18);
-            let newNoVotes = ethers.utils.parseUnits(p.noVotes, 18);
-
-            if (support) {
-              newYesVotes = newYesVotes.add(userBalanceBN);
-            } else {
-              newNoVotes = newNoVotes.add(userBalanceBN);
-            }
-
-            const totalVotes = newYesVotes.add(newNoVotes);
-            const yesPercentage = totalVotes.gt(0)
-              ? newYesVotes.mul(100).div(totalVotes).toNumber()
-              : 0;
-
-            return {
-              ...p,
-              yesVotes: ethers.utils.formatUnits(newYesVotes, 18),
-              noVotes: ethers.utils.formatUnits(newNoVotes, 18),
-              yesPercentage,
-              noPercentage: 100 - yesPercentage,
-              hasVoted: true,
-              userVoteDirection: support,
-            };
-          }
-          return p;
-        })
-      );
-    } catch (error) {
-      console.error("Error voting on proposal:", error);
-      alert(`Failed to vote: ${(error as Error).message}`);
-    }
-  };
+  const handleVote = async (proposalId: number, support: boolean) => {};
 
   // Execute a proposal
-  const handleExecute = async (proposalId: number) => {
-    if (!governanceContract || !selectedToken) return;
-
-    try {
-      const tx = await governanceContract.executeProposal(
-        selectedToken,
-        proposalId
-      );
-      await tx.wait();
-
-      alert("Proposal executed successfully!");
-
-      // Update proposal in the UI
-      setProposals(
-        proposals.map((p) => {
-          if (p.id === proposalId) {
-            return {
-              ...p,
-              executed: true,
-              isActive: false,
-            };
-          }
-          return p;
-        })
-      );
-    } catch (error) {
-      console.error("Error executing proposal:", error);
-      alert(`Failed to execute proposal: ${(error as Error).message}`);
-    }
-  };
+  const handleExecute = async (proposalId: number) => {};
 
   // Handle token selection change
   const handleTokenChange = (value: string) => {
     setSelectedToken(value);
   };
 
-  if (!provider) {
+  if (!authenticated) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold mb-4">Clampify Governance</h1>
         <p className="text-lg mb-8">
           Please connect your wallet to access governance features.
         </p>
-        <Button
-          size="lg"
-          onClick={() =>
-            window.ethereum &&
-            window.ethereum.request({ method: "eth_requestAccounts" })
-          }
-        >
+        <Button size="lg" onClick={() => login()}>
           Connect Wallet
         </Button>
       </div>
@@ -538,7 +177,7 @@ export default function GovernancePage() {
   return (
     <>
       <Navbar />
-      <div className="container mx-auto px-4 py-20">
+      <div className="container mx-auto min-h-screen px-4 py-20">
         <h1 className="text-3xl font-bold mb-2 text-center">
           Clampify Governance
         </h1>
@@ -894,7 +533,7 @@ function ProposalCard({
   proposal: ProposalInfo;
   onVote: (proposalId: number, support: boolean) => Promise<void>;
   onExecute: (proposalId: number) => Promise<void>;
-  userAddress: string | null;
+  userAddress: string | undefined;
   selectedToken: string;
   quorum: number;
 }) {

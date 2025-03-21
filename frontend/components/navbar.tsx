@@ -57,7 +57,7 @@ export function Navbar() {
         },
       ],
     },
-    { label: "Stats", href: "/stats" },
+    { label: "Governance", href: "/governance" },
     { label: "Docs", href: "/docs" },
   ];
 
