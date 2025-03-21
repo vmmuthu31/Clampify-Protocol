@@ -23,7 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { format, formatDistanceToNow } from "date-fns";
 import { Navbar } from "@/components/navbar";
 import { usePrivy } from "@privy-io/react-auth";
 import {
@@ -120,6 +119,19 @@ interface Token {
   proposalThreshold?: string;
   quorum?: number;
   votingPeriod?: number;
+}
+
+interface RawProposalData {
+  0: string; // title
+  1: string; // description
+  2: string; // proposer
+  3: { _hex: string; _isBigNumber: boolean }; // createdAt
+  4: { _hex: string; _isBigNumber: boolean }; // votingEndsAt
+  5: boolean; // executed
+  6: string; // targetContract
+  7: { _hex: string; _isBigNumber: boolean }; // yesVotes
+  8: { _hex: string; _isBigNumber: boolean }; // noVotes
+  [key: number]: string | boolean | { _hex: string; _isBigNumber: boolean };
 }
 
 export default function GovernancePage() {
@@ -306,20 +318,45 @@ export default function GovernancePage() {
         const proposalDetails = await Promise.all(proposalPromises);
         console.log("proposalDetails", proposalDetails);
 
-        const proposalDetailsArray = proposalDetails.map((p) => ({
-          ...p,
-          createdAt: String(p.createdAt),
-          votingEndsAt: String(p.votingEndsAt),
-          yesVotes: p?.yesVotes?.toString(),
-          noVotes: p?.noVotes?.toString(),
-          isActive: !p?.executed,
-          yesPercentage: (p?.yesVotes / (p?.yesVotes + p?.noVotes)) * 100 || 0,
-          noPercentage: (p?.noVotes / (p?.yesVotes + p?.noVotes)) * 100 || 0,
+        const proposalDetailsArray = (
+          proposalDetails as unknown as RawProposalData[]
+        ).map((p, index) => ({
+          title: (p[0] as string) || "",
+          description: (p[1] as string) || "",
+          proposer: (p[2] as string) || "",
+          createdAt: String(
+            (p[3] as { _hex: string })?._hex
+              ? parseInt((p[3] as { _hex: string })._hex, 16)
+              : 0
+          ),
+          votingEndsAt: String(
+            (p[4] as { _hex: string })?._hex
+              ? parseInt((p[4] as { _hex: string })._hex, 16)
+              : 0
+          ),
+          executed: (p[5] as boolean) || false,
+          targetContract: (p[6] as string) || "",
+          yesVotes: (p[7] as { _hex: string })?._hex
+            ? parseInt((p[7] as { _hex: string })._hex, 16).toString()
+            : "0",
+          noVotes: (p[8] as { _hex: string })?._hex
+            ? parseInt((p[8] as { _hex: string })._hex, 16).toString()
+            : "0",
+          isActive: !(p[5] as boolean),
+          id: index + 1,
+          yesPercentage:
+            (parseInt((p[7] as { _hex: string })?._hex || "0", 16) /
+              (parseInt((p[7] as { _hex: string })?._hex || "0", 16) +
+                parseInt((p[8] as { _hex: string })?._hex || "0", 16) || 1)) *
+              100 || 0,
+          noPercentage:
+            (parseInt((p[8] as { _hex: string })?._hex || "0", 16) /
+              (parseInt((p[7] as { _hex: string })?._hex || "0", 16) +
+                parseInt((p[8] as { _hex: string })?._hex || "0", 16))) *
+              100 || 0,
           quorumReached: false,
           hasVoted: null,
           userVoteDirection: null,
-          targetContract: p?.targetContract,
-          proposer: p?.proposer,
         }));
         setProposals(proposalDetailsArray);
 
@@ -960,31 +997,55 @@ function ProposalCard({
                     6
                   )}...${proposal?.proposer?.substring(38)}`}
               <span className="mx-2">•</span>
-              Created{" "}
-              {formatDistanceToNow(proposal?.createdAt, { addSuffix: true })}
+              Created:{" "}
+              {new Date(Number(proposal?.createdAt) * 1000).toLocaleString(
+                "en-US",
+                {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                }
+              )}
+              {/* {formatDistanceToNow(proposal?.createdAt, { addSuffix: true })} */}
             </CardDescription>
           </div>
 
           <div className="text-right">
             <div className="text-sm font-medium">
-              {proposal.isActive ? (
+              {proposal.isActive && proposal?.votingEndsAt ? (
                 <>
                   Voting Ends:{" "}
                   <span className="text-muted-foreground">
-                    {format(proposal?.votingEndsAt, "MMM d, yyyy HH:mm")}
+                    {new Date(
+                      Number(proposal?.votingEndsAt) * 1000 +
+                        10 * 24 * 60 * 60 * 1000
+                    ).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })}
                   </span>
                 </>
               ) : (
                 <>
                   Ended:{" "}
                   <span className="text-muted-foreground">
-                    {format(proposal?.votingEndsAt, "MMM d, yyyy HH:mm")}
+                    {new Date(
+                      Number(proposal?.votingEndsAt) * 1000
+                    ).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
                   </span>
                 </>
               )}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {formatDistanceToNow(proposal?.votingEndsAt, { addSuffix: true })}
             </div>
           </div>
         </div>
@@ -998,14 +1059,8 @@ function ProposalCard({
 
           <div className="mb-4">
             <div className="flex justify-between text-sm mb-1">
-              <span>
-                Yes: {parseFloat(proposal?.yesVotes).toLocaleString()} (
-                {proposal?.yesPercentage}%)
-              </span>
-              <span>
-                No: {parseFloat(proposal?.noVotes).toLocaleString()} (
-                {proposal?.noPercentage}%)
-              </span>
+              <span>Yes: ({proposal?.yesPercentage}%)</span>
+              <span>No: ({proposal?.noPercentage}%)</span>
             </div>
 
             <div className="w-full bg-gray-200 dark:bg-gray-700 h-2.5 rounded-full">
@@ -1057,13 +1112,6 @@ function ProposalCard({
           </div>
         </div>
       </CardContent>
-
-      <CardFooter className="text-sm text-muted-foreground">
-        <div>
-          Target Contract: {proposal?.targetContract?.substring(0, 6)}...
-          {proposal?.targetContract?.substring(38)}
-        </div>
-      </CardFooter>
     </Card>
   );
 }
