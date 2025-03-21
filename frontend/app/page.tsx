@@ -63,9 +63,10 @@ export default function HomePage() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  const filteredTokens = tokens.filter(token => 
-    token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTokens = tokens.filter(
+    (token) =>
+      token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (!isClient) {
@@ -539,7 +540,9 @@ export default function HomePage() {
               animate={{ opacity: 1 }}
               className="text-center py-8"
             >
-              <p className="text-white/70">No tokens found matching "{searchQuery}"</p>
+              <p className="text-white/70">
+                No tokens found matching &quot;{searchQuery}&quot;
+              </p>
             </motion.div>
           )}
         </motion.div>
