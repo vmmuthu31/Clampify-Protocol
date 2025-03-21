@@ -55,6 +55,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { TokenInfo } from "@/services/tokenCreation";
+import { ethers } from "ethers";
 
 type IGovernanceTokenInfo = {
   address: string;
@@ -114,6 +116,7 @@ interface Token {
   createdAt: string;
   __v: number;
   balance?: string;
+  totalSupply?: string;
   proposalThreshold?: string;
   quorum?: number;
   votingPeriod?: number;
@@ -165,8 +168,23 @@ export default function GovernancePage() {
           }
           const data = await response.json();
           if (data.success) {
-            setUserCreatedTokens(data.tokens);
-            console.log("User created tokens:", data.tokens);
+            // Fetch balance info for each token
+            const tokensWithBalance = await Promise.all(
+              data.tokens.map(async (token: Token) => {
+                try {
+                  const tokenInfo = await TokenInfo(token.address);
+                  return {
+                    ...token,
+                    balance: tokenInfo.balance,
+                    totalSupply: tokenInfo.totalSupply
+                  };
+                } catch (error) {
+                  console.error(`Error fetching info for token ${token.address}:`, error);
+                  return token;
+                }
+              })
+            );
+            setUserCreatedTokens(tokensWithBalance);
           }
         } catch (error) {
           console.error("Error fetching user tokens:", error);
@@ -240,13 +258,20 @@ export default function GovernancePage() {
     }
   }, [selectedToken, proposalForm]);
 
-  // Add effect to fetch governance info when token is selected
+  // Modify the effect that fetches governance info
   useEffect(() => {
     const fetchGovernanceInfo = async () => {
       if (selectedToken) {
         try {
-          const info = await GovernanceTokenInfo(selectedToken);
-          setGovernanceInfo(info);
+          // Get both governance info and token balance
+          const tokenInfo = await TokenInfo(selectedToken);
+          const govInfo = await GovernanceTokenInfo(selectedToken);
+
+          setGovernanceInfo({
+            ...govInfo,
+            balance: tokenInfo.balance // Use the actual token balance
+          });
+
         } catch (error) {
           console.error("Error fetching governance info:", error);
           toast.error("Failed to fetch governance information");
@@ -524,8 +549,7 @@ export default function GovernancePage() {
                 <Card className="w-full md:w-2/3">
                   <CardHeader>
                     <CardTitle>
-                      {tokens.find((t) => t.address === selectedToken)?.name}{" "}
-                      Governance
+                      {tokens.find((t) => t.address === selectedToken)?.name} Governance
                     </CardTitle>
                     <CardDescription>
                       Token governance parameters and your voting power
@@ -534,45 +558,29 @@ export default function GovernancePage() {
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">
-                          Your Balance
-                        </h3>
+                        <h3 className="text-sm font-medium mb-1">Your Balance</h3>
                         <p className="text-2xl font-bold">
-                          {parseFloat(
-                            tokens.find((t) => t.address === selectedToken)
-                              ?.balance || "0"
-                          ).toLocaleString()}{" "}
-                          {
-                            tokens.find((t) => t.address === selectedToken)
-                              ?.symbol
-                          }
+                          {governanceInfo?.balance ? (
+                            `${Number(ethers.utils.formatEther(governanceInfo.balance)).toLocaleString()} ${governanceInfo.symbol}`
+                          ) : (
+                            "0 TS"
+                          )}
                         </p>
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">
-                          Proposal Threshold
-                        </h3>
+                        <h3 className="text-sm font-medium mb-1">Proposal Threshold</h3>
                         <p className="text-2xl font-bold">
-                          {parseFloat(
-                            tokens.find((t) => t.address === selectedToken)
-                              ?.proposalThreshold || "0"
-                          ).toLocaleString()}{" "}
-                          {
-                            tokens.find((t) => t.address === selectedToken)
-                              ?.symbol
-                          }
+                          {governanceInfo?.proposalThreshold ? (
+                            `${Number(ethers.utils.formatEther(governanceInfo.proposalThreshold)).toLocaleString()} ${governanceInfo.symbol}`
+                          ) : (
+                            "0 TS"
+                          )}
                         </p>
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">
-                          Quorum Required
-                        </h3>
+                        <h3 className="text-sm font-medium mb-1">Quorum Required</h3>
                         <p className="text-2xl font-bold">
-                          {
-                            tokens.find((t) => t.address === selectedToken)
-                              ?.quorum
-                          }
-                          %
+                          {governanceInfo?.quorum ? `${governanceInfo.quorum}%` : "0%"}
                         </p>
                       </div>
                     </div>
@@ -580,12 +588,8 @@ export default function GovernancePage() {
                   <CardFooter className="flex justify-between">
                     <span className="text-sm text-muted-foreground">
                       Voting period:{" "}
-                      {tokens.find((t) => t.address === selectedToken)
-                        ?.votingPeriod
-                        ? formatDuration(
-                            tokens.find((t) => t.address === selectedToken)
-                              ?.votingPeriod || 0
-                          )
+                      {governanceInfo?.votingPeriod
+                        ? formatDuration(governanceInfo.votingPeriod)
                         : "N/A"}
                     </span>
                     {!governanceInfo?.isGovernanceActive && (
@@ -789,14 +793,37 @@ export default function GovernancePage() {
                           </span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Created:{" "}
-                          {new Date(token.createdAt).toLocaleDateString()}
+                          Created: {new Date(token.createdAt).toLocaleDateString()}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Initial Supply:{" "}
-                          {parseFloat(token.initialSupply).toLocaleString()}{" "}
-                          {token.symbol}
+                          Balance: {token.balance ? (
+                            `${Number(ethers.utils.formatEther(token.balance)).toLocaleString()} ${token.symbol}`
+                          ) : (
+                            "Loading..."
+                          )}
                         </div>
+                        <div className="text-sm text-muted-foreground">
+                          Total Supply: {token.totalSupply ? (
+                            `${Number(token.totalSupply).toLocaleString()} ${token.symbol}`
+                          ) : (
+                            "Loading..."
+                          )}
+                        </div>
+                        {token.totalSupply && token.balance && (
+                          <div className="mt-2">
+                            <div className="text-sm text-muted-foreground mb-1">
+                              Your Holdings
+                            </div>
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                              <div
+                                className="bg-gradient-to-r from-[#ffae5c] to-[#4834D4] h-full rounded-full"
+                                style={{
+                                  width: `${(Number(ethers.utils.formatEther(token.balance)) / Number(token.totalSupply)) * 100}%`
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
