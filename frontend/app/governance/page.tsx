@@ -104,7 +104,7 @@ type ProposalInfo = {
 };
 
 export default function GovernancePage() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [tokens, setTokens] = useState<GovernanceTokenInfo[]>([]);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState<boolean | null>(null);
