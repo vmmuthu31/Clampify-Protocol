@@ -265,8 +265,6 @@ export const GovernanceProposalInfo = async (
   }
 };
 
-
-
 export const hasVoted = async (
   tokenAddress: string,
   proposalId: number,
@@ -290,9 +288,12 @@ export const hasVoted = async (
       signer
     );
 
-    const voted = await contract.hasVoted(tokenAddress, proposalId, voterAddress);
+    const voted = await contract.hasVoted(
+      tokenAddress,
+      proposalId,
+      voterAddress
+    );
     return voted;
-
   } catch (error) {
     console.error("Error checking vote status:", error);
     throw error;
@@ -397,4 +398,3 @@ export const executeProposal = async (
     throw error;
   }
 };
-

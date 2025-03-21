@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
 import {
   Card,
   CardContent,
@@ -54,6 +53,16 @@ import {
   UserCreatedTokens,
 } from "@/services/tokenCreation";
 
+type IGovernanceTokenInfo = {
+  address: string;
+  name: string;
+  symbol: string;
+  balance: string;
+  proposalThreshold: string;
+  quorum: number;
+  votingPeriod: number;
+  activeProposals: number;
+};
 // Form schema for creating proposals
 const proposalFormSchema = z.object({
   tokenAddress: z
@@ -166,7 +175,7 @@ export default function GovernancePage() {
             }
             const proposals = await Promise.all(proposalPromises);
             setProposals(
-              proposals.map((p) => ({
+              (proposals as unknown as GovernanceProposalData[]).map((p) => ({
                 id: p.id,
                 title: p.title,
                 description: p.description,
