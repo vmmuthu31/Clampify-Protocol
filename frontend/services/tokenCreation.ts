@@ -8,7 +8,7 @@ const isBrowser = (): boolean => typeof window !== "undefined";
 const { ethereum } = isBrowser() ? window : { ethereum: null };
 
 const contract_address: string = "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67"; // Clampify Factory Contract Address
-const governance_address: string = "0xE383A8EFDC5D0E7a5474da69EBA775ac506953e"; // Clampify Governance Contract Address
+const governance_address: string = "0xE383A8EFDC5D0E7a5474da69EBA775ac506953ef"; // Clampify Governance Contract Address
 
 // Add RPC URL for the network you're using (Core DAO testnet)
 const RPC_URL = "https://rpc.test2.btcs.network/";
@@ -135,32 +135,76 @@ type GovernanceTokenInfo = {
   quorum: number;
   votingPeriod: number;
   activeProposals: number;
+  isGovernanceActive: boolean;
 };
 
-export const GovernanceTokenInfo = async (): Promise<GovernanceTokenInfo> => {
+export const GovernanceTokenInfo = async (tokenAddress: string): Promise<GovernanceTokenInfo> => {
   try {
-    const provider =
-      ethereum != null
-        ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider();
-
+    const provider = ethereum != null 
+      ? new ethers.providers.Web3Provider(ethereum)
+      : new ethers.providers.JsonRpcProvider(RPC_URL);
+    
     const signer = ethereum != null ? provider.getSigner() : null;
-
+    
     if (!signer) {
       throw new Error("No wallet connected");
     }
 
-    const contract = new ethers.Contract(
-      governance_address,
-      ClampifyGovernance,
-      signer
-    );
-    const governanceTokens = await contract.getGovernanceTokens();
+    const contract = new ethers.Contract(governance_address, ClampifyGovernance, signer);
+    
+    // Get governance info for the token
+    const governanceInfo = await contract.tokenGovernance(tokenAddress);
+    
+    // Check if governance info exists and is active
+    const isGovernanceActive = governanceInfo?.isActive || false;
+    
+    if (!governanceInfo) {
+      // Return default values if governance is not set up
+      return {
+        address: tokenAddress,
+        name: "Unknown",
+        symbol: "Unknown",
+        balance: "0",
+        proposalThreshold: "0",
+        quorum: 0,
+        votingPeriod: 0,
+        activeProposals: 0,
+        isGovernanceActive: false
+      };
+    }
 
-    return governanceTokens;
+    // Get token contract to fetch name and symbol
+    const tokenContract = new ethers.Contract(tokenAddress, ClampifyToken, signer);
+    const [name, symbol] = await Promise.all([
+      tokenContract.name(),
+      tokenContract.symbol()
+    ]);
+
+    return {
+      address: tokenAddress,
+      name,
+      symbol,
+      balance: governanceInfo.balance?.toString() || "0",
+      proposalThreshold: governanceInfo.proposalThreshold?.toString() || "0",
+      quorum: governanceInfo.quorum?.toNumber() || 0,
+      votingPeriod: governanceInfo.votingPeriod?.toNumber() || 0,
+      activeProposals: governanceInfo.activeProposals?.toNumber() || 0,
+      isGovernanceActive
+    };
   } catch (error) {
-    console.error("Detailed error:", error);
-    throw error;
+    console.error("Error fetching governance info:", error);
+    // Return default values on error
+    return {
+      address: tokenAddress,
+      name: "Error",
+      symbol: "Error",
+      balance: "0",
+      proposalThreshold: "0",
+      quorum: 0,
+      votingPeriod: 0,
+      activeProposals: 0,
+      isGovernanceActive: false
+    };
   }
 };
 
@@ -314,6 +358,7 @@ export const createProposal = async (
   callData: string
 ): Promise<number> => {
   try {
+    console.log(tokenAddress, title, description, targetContract, callData);
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
@@ -401,6 +446,46 @@ export const executeProposal = async (
     await contract.executeProposal(tokenAddress, proposalId);
   } catch (error) {
     console.error("Error executing proposal:", error);
+    throw error;
+  }
+};
+
+// Add this new function to activate governance
+export const activateGovernance = async (
+  tokenAddress: string,
+  proposalThreshold: string,
+  quorum: number,
+  votingPeriod: number
+): Promise<void> => {
+  try {
+    const provider = ethereum != null 
+      ? new ethers.providers.Web3Provider(ethereum)
+      : new ethers.providers.JsonRpcProvider(RPC_URL);
+    
+    const signer = ethereum != null ? provider.getSigner() : null;
+    
+    if (!signer) {
+      throw new Error("No wallet connected");
+    }
+
+    const contract = new ethers.Contract(governance_address, ClampifyGovernance, signer);
+    
+    // Convert proposal threshold to wei
+    const proposalThresholdWei = ethers.utils.parseEther(proposalThreshold);
+    
+    // Activate governance
+    const tx = await contract.activateGovernance(
+      tokenAddress,
+      proposalThresholdWei,
+      quorum, // percentage (e.g., 51 for 51%)
+      votingPeriod // in seconds
+    );
+
+    await tx.wait();
+    
+    console.log("Governance activated successfully");
+  } catch (error) {
+    console.error("Error activating governance:", error);
     throw error;
   }
 };

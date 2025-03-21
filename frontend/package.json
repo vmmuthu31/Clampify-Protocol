@@ -48,6 +48,7 @@
     "react-tabs": "^6.1.0",
     "separator": "^0.1.0",
     "slider": "^1.0.4",
+    "sonner": "^2.0.1",
     "switch": "^0.0.0",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
