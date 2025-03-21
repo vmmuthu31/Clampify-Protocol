@@ -104,7 +104,6 @@ type ProposalInfo = {
 };
 
 export default function GovernancePage() {
-  const [loading, setLoading] = useState(false);
   const [tokens, setTokens] = useState<GovernanceTokenInfo[]>([]);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState<boolean | null>(null);
@@ -151,11 +150,31 @@ export default function GovernancePage() {
         try {
           const proposalCount = await GovernanceProposalCount(selectedToken);
           if (proposalCount > 0) {
-            const proposals = await GovernanceProposalInfo(
-              selectedToken,
-              proposalCount
+            const proposalPromises = [];
+            for (let i = 1; i <= proposalCount; i++) {
+              proposalPromises.push(GovernanceProposalInfo(selectedToken, i));
+            }
+            const proposals = await Promise.all(proposalPromises);
+            setProposals(
+              proposals.map((p) => ({
+                id: p.id,
+                title: p.title,
+                description: p.description,
+                proposer: p.proposer,
+                createdAt: new Date(p.createdAt),
+                votingEndsAt: new Date(p.endTime),
+                isActive: p.active,
+                executed: p.executed,
+                targetContract: p.target,
+                yesVotes: p.forVotes,
+                noVotes: p.againstVotes,
+                yesPercentage: p.forPercentage,
+                noPercentage: p.againstPercentage,
+                quorumReached: p.quorumReached,
+                hasVoted: p.hasVoted,
+                userVoteDirection: p.userVoteDirection,
+              }))
             );
-            setProposals(proposals);
           }
         } catch (error) {
           console.error("Error fetching proposals:", error);
@@ -165,6 +184,7 @@ export default function GovernancePage() {
 
     fetchGovernanceTokens();
     fetchUserCreatedTokens();
+    fetchProposals();
   }, [userAddress]);
 
   // Form handler for creating new proposals
@@ -224,362 +244,340 @@ export default function GovernancePage() {
           Vote on proposals and shape the future of the platform
         </p>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        {tokens.length === 0 ? (
+          <div className="text-center p-12 border rounded-lg">
+            <h2 className="text-xl font-semibold mb-2">
+              No Governance Tokens Found
+            </h2>
+            <p className="text-muted-foreground">
+              There are no tokens with governance activated yet.
+            </p>
           </div>
         ) : (
           <>
-            {tokens.length === 0 ? (
-              <div className="text-center p-12 border rounded-lg">
-                <h2 className="text-xl font-semibold mb-2">
-                  No Governance Tokens Found
-                </h2>
-                <p className="text-muted-foreground">
-                  There are no tokens with governance activated yet.
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Token Selection and Info Card */}
-                <div className="flex flex-col md:flex-row gap-6 mb-8">
-                  <Card className="w-full md:w-1/3">
-                    <CardHeader>
-                      <CardTitle>Select Token</CardTitle>
-                      <CardDescription>
-                        Choose a token to view and participate in governance
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Select
-                        value={selectedToken || ""}
-                        onValueChange={handleTokenChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a token" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {tokens.map((token) => (
-                            <SelectItem
-                              key={token.address}
-                              value={token.address}
-                            >
-                              {token.name} ({token.symbol})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </CardContent>
-                  </Card>
+            {/* Token Selection and Info Card */}
+            <div className="flex flex-col md:flex-row gap-6 mb-8">
+              <Card className="w-full md:w-1/3">
+                <CardHeader>
+                  <CardTitle>Select Token</CardTitle>
+                  <CardDescription>
+                    Choose a token to view and participate in governance
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Select
+                    value={selectedToken || ""}
+                    onValueChange={handleTokenChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a token" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tokens.map((token) => (
+                        <SelectItem key={token.address} value={token.address}>
+                          {token.name} ({token.symbol})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
 
-                  {selectedToken && (
-                    <Card className="w-full md:w-2/3">
-                      <CardHeader>
-                        <CardTitle>
+              {selectedToken && (
+                <Card className="w-full md:w-2/3">
+                  <CardHeader>
+                    <CardTitle>
+                      {tokens.find((t) => t.address === selectedToken)?.name}{" "}
+                      Governance
+                    </CardTitle>
+                    <CardDescription>
+                      Token governance parameters and your voting power
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <h3 className="text-sm font-medium text-muted-foreground">
+                          Your Balance
+                        </h3>
+                        <p className="text-2xl font-bold">
+                          {parseFloat(
+                            tokens.find((t) => t.address === selectedToken)
+                              ?.balance || "0"
+                          ).toLocaleString()}{" "}
                           {
                             tokens.find((t) => t.address === selectedToken)
-                              ?.name
-                          }{" "}
-                          Governance
-                        </CardTitle>
-                        <CardDescription>
-                          Token governance parameters and your voting power
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <h3 className="text-sm font-medium text-muted-foreground">
-                              Your Balance
-                            </h3>
-                            <p className="text-2xl font-bold">
-                              {parseFloat(
-                                tokens.find((t) => t.address === selectedToken)
-                                  ?.balance || "0"
-                              ).toLocaleString()}{" "}
-                              {
-                                tokens.find((t) => t.address === selectedToken)
-                                  ?.symbol
-                              }
-                            </p>
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-muted-foreground">
-                              Proposal Threshold
-                            </h3>
-                            <p className="text-2xl font-bold">
-                              {parseFloat(
+                              ?.symbol
+                          }
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-muted-foreground">
+                          Proposal Threshold
+                        </h3>
+                        <p className="text-2xl font-bold">
+                          {parseFloat(
+                            tokens.find((t) => t.address === selectedToken)
+                              ?.proposalThreshold || "0"
+                          ).toLocaleString()}{" "}
+                          {
+                            tokens.find((t) => t.address === selectedToken)
+                              ?.symbol
+                          }
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-muted-foreground">
+                          Quorum Required
+                        </h3>
+                        <p className="text-2xl font-bold">
+                          {
+                            tokens.find((t) => t.address === selectedToken)
+                              ?.quorum
+                          }
+                          %
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Voting period:{" "}
+                      {tokens.find((t) => t.address === selectedToken)
+                        ?.votingPeriod
+                        ? formatDuration(
+                            tokens.find((t) => t.address === selectedToken)
+                              ?.votingPeriod || 0
+                          )
+                        : "N/A"}
+                    </span>
+                    <Dialog
+                      open={proposalDialogOpen}
+                      onOpenChange={setProposalDialogOpen}
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          disabled={
+                            !userAddress ||
+                            parseFloat(
+                              tokens.find((t) => t.address === selectedToken)
+                                ?.balance || "0"
+                            ) <
+                              parseFloat(
                                 tokens.find((t) => t.address === selectedToken)
                                   ?.proposalThreshold || "0"
-                              ).toLocaleString()}{" "}
-                              {
-                                tokens.find((t) => t.address === selectedToken)
-                                  ?.symbol
-                              }
-                            </p>
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium text-muted-foreground">
-                              Quorum Required
-                            </h3>
-                            <p className="text-2xl font-bold">
-                              {
-                                tokens.find((t) => t.address === selectedToken)
-                                  ?.quorum
-                              }
-                              %
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Voting period:{" "}
-                          {tokens.find((t) => t.address === selectedToken)
-                            ?.votingPeriod
-                            ? formatDuration(
-                                tokens.find((t) => t.address === selectedToken)
-                                  ?.votingPeriod || 0
                               )
-                            : "N/A"}
+                          }
+                        >
+                          Create Proposal
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[600px]">
+                        <DialogHeader>
+                          <DialogTitle>Create New Proposal</DialogTitle>
+                          <DialogDescription>
+                            Submit a proposal for the community to vote on. You
+                            need at least{" "}
+                            {parseFloat(
+                              tokens.find((t) => t.address === selectedToken)
+                                ?.proposalThreshold || "0"
+                            ).toLocaleString()}{" "}
+                            {
+                              tokens.find((t) => t.address === selectedToken)
+                                ?.symbol
+                            }{" "}
+                            to create a proposal.
+                          </DialogDescription>
+                        </DialogHeader>
+
+                        <Form {...proposalForm}>
+                          <form
+                            onSubmit={proposalForm.handleSubmit(
+                              onProposalSubmit
+                            )}
+                            className="space-y-4"
+                          >
+                            <FormField
+                              control={proposalForm.control}
+                              name="title"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Proposal Title</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="Enter a descriptive title"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={proposalForm.control}
+                              name="description"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Description</FormLabel>
+                                  <FormControl>
+                                    <Textarea
+                                      placeholder="Provide details about your proposal"
+                                      className="min-h-[120px]"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={proposalForm.control}
+                              name="targetContract"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Target Contract</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="0x..." {...field} />
+                                  </FormControl>
+                                  <FormDescription>
+                                    The contract address that will be called if
+                                    the proposal passes
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={proposalForm.control}
+                              name="callData"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Call Data</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="0x..." {...field} />
+                                  </FormControl>
+                                  <FormDescription>
+                                    The encoded function call data (use
+                                    ethers.utils.encodeFunctionData)
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <DialogFooter>
+                              <Button type="submit">Submit Proposal</Button>
+                            </DialogFooter>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+                  </CardFooter>
+                </Card>
+              )}
+            </div>
+
+            {/* Proposals Section */}
+            {selectedToken && (
+              <div>
+                <Tabs defaultValue="active">
+                  <TabsList>
+                    <TabsTrigger value="active">Active Proposals</TabsTrigger>
+                    <TabsTrigger value="past">Past Proposals</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="active" className="space-y-6 mt-6">
+                    {proposals.filter((p) => p.isActive).length === 0 ? (
+                      <div className="text-center p-12 border rounded-lg">
+                        <h2 className="text-xl font-semibold mb-2">
+                          No Active Proposals
+                        </h2>
+                        <p className="text-muted-foreground">
+                          There are no active proposals for this token at the
+                          moment.
+                        </p>
+                      </div>
+                    ) : (
+                      proposals
+                        .filter((p) => p.isActive)
+                        .map((proposal) => (
+                          <ProposalCard
+                            key={`${selectedToken}-${proposal.id}`}
+                            proposal={proposal}
+                            onVote={handleVote}
+                            onExecute={handleExecute}
+                            userAddress={userAddress}
+                            selectedToken={selectedToken}
+                            quorum={
+                              tokens.find((t) => t.address === selectedToken)
+                                ?.quorum || 0
+                            }
+                          />
+                        ))
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="past" className="space-y-6 mt-6">
+                    {proposals.filter((p) => !p.isActive).length === 0 ? (
+                      <div className="text-center p-12 border rounded-lg">
+                        <h2 className="text-xl font-semibold mb-2">
+                          No Past Proposals
+                        </h2>
+                        <p className="text-muted-foreground">
+                          There are no past proposals for this token.
+                        </p>
+                      </div>
+                    ) : (
+                      proposals
+                        .filter((p) => !p.isActive)
+                        .map((proposal) => (
+                          <ProposalCard
+                            key={`${selectedToken}-${proposal.id}`}
+                            proposal={proposal}
+                            onVote={handleVote}
+                            onExecute={handleExecute}
+                            userAddress={userAddress}
+                            selectedToken={selectedToken}
+                            quorum={
+                              tokens.find((t) => t.address === selectedToken)
+                                ?.quorum || 0
+                            }
+                          />
+                        ))
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
+
+            {userCreatedTokens.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">
+                  Your Created Tokens
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {userCreatedTokens.map((token) => (
+                    <div
+                      key={token.address}
+                      className="p-4 border rounded-lg bg-black/20 backdrop-blur-sm"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium">{token.name}</h3>
+                        <span className="text-sm text-muted-foreground">
+                          {token.symbol}
                         </span>
-                        <Dialog
-                          open={proposalDialogOpen}
-                          onOpenChange={setProposalDialogOpen}
-                        >
-                          <DialogTrigger asChild>
-                            <Button
-                              disabled={
-                                !userAddress ||
-                                parseFloat(
-                                  tokens.find(
-                                    (t) => t.address === selectedToken
-                                  )?.balance || "0"
-                                ) <
-                                  parseFloat(
-                                    tokens.find(
-                                      (t) => t.address === selectedToken
-                                    )?.proposalThreshold || "0"
-                                  )
-                              }
-                            >
-                              Create Proposal
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[600px]">
-                            <DialogHeader>
-                              <DialogTitle>Create New Proposal</DialogTitle>
-                              <DialogDescription>
-                                Submit a proposal for the community to vote on.
-                                You need at least{" "}
-                                {parseFloat(
-                                  tokens.find(
-                                    (t) => t.address === selectedToken
-                                  )?.proposalThreshold || "0"
-                                ).toLocaleString()}{" "}
-                                {
-                                  tokens.find(
-                                    (t) => t.address === selectedToken
-                                  )?.symbol
-                                }{" "}
-                                to create a proposal.
-                              </DialogDescription>
-                            </DialogHeader>
-
-                            <Form {...proposalForm}>
-                              <form
-                                onSubmit={proposalForm.handleSubmit(
-                                  onProposalSubmit
-                                )}
-                                className="space-y-4"
-                              >
-                                <FormField
-                                  control={proposalForm.control}
-                                  name="title"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Proposal Title</FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          placeholder="Enter a descriptive title"
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-
-                                <FormField
-                                  control={proposalForm.control}
-                                  name="description"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Description</FormLabel>
-                                      <FormControl>
-                                        <Textarea
-                                          placeholder="Provide details about your proposal"
-                                          className="min-h-[120px]"
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-
-                                <FormField
-                                  control={proposalForm.control}
-                                  name="targetContract"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Target Contract</FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="0x..." {...field} />
-                                      </FormControl>
-                                      <FormDescription>
-                                        The contract address that will be called
-                                        if the proposal passes
-                                      </FormDescription>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-
-                                <FormField
-                                  control={proposalForm.control}
-                                  name="callData"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Call Data</FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="0x..." {...field} />
-                                      </FormControl>
-                                      <FormDescription>
-                                        The encoded function call data (use
-                                        ethers.utils.encodeFunctionData)
-                                      </FormDescription>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-
-                                <DialogFooter>
-                                  <Button type="submit">Submit Proposal</Button>
-                                </DialogFooter>
-                              </form>
-                            </Form>
-                          </DialogContent>
-                        </Dialog>
-                      </CardFooter>
-                    </Card>
-                  )}
-                </div>
-
-                {/* Proposals Section */}
-                {selectedToken && (
-                  <div>
-                    <Tabs defaultValue="active">
-                      <TabsList>
-                        <TabsTrigger value="active">
-                          Active Proposals
-                        </TabsTrigger>
-                        <TabsTrigger value="past">Past Proposals</TabsTrigger>
-                      </TabsList>
-
-                      <TabsContent value="active" className="space-y-6 mt-6">
-                        {proposals.filter((p) => p.isActive).length === 0 ? (
-                          <div className="text-center p-12 border rounded-lg">
-                            <h2 className="text-xl font-semibold mb-2">
-                              No Active Proposals
-                            </h2>
-                            <p className="text-muted-foreground">
-                              There are no active proposals for this token at
-                              the moment.
-                            </p>
-                          </div>
-                        ) : (
-                          proposals
-                            .filter((p) => p.isActive)
-                            .map((proposal) => (
-                              <ProposalCard
-                                key={`${selectedToken}-${proposal.id}`}
-                                proposal={proposal}
-                                onVote={handleVote}
-                                onExecute={handleExecute}
-                                userAddress={userAddress}
-                                selectedToken={selectedToken}
-                                quorum={
-                                  tokens.find(
-                                    (t) => t.address === selectedToken
-                                  )?.quorum || 0
-                                }
-                              />
-                            ))
-                        )}
-                      </TabsContent>
-
-                      <TabsContent value="past" className="space-y-6 mt-6">
-                        {proposals.filter((p) => !p.isActive).length === 0 ? (
-                          <div className="text-center p-12 border rounded-lg">
-                            <h2 className="text-xl font-semibold mb-2">
-                              No Past Proposals
-                            </h2>
-                            <p className="text-muted-foreground">
-                              There are no past proposals for this token.
-                            </p>
-                          </div>
-                        ) : (
-                          proposals
-                            .filter((p) => !p.isActive)
-                            .map((proposal) => (
-                              <ProposalCard
-                                key={`${selectedToken}-${proposal.id}`}
-                                proposal={proposal}
-                                onVote={handleVote}
-                                onExecute={handleExecute}
-                                userAddress={userAddress}
-                                selectedToken={selectedToken}
-                                quorum={
-                                  tokens.find(
-                                    (t) => t.address === selectedToken
-                                  )?.quorum || 0
-                                }
-                              />
-                            ))
-                        )}
-                      </TabsContent>
-                    </Tabs>
-                  </div>
-                )}
-
-                {userCreatedTokens.length > 0 && (
-                  <div className="mb-8">
-                    <h2 className="text-xl font-semibold mb-4">
-                      Your Created Tokens
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {userCreatedTokens.map((token) => (
-                        <div
-                          key={token.address}
-                          className="p-4 border rounded-lg bg-black/20 backdrop-blur-sm"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-medium">{token.name}</h3>
-                            <span className="text-sm text-muted-foreground">
-                              {token.symbol}
-                            </span>
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            Address: {token.address.slice(0, 6)}...
-                            {token.address.slice(-4)}
-                          </div>
-                        </div>
-                      ))}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Address: {token.address.slice(0, 6)}...
+                        {token.address.slice(-4)}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </>
+                  ))}
+                </div>
+              </div>
             )}
           </>
         )}
