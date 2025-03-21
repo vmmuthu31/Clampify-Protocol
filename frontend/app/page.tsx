@@ -18,6 +18,7 @@ import {
   Repeat,
   CheckCircle2,
   X,
+  Search,
 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import Image from "next/image";
@@ -26,6 +27,7 @@ export default function HomePage() {
   // Client-side state
   const [isClient, setIsClient] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [searchQuery, setSearchQuery] = useState("");
 
   interface Token {
     _id: string;
@@ -60,6 +62,11 @@ export default function HomePage() {
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
+
+  const filteredTokens = tokens.filter(token => 
+    token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (!isClient) {
     return null;
@@ -454,19 +461,34 @@ export default function HomePage() {
         >
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-3xl font-bold text-white">Trending Tokens</h2>
-            <Link
-              href="/discover"
-              className="text-[#ffae5c] hover:underline flex items-center"
-            >
-              View All <ArrowRight className="w-4 h-4 ml-1" />
-            </Link>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search tokens..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="px-4 py-2 pr-10 rounded-lg bg-[#ffae5c]/5 border border-[#ffae5c]/20 
+                    text-white placeholder-white/50 focus:outline-none focus:border-[#ffae5c]/40
+                    transition-all duration-300"
+                />
+                <Search className="w-4 h-4 text-white/50 absolute right-3 top-1/2 transform -translate-y-1/2" />
+              </div>
+              <Link
+                href="/discover"
+                className="text-[#ffae5c] hover:underline flex items-center"
+              >
+                View All <ArrowRight className="w-4 h-4 ml-1" />
+              </Link>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {tokens.slice(0, 8).map((token: Token, i: number) => (
+            {filteredTokens.slice(0, 8).map((token: Token, i: number) => (
               <Link href={`/token/${token.address}`} key={token.address}>
                 <motion.div
-                  className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-6 border border-[#ffae5c]/20 hover:border-[#ffae5c]/40 transition-all duration-300"
+                  className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-6 border border-[#ffae5c]/20 
+                    hover:border-[#ffae5c]/40 transition-all duration-300"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
@@ -510,6 +532,16 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
+
+          {filteredTokens.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-8"
+            >
+              <p className="text-white/70">No tokens found matching "{searchQuery}"</p>
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Why Clampify Section */}
