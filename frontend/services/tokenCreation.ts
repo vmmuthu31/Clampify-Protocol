@@ -126,7 +126,7 @@ export const TokenInfo = async (tokenAddress: string): Promise<TokenInfo> => {
   }
 };
 
-type GovernanceTokenInfoI = {
+type GovernanceTokenInfo = {
   address: string;
   name: string;
   symbol: string;
@@ -138,26 +138,33 @@ type GovernanceTokenInfoI = {
   isGovernanceActive: boolean;
 };
 
-export const GovernanceTokenInfo = async (tokenAddress: string): Promise<GovernanceTokenInfoI> => {
+export const GovernanceTokenInfo = async (
+  tokenAddress: string
+): Promise<GovernanceTokenInfo> => {
   try {
-    const provider = ethereum != null 
-      ? new ethers.providers.Web3Provider(ethereum)
-      : new ethers.providers.JsonRpcProvider(RPC_URL);
-    
+    const provider =
+      ethereum != null
+        ? new ethers.providers.Web3Provider(ethereum)
+        : new ethers.providers.JsonRpcProvider(RPC_URL);
+
     const signer = ethereum != null ? provider.getSigner() : null;
-    
+
     if (!signer) {
       throw new Error("No wallet connected");
     }
 
-    const contract = new ethers.Contract(governance_address, ClampifyGovernance, signer);
-    
+    const contract = new ethers.Contract(
+      governance_address,
+      ClampifyGovernance,
+      signer
+    );
+
     // Get governance info for the token
     const governanceInfo = await contract.tokenGovernance(tokenAddress);
-    
+
     // Check if governance info exists and is active
     const isGovernanceActive = governanceInfo?.isActive || false;
-    
+
     if (!governanceInfo) {
       // Return default values if governance is not set up
       return {
@@ -169,15 +176,19 @@ export const GovernanceTokenInfo = async (tokenAddress: string): Promise<Governa
         quorum: 0,
         votingPeriod: 0,
         activeProposals: 0,
-        isGovernanceActive: false
+        isGovernanceActive: false,
       };
     }
 
     // Get token contract to fetch name and symbol
-    const tokenContract = new ethers.Contract(tokenAddress, ClampifyToken, signer);
+    const tokenContract = new ethers.Contract(
+      tokenAddress,
+      ClampifyToken,
+      signer
+    );
     const [name, symbol] = await Promise.all([
       tokenContract.name(),
-      tokenContract.symbol()
+      tokenContract.symbol(),
     ]);
 
     return {
@@ -189,7 +200,7 @@ export const GovernanceTokenInfo = async (tokenAddress: string): Promise<Governa
       quorum: governanceInfo.quorum?.toNumber() || 0,
       votingPeriod: governanceInfo.votingPeriod?.toNumber() || 0,
       activeProposals: governanceInfo.activeProposals?.toNumber() || 0,
-      isGovernanceActive
+      isGovernanceActive,
     };
   } catch (error) {
     console.error("Error fetching governance info:", error);
@@ -203,14 +214,14 @@ export const GovernanceTokenInfo = async (tokenAddress: string): Promise<Governa
       quorum: 0,
       votingPeriod: 0,
       activeProposals: 0,
-      isGovernanceActive: false
+      isGovernanceActive: false,
     };
   }
 };
 
 export const UserCreatedTokens = async (
   userAddress: string
-): Promise<GovernanceTokenInfoI> => {
+): Promise<GovernanceTokenInfo> => {
   try {
     const provider =
       ethereum != null
@@ -238,24 +249,19 @@ export const UserCreatedTokens = async (
   }
 };
 
-interface GovernanceProposalInfo {
+export interface IGovernanceProposalInfo {
   id: number;
   title: string;
   description: string;
+  targetContract: string;
+  callData: string;
   proposer: string;
   createdAt: number;
-  endTime: number;
-  active: boolean;
+  votingEndsAt: number;
   executed: boolean;
-  target: string;
-  callData: string;
-  forVotes: string;
-  againstVotes: string;
-  forPercentage: number;
-  againstPercentage: number;
-  quorumReached: boolean;
-  hasVoted: boolean;
-  userVoteDirection: boolean;
+  yesVotes: number;
+  noVotes: number;
+  yesPercentage: number;
 }
 
 export const GovernanceProposalCount = async (
@@ -464,39 +470,43 @@ export const activateGovernance = async (
   quorum: number,
   votingPeriod: number
 ): Promise<void> => {
-
-  console.log(tokenAddress, proposalThreshold, quorum, votingPeriod);
   try {
-    const provider = ethereum != null 
-      ? new ethers.providers.Web3Provider(ethereum)
-      : new ethers.providers.JsonRpcProvider(RPC_URL);
-    
+    const provider =
+      ethereum != null
+        ? new ethers.providers.Web3Provider(ethereum)
+        : new ethers.providers.JsonRpcProvider(RPC_URL);
+
     const signer = ethereum != null ? provider.getSigner() : null;
-    
+
     if (!signer) {
       throw new Error("No wallet connected");
     }
 
-    const contract = new ethers.Contract(governance_address, ClampifyGovernance, signer);
-    
-    // Convert proposal threshold to wei
-
-    
+    const contract = new ethers.Contract(
+      governance_address,
+      ClampifyGovernance,
+      signer
+    );
+    console.log(tokenAddress, proposalThreshold, quorum, votingPeriod);
+    // Error activating governance: Error: cannot estimate gas; transaction may fail or may require manual
     // Activate governance
     const tx = await contract.activateGovernance(
       tokenAddress,
-      proposalThreshold,
-      quorum, // percentage (e.g., 51 for 51%)
-      votingPeriod // in seconds
+      50,
+      50, // percentage (e.g., 51 for 51%)
+      1000, // in seconds
+      {
+        gasLimit: 1000000,
+      }
     );
 
     await tx.wait();
-    
+    console.log(tx);
+
     console.log("Governance activated successfully");
+    return tx;
   } catch (error) {
     console.error("Error activating governance:", error);
     throw error;
   }
 };
-
-

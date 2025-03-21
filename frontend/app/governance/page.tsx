@@ -18,25 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -49,15 +30,11 @@ import {
   GovernanceProposalCount,
   GovernanceProposalInfo,
   GovernanceTokenInfo,
-  UserCreatedTokens,
   createProposal,
   activateGovernance,
-  IGovernanceProposalInfo,
 } from "@/services/tokenCreation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
-import { GovernanceProposalData } from "@/types/token";
 
 type IGovernanceTokenInfo = {
   address: string;
@@ -112,10 +89,6 @@ interface Token {
   _id: string;
   address: string;
   name: string;
-  balance: string;
-  proposalThreshold: string;
-  quorum: number;
-  votingPeriod: number;
   symbol: string;
   creator: string;
   initialSupply: string;
@@ -140,19 +113,21 @@ type ActivateFormValues = z.infer<typeof activateFormSchema>;
 export default function GovernancePage() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
-  const [hasVoted, setHasVoted] = useState<boolean | null>(null);
   const [proposals, setProposals] = useState<ProposalInfo[]>([]);
   const [userCreatedTokens, setUserCreatedTokens] = useState<Token[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
   const { authenticated, login, user } = usePrivy();
   const userAddress = user?.wallet?.address;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [governanceInfo, setGovernanceInfo] =
     useState<IGovernanceTokenInfo | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
   const [isActivating, setIsActivating] = useState(false);
 
-  // Add this with other form declarations
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const activateForm = useForm<ActivateFormValues>({
     resolver: zodResolver(activateFormSchema),
     defaultValues: {
@@ -220,10 +195,11 @@ export default function GovernancePage() {
             for (let i = 1; i <= proposalCount; i++) {
               proposalPromises.push(GovernanceProposalInfo(selectedToken, i));
             }
-            const proposals = await Promise.all(proposalPromises);
+
+            const newProposals = await Promise.all(proposalPromises);
             setProposals(
-              (proposals as unknown as IGovernanceProposalInfo[]).map((p) => ({
-                id: Number(p) || 0,
+              newProposals.map((p) => ({
+                id: Number(p.id) || 0,
                 title: p.title,
                 description: p.description,
                 proposer: p.proposer,
@@ -288,6 +264,7 @@ export default function GovernancePage() {
     fetchGovernanceInfo();
   }, [selectedToken]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onProposalSubmit = async (values: ProposalFormValues) => {
     if (!selectedToken) {
       toast.error("Please select a token first");
@@ -334,17 +311,17 @@ export default function GovernancePage() {
               description: p.description,
               proposer: p.proposer,
               createdAt: new Date(p.createdAt),
-              votingEndsAt: new Date(p.endTime),
-              isActive: p.active,
+              votingEndsAt: new Date(p.votingEndsAt),
+              isActive: !p.executed,
               executed: p.executed,
-              targetContract: p.target,
-              yesVotes: p.forVotes,
-              noVotes: p.againstVotes,
-              yesPercentage: p.forPercentage,
-              noPercentage: p.againstPercentage,
-              quorumReached: p.quorumReached,
-              hasVoted: p.hasVoted,
-              userVoteDirection: p.userVoteDirection,
+              targetContract: p.targetContract,
+              yesVotes: p.yesVotes.toString(),
+              noVotes: p.noVotes.toString(),
+              yesPercentage: (p.yesVotes / (p.yesVotes + p.noVotes)) * 100 || 0,
+              noPercentage: (p.noVotes / (p.yesVotes + p.noVotes)) * 100 || 0,
+              quorumReached: false,
+              hasVoted: null,
+              userVoteDirection: null,
             }))
           );
         }
@@ -384,12 +361,13 @@ export default function GovernancePage() {
     setIsActivating(true);
     try {
       console.log(selectedToken);
-      await activateGovernance(
+      const tx = await activateGovernance(
         selectedToken,
         45, // Default proposal threshold of 1000 tokens
         51, // Default quorum of 51%
         7 * 24 * 60 * 60 // Default voting period of 7 days in seconds
       );
+      console.log(tx);
 
       toast.success("Governance activated successfully!");
       setActivateDialogOpen(false);
@@ -556,25 +534,22 @@ export default function GovernancePage() {
                           )
                         : "N/A"}
                     </span>
-                    {userCreatedTokens.some(
-                      (t) => t.address === selectedToken
-                    ) &&
-                      !governanceInfo?.isGovernanceActive && (
-                        <Button
-                          onClick={handleActivateGovernance}
-                          disabled={isActivating}
-                          className="bg-gradient-to-r from-[#ffae5c]/10 to-[#4834D4]/10 hover:from-[#ffae5c]/20 hover:to-[#4834D4]/20"
-                        >
-                          {isActivating ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Activating...
-                            </>
-                          ) : (
-                            "Activate Governance"
-                          )}
-                        </Button>
-                      )}
+                    {!governanceInfo?.isGovernanceActive && (
+                      <Button
+                        onClick={handleActivateGovernance}
+                        disabled={isActivating}
+                        className="bg-gradient-to-r from-[#ffae5c]/10 to-[#4834D4]/10 hover:from-[#ffae5c]/20 hover:to-[#4834D4]/20"
+                      >
+                        {isActivating ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Activating...
+                          </>
+                        ) : (
+                          "Activate Governance"
+                        )}
+                      </Button>
+                    )}
                   </CardFooter>
                 </Card>
               )}
