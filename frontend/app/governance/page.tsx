@@ -47,6 +47,12 @@ import * as z from "zod";
 import { format, formatDistanceToNow } from "date-fns";
 import { Navbar } from "@/components/navbar";
 import { usePrivy } from "@privy-io/react-auth";
+import {
+  GovernanceProposalCount,
+  GovernanceProposalInfo,
+  GovernanceTokenInfo,
+  UserCreatedTokens,
+} from "@/services/tokenCreation";
 
 // Form schema for creating proposals
 const proposalFormSchema = z.object({
@@ -67,7 +73,7 @@ const proposalFormSchema = z.object({
 
 type ProposalFormValues = z.infer<typeof proposalFormSchema>;
 
-type TokenInfo = {
+type GovernanceTokenInfo = {
   address: string;
   name: string;
   symbol: string;
@@ -99,18 +105,66 @@ type ProposalInfo = {
 
 export default function GovernancePage() {
   const [loading, setLoading] = useState(true);
-  const [tokens, setTokens] = useState<TokenInfo[]>([]);
+  const [tokens, setTokens] = useState<GovernanceTokenInfo[]>([]);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState<boolean | null>(null);
   const [proposals, setProposals] = useState<ProposalInfo[]>([]);
-  const [userCreatedTokens, setUserCreatedTokens] = useState<TokenInfo[]>([]);
+  const [userCreatedTokens, setUserCreatedTokens] = useState<
+    GovernanceTokenInfo[]
+  >([]);
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
   const { authenticated, login, user } = usePrivy();
   const userAddress = user?.wallet?.address;
 
   useEffect(() => {
-    console.log("Tokens:", tokens);
-    fetchUserCreatedTokens(userAddress || "");
+    const fetchGovernanceTokens = async () => {
+      try {
+        const governanceTokens = await GovernanceTokenInfo();
+        console.log("Governance tokens:", governanceTokens);
+        setTokens(
+          Array.isArray(governanceTokens)
+            ? governanceTokens
+            : [governanceTokens]
+        );
+      } catch (error) {
+        console.error("Error fetching governance tokens:", error);
+      }
+    };
+
+    const fetchUserCreatedTokens = async () => {
+      if (userAddress) {
+        try {
+          const userCreatedTokens = await UserCreatedTokens(userAddress);
+          setUserCreatedTokens(
+            Array.isArray(userCreatedTokens)
+              ? (userCreatedTokens as GovernanceTokenInfo[])
+              : ([userCreatedTokens] as GovernanceTokenInfo[])
+          );
+        } catch (error) {
+          console.error("Error fetching user created tokens:", error);
+        }
+      }
+    };
+
+    const fetchProposals = async () => {
+      if (selectedToken) {
+        try {
+          const proposalCount = await GovernanceProposalCount(selectedToken);
+          if (proposalCount > 0) {
+            const proposals = await GovernanceProposalInfo(
+              selectedToken,
+              proposalCount
+            );
+            setProposals(proposals);
+          }
+        } catch (error) {
+          console.error("Error fetching proposals:", error);
+        }
+      }
+    };
+
+    fetchGovernanceTokens();
+    fetchUserCreatedTokens();
   }, [userAddress]);
 
   // Form handler for creating new proposals

@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import ClampifyFactory from "../deployments/ClampifyFactory.json";
+import ClampifyGovernance from "../deployments/ClampifyGovernance.json";
 import ClampifyToken from "../deployments/ClampifyToken.json";
 
 const isBrowser = (): boolean => typeof window !== "undefined";
@@ -119,6 +120,145 @@ export const TokenInfo = async (tokenAddress: string): Promise<TokenInfo> => {
       marketCap,
       volume24h,
     };
+  } catch (error) {
+    console.error("Detailed error:", error);
+    throw error;
+  }
+};
+
+type GovernanceTokenInfo = {
+  address: string;
+  name: string;
+  symbol: string;
+  balance: string;
+  proposalThreshold: string;
+  quorum: number;
+  votingPeriod: number;
+  activeProposals: number;
+};
+
+export const GovernanceTokenInfo = async (): Promise<GovernanceTokenInfo> => {
+  try {
+    const provider =
+      ethereum != null
+        ? new ethers.providers.Web3Provider(ethereum)
+        : new ethers.providers.JsonRpcProvider();
+
+    const signer = ethereum != null ? provider.getSigner() : null;
+
+    if (!signer) {
+      throw new Error("No wallet connected");
+    }
+
+    const contract = new ethers.Contract(
+      governance_address,
+      ClampifyGovernance,
+      signer
+    );
+    const governanceTokens = await contract.getGovernanceTokens();
+
+    return governanceTokens;
+  } catch (error) {
+    console.error("Detailed error:", error);
+    throw error;
+  }
+};
+
+export const UserCreatedTokens = async (
+  userAddress: string
+): Promise<GovernanceTokenInfo> => {
+  try {
+    const provider =
+      ethereum != null
+        ? new ethers.providers.Web3Provider(ethereum)
+        : new ethers.providers.JsonRpcProvider();
+
+    const signer = ethereum != null ? provider.getSigner() : null;
+
+    if (!signer) {
+      throw new Error("No wallet connected");
+    }
+
+    const contract = new ethers.Contract(
+      governance_address,
+      ClampifyGovernance,
+      signer
+    );
+
+    const userCreatedTokens = await contract.getGovernanceTokens(userAddress);
+
+    return userCreatedTokens;
+  } catch (error) {
+    console.error("Detailed error:", error);
+    throw error;
+  }
+};
+
+interface GovernanceProposalInfo {
+  title: string;
+  description: string;
+  targetContract: string;
+  callData: string;
+}
+
+export const GovernanceProposalCount = async (
+  userAddress: string
+): Promise<number> => {
+  try {
+    const provider =
+      ethereum != null
+        ? new ethers.providers.Web3Provider(ethereum)
+        : new ethers.providers.JsonRpcProvider();
+
+    const signer = ethereum != null ? provider.getSigner() : null;
+
+    if (!signer) {
+      throw new Error("No wallet connected");
+    }
+
+    const contract = new ethers.Contract(
+      governance_address,
+      ClampifyGovernance,
+      signer
+    );
+
+    const proposalCount = await contract.proposalCount(userAddress);
+
+    return proposalCount;
+  } catch (error) {
+    console.error("Detailed error:", error);
+    throw error;
+  }
+};
+
+export const GovernanceProposalInfo = async (
+  tokenAddress: string,
+  proposalId: number
+): Promise<GovernanceProposalInfo> => {
+  try {
+    const provider =
+      ethereum != null
+        ? new ethers.providers.Web3Provider(ethereum)
+        : new ethers.providers.JsonRpcProvider();
+
+    const signer = ethereum != null ? provider.getSigner() : null;
+
+    if (!signer) {
+      throw new Error("No wallet connected");
+    }
+
+    const contract = new ethers.Contract(
+      governance_address,
+      ClampifyGovernance,
+      signer
+    );
+
+    const proposalDetails = await contract.getProposalDetails(
+      tokenAddress,
+      proposalId
+    );
+
+    return proposalDetails;
   } catch (error) {
     console.error("Detailed error:", error);
     throw error;
