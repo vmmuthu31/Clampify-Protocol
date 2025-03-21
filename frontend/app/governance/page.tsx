@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
 import {
   Card,
   CardContent,
@@ -54,6 +53,16 @@ import {
   UserCreatedTokens,
 } from "@/services/tokenCreation";
 
+type IGovernanceTokenInfo = {
+  address: string;
+  name: string;
+  symbol: string;
+  balance: string;
+  proposalThreshold: string;
+  quorum: number;
+  votingPeriod: number;
+  activeProposals: number;
+};
 // Form schema for creating proposals
 const proposalFormSchema = z.object({
   tokenAddress: z
@@ -72,17 +81,6 @@ const proposalFormSchema = z.object({
 });
 
 type ProposalFormValues = z.infer<typeof proposalFormSchema>;
-
-type GovernanceTokenInfo = {
-  address: string;
-  name: string;
-  symbol: string;
-  balance: string;
-  proposalThreshold: string;
-  quorum: number;
-  votingPeriod: number;
-  activeProposals: number;
-};
 
 type ProposalInfo = {
   id: number;
@@ -103,13 +101,32 @@ type ProposalInfo = {
   userVoteDirection: boolean | null;
 };
 
+type GovernanceProposalData = {
+  id: number;
+  title: string;
+  description: string;
+  proposer: string;
+  createdAt: string;
+  endTime: string;
+  active: boolean;
+  executed: boolean;
+  target: string;
+  forVotes: string;
+  againstVotes: string;
+  forPercentage: number;
+  againstPercentage: number;
+  quorumReached: boolean;
+  hasVoted: boolean | null;
+  userVoteDirection: boolean | null;
+};
+
 export default function GovernancePage() {
-  const [tokens, setTokens] = useState<GovernanceTokenInfo[]>([]);
+  const [tokens, setTokens] = useState<IGovernanceTokenInfo[]>([]);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState<boolean | null>(null);
   const [proposals, setProposals] = useState<ProposalInfo[]>([]);
   const [userCreatedTokens, setUserCreatedTokens] = useState<
-    GovernanceTokenInfo[]
+    IGovernanceTokenInfo[]
   >([]);
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
   const { authenticated, login, user } = usePrivy();
@@ -136,8 +153,8 @@ export default function GovernancePage() {
           const userCreatedTokens = await UserCreatedTokens(userAddress);
           setUserCreatedTokens(
             Array.isArray(userCreatedTokens)
-              ? (userCreatedTokens as GovernanceTokenInfo[])
-              : ([userCreatedTokens] as GovernanceTokenInfo[])
+              ? (userCreatedTokens as IGovernanceTokenInfo[])
+              : ([userCreatedTokens] as IGovernanceTokenInfo[])
           );
         } catch (error) {
           console.error("Error fetching user created tokens:", error);
@@ -156,7 +173,7 @@ export default function GovernancePage() {
             }
             const proposals = await Promise.all(proposalPromises);
             setProposals(
-              proposals.map((p) => ({
+              (proposals as unknown as GovernanceProposalData[]).map((p) => ({
                 id: p.id,
                 title: p.title,
                 description: p.description,
