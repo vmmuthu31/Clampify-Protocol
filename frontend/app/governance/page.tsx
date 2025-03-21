@@ -87,17 +87,17 @@ type ProposalFormValues = {
 };
 
 type ProposalInfo = {
-  id: number;
   title: string;
   description: string;
   proposer: string;
-  createdAt: Date;
-  votingEndsAt: Date;
-  isActive: boolean;
+  createdAt: string;
+  votingEndsAt: string;
   executed: boolean;
   targetContract: string;
+  isActive: boolean;
   yesVotes: string;
   noVotes: string;
+  id: number;
   yesPercentage: number;
   noPercentage: number;
   quorumReached: boolean;
@@ -176,10 +176,13 @@ export default function GovernancePage() {
                   return {
                     ...token,
                     balance: tokenInfo.balance,
-                    totalSupply: tokenInfo.totalSupply
+                    totalSupply: tokenInfo.totalSupply,
                   };
                 } catch (error) {
-                  console.error(`Error fetching info for token ${token.address}:`, error);
+                  console.error(
+                    `Error fetching info for token ${token.address}:`,
+                    error
+                  );
                   return token;
                 }
               })
@@ -212,23 +215,20 @@ export default function GovernancePage() {
             const newProposals = await Promise.all(proposalPromises);
             setProposals(
               newProposals.map((p) => ({
-                id: Number(p.id) || 0,
-                title: p.title,
-                description: p.description,
-                proposer: p.proposer,
-                createdAt: new Date(p.createdAt),
-                votingEndsAt: new Date(p.votingEndsAt),
-                isActive: !p.executed,
-                executed: p.executed,
-                targetContract: p.targetContract,
-                yesVotes: p.yesVotes.toString(),
-                noVotes: p.noVotes.toString(),
+                ...p,
+                createdAt: p?.createdAt?.toString(),
+                votingEndsAt: p?.votingEndsAt?.toString(),
+                yesVotes: p?.yesVotes?.toString(),
+                noVotes: p?.noVotes?.toString(),
+                isActive: !p?.executed,
                 yesPercentage:
-                  (p.yesVotes / (p.yesVotes + p.noVotes)) * 100 || 0,
-                noPercentage: (p.noVotes / (p.yesVotes + p.noVotes)) * 100 || 0,
+                  (p?.yesVotes / (p?.yesVotes + p?.noVotes)) * 100 || 0,
+                noPercentage:
+                  (p?.noVotes / (p?.yesVotes + p?.noVotes)) * 100 || 0,
                 quorumReached: false,
                 hasVoted: null,
                 userVoteDirection: null,
+                proposer: p?.proposer,
               }))
             );
           }
@@ -269,9 +269,8 @@ export default function GovernancePage() {
 
           setGovernanceInfo({
             ...govInfo,
-            balance: tokenInfo.balance // Use the actual token balance
+            balance: tokenInfo.balance, // Use the actual token balance
           });
-
         } catch (error) {
           console.error("Error fetching governance info:", error);
           toast.error("Failed to fetch governance information");
@@ -281,6 +280,57 @@ export default function GovernancePage() {
 
     fetchGovernanceInfo();
   }, [selectedToken]);
+
+  useEffect(() => {
+    const loadProposals = async () => {
+      if (!selectedToken) return;
+
+      try {
+        const proposalCount = await GovernanceProposalCount(selectedToken);
+        const count = proposalCount;
+        console.log("count", count);
+
+        const selectedTokenInfo = tokens.find(
+          (t) => t.address === selectedToken
+        );
+
+        const selectedTokenAddress = selectedTokenInfo?.address;
+
+        const proposalPromises = [];
+        for (let i = 1; i <= count; i++) {
+          proposalPromises.push(
+            GovernanceProposalInfo(selectedTokenAddress, i)
+          );
+        }
+
+        const proposalDetails = await Promise.all(proposalPromises);
+        console.log("proposalDetails", proposalDetails);
+
+        const proposalDetailsArray = proposalDetails.map((p) => ({
+          ...p,
+          createdAt: String(p.createdAt),
+          votingEndsAt: String(p.votingEndsAt),
+          yesVotes: p?.yesVotes?.toString(),
+          noVotes: p?.noVotes?.toString(),
+          isActive: !p?.executed,
+          yesPercentage: (p?.yesVotes / (p?.yesVotes + p?.noVotes)) * 100 || 0,
+          noPercentage: (p?.noVotes / (p?.yesVotes + p?.noVotes)) * 100 || 0,
+          quorumReached: false,
+          hasVoted: null,
+          userVoteDirection: null,
+          targetContract: p?.targetContract,
+          proposer: p?.proposer,
+        }));
+        setProposals(proposalDetailsArray);
+
+        console.log("proposalDetailsArray", proposalDetailsArray);
+      } catch (error) {
+        console.error("Error loading proposals:", error);
+      }
+    };
+
+    loadProposals();
+  }, [selectedToken, tokens, userAddress]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onProposalSubmit = async (values: ProposalFormValues) => {
@@ -328,8 +378,8 @@ export default function GovernancePage() {
               title: p.title,
               description: p.description,
               proposer: p.proposer,
-              createdAt: new Date(p.createdAt),
-              votingEndsAt: new Date(p.votingEndsAt),
+              createdAt: String(p.createdAt),
+              votingEndsAt: String(p.votingEndsAt),
               isActive: !p.executed,
               executed: p.executed,
               targetContract: p.targetContract,
@@ -549,7 +599,8 @@ export default function GovernancePage() {
                 <Card className="w-full md:w-2/3">
                   <CardHeader>
                     <CardTitle>
-                      {tokens.find((t) => t.address === selectedToken)?.name} Governance
+                      {tokens.find((t) => t.address === selectedToken)?.name}{" "}
+                      Governance
                     </CardTitle>
                     <CardDescription>
                       Token governance parameters and your voting power
@@ -558,29 +609,39 @@ export default function GovernancePage() {
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <h3 className="text-sm font-medium mb-1">Your Balance</h3>
+                        <h3 className="text-sm font-medium mb-1">
+                          Your Balance
+                        </h3>
                         <p className="text-2xl font-bold">
-                          {governanceInfo?.balance ? (
-                            `${Number(ethers.utils.formatEther(governanceInfo.balance)).toLocaleString()} ${governanceInfo.symbol}`
-                          ) : (
-                            "0 TS"
-                          )}
+                          {governanceInfo?.balance
+                            ? `${Number(
+                                ethers.utils.formatEther(governanceInfo.balance)
+                              ).toLocaleString()} ${governanceInfo.symbol}`
+                            : "0 TS"}
                         </p>
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium mb-1">Proposal Threshold</h3>
+                        <h3 className="text-sm font-medium mb-1">
+                          Proposal Threshold
+                        </h3>
                         <p className="text-2xl font-bold">
-                          {governanceInfo?.proposalThreshold ? (
-                            `${Number(ethers.utils.formatEther(governanceInfo.proposalThreshold)).toLocaleString()} ${governanceInfo.symbol}`
-                          ) : (
-                            "0 TS"
-                          )}
+                          {governanceInfo?.proposalThreshold
+                            ? `${Number(
+                                ethers.utils.formatEther(
+                                  governanceInfo.proposalThreshold
+                                )
+                              ).toLocaleString()} ${governanceInfo.symbol}`
+                            : "0 TS"}
                         </p>
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium mb-1">Quorum Required</h3>
+                        <h3 className="text-sm font-medium mb-1">
+                          Quorum Required
+                        </h3>
                         <p className="text-2xl font-bold">
-                          {governanceInfo?.quorum ? `${governanceInfo.quorum}%` : "0%"}
+                          {governanceInfo?.quorum
+                            ? `${governanceInfo.quorum}%`
+                            : "0%"}
                         </p>
                       </div>
                     </div>
@@ -793,23 +854,26 @@ export default function GovernancePage() {
                           </span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Created: {new Date(token.createdAt).toLocaleDateString()}
+                          Created:{" "}
+                          {new Date(token.createdAt).toLocaleDateString()}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Balance: {token.balance ? (
-                            `${Number(ethers.utils.formatEther(token.balance)).toLocaleString()} ${token.symbol}`
-                          ) : (
-                            "Loading..."
-                          )}
+                          Balance:{" "}
+                          {token.balance
+                            ? `${Number(
+                                ethers.utils.formatEther(token.balance)
+                              ).toLocaleString()} ${token.symbol}`
+                            : "Loading..."}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Total Supply: {token.totalSupply ? (
-                            `${Number(token.totalSupply).toLocaleString()} ${token.symbol}`
-                          ) : (
-                            "Loading..."
-                          )}
+                          Total Supply:{" "}
+                          {token?.totalSupply
+                            ? `${Number(token?.totalSupply).toLocaleString()} ${
+                                token?.symbol
+                              }`
+                            : "Loading..."}
                         </div>
-                        {token.totalSupply && token.balance && (
+                        {token?.totalSupply && token?.balance && (
                           <div className="mt-2">
                             <div className="text-sm text-muted-foreground mb-1">
                               Your Holdings
@@ -818,7 +882,13 @@ export default function GovernancePage() {
                               <div
                                 className="bg-gradient-to-r from-[#ffae5c] to-[#4834D4] h-full rounded-full"
                                 style={{
-                                  width: `${(Number(ethers.utils.formatEther(token.balance)) / Number(token.totalSupply)) * 100}%`
+                                  width: `${
+                                    (Number(
+                                      ethers.utils.formatEther(token.balance)
+                                    ) /
+                                      Number(token.totalSupply)) *
+                                    100
+                                  }%`,
                                 }}
                               />
                             </div>
@@ -883,15 +953,15 @@ function ProposalCard({
 
             <CardDescription>
               Proposed by:{" "}
-              {proposal.proposer === userAddress
+              {proposal?.proposer === userAddress
                 ? "You"
-                : `${proposal.proposer.substring(
+                : `${proposal?.proposer?.substring(
                     0,
                     6
-                  )}...${proposal.proposer.substring(38)}`}
+                  )}...${proposal?.proposer?.substring(38)}`}
               <span className="mx-2">•</span>
               Created{" "}
-              {formatDistanceToNow(proposal.createdAt, { addSuffix: true })}
+              {formatDistanceToNow(proposal?.createdAt, { addSuffix: true })}
             </CardDescription>
           </div>
 
@@ -901,20 +971,20 @@ function ProposalCard({
                 <>
                   Voting Ends:{" "}
                   <span className="text-muted-foreground">
-                    {format(proposal.votingEndsAt, "MMM d, yyyy HH:mm")}
+                    {format(proposal?.votingEndsAt, "MMM d, yyyy HH:mm")}
                   </span>
                 </>
               ) : (
                 <>
                   Ended:{" "}
                   <span className="text-muted-foreground">
-                    {format(proposal.votingEndsAt, "MMM d, yyyy HH:mm")}
+                    {format(proposal?.votingEndsAt, "MMM d, yyyy HH:mm")}
                   </span>
                 </>
               )}
             </div>
             <div className="text-sm text-muted-foreground">
-              {formatDistanceToNow(proposal.votingEndsAt, { addSuffix: true })}
+              {formatDistanceToNow(proposal?.votingEndsAt, { addSuffix: true })}
             </div>
           </div>
         </div>
@@ -929,35 +999,35 @@ function ProposalCard({
           <div className="mb-4">
             <div className="flex justify-between text-sm mb-1">
               <span>
-                Yes: {parseFloat(proposal.yesVotes).toLocaleString()} (
-                {proposal.yesPercentage}%)
+                Yes: {parseFloat(proposal?.yesVotes).toLocaleString()} (
+                {proposal?.yesPercentage}%)
               </span>
               <span>
-                No: {parseFloat(proposal.noVotes).toLocaleString()} (
-                {proposal.noPercentage}%)
+                No: {parseFloat(proposal?.noVotes).toLocaleString()} (
+                {proposal?.noPercentage}%)
               </span>
             </div>
 
             <div className="w-full bg-gray-200 dark:bg-gray-700 h-2.5 rounded-full">
               <div
                 className="bg-green-500 h-2.5 rounded-full"
-                style={{ width: `${proposal.yesPercentage}%` }}
+                style={{ width: `${proposal?.yesPercentage}%` }}
               ></div>
             </div>
 
             <div className="mt-2 text-sm text-muted-foreground flex justify-between">
               <span>
-                {proposal.hasVoted &&
-                  `You voted: ${proposal.userVoteDirection ? "Yes" : "No"}`}
+                {proposal?.hasVoted &&
+                  `You voted: ${proposal?.userVoteDirection ? "Yes" : "No"}`}
               </span>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 mt-4">
-            {proposal.isActive && !proposal.hasVoted && userAddress && (
+            {proposal?.isActive && !proposal?.hasVoted && userAddress && (
               <>
                 <Button
-                  onClick={() => onVote(proposal.id, true)}
+                  onClick={() => onVote(proposal?.id, true)}
                   variant="outline"
                   className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
                 >
@@ -973,12 +1043,12 @@ function ProposalCard({
               </>
             )}
 
-            {!proposal.isActive &&
-              !proposal.executed &&
-              proposal.yesPercentage > proposal.noPercentage &&
-              proposal.quorumReached && (
+            {!proposal?.isActive &&
+              !proposal?.executed &&
+              proposal?.yesPercentage > proposal?.noPercentage &&
+              proposal?.quorumReached && (
                 <Button
-                  onClick={() => onExecute(proposal.id)}
+                  onClick={() => onExecute(proposal?.id)}
                   variant="default"
                 >
                   Execute Proposal
@@ -990,8 +1060,8 @@ function ProposalCard({
 
       <CardFooter className="text-sm text-muted-foreground">
         <div>
-          Target Contract: {proposal.targetContract.substring(0, 6)}...
-          {proposal.targetContract.substring(38)}
+          Target Contract: {proposal?.targetContract?.substring(0, 6)}...
+          {proposal?.targetContract?.substring(38)}
         </div>
       </CardFooter>
     </Card>
