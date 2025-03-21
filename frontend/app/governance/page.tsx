@@ -375,20 +375,11 @@ export default function GovernancePage() {
     setSelectedToken(value);
   };
 
-<<<<<<< HEAD
-  const handleActivateGovernance = async () => {
-    if (!selectedToken) {
-      toast.error("No token selected");
-      return;
-    }
-=======
   const handleActivateGovernance = async (values: ActivateFormValues) => {
     if (!selectedToken) return;
->>>>>>> c91e00ddd77b21927f1d46fbb0c988a07e699fbf
 
     setIsActivating(true);
     try {
-
       console.log(selectedToken);
       await activateGovernance(
         selectedToken,
@@ -399,16 +390,11 @@ export default function GovernancePage() {
 
       toast.success("Governance activated successfully!");
       setActivateDialogOpen(false);
-<<<<<<< HEAD
-      
-=======
       activateForm.reset(); // Reset form after successful submission
 
->>>>>>> c91e00ddd77b21927f1d46fbb0c988a07e699fbf
       // Refresh governance info
       const info = await GovernanceTokenInfo(selectedToken);
       setGovernanceInfo(info);
-      
     } catch (error) {
       console.error("Error activating governance:", error);
       toast.error("Failed to activate governance", {
@@ -560,30 +546,14 @@ export default function GovernancePage() {
                   <CardFooter className="flex justify-between">
                     <span className="text-sm text-muted-foreground">
                       Voting period:{" "}
-                      {tokens.find((t) => t.address === selectedToken)?.votingPeriod
+                      {tokens.find((t) => t.address === selectedToken)
+                        ?.votingPeriod
                         ? formatDuration(
-                            tokens.find((t) => t.address === selectedToken)?.votingPeriod || 0
+                            tokens.find((t) => t.address === selectedToken)
+                              ?.votingPeriod || 0
                           )
                         : "N/A"}
                     </span>
-<<<<<<< HEAD
-                    {userCreatedTokens.some(t => t.address === selectedToken) && !governanceInfo?.isGovernanceActive && (
-                      <Button
-                        onClick={handleActivateGovernance}
-                        disabled={isActivating}
-                        className="bg-gradient-to-r from-[#ffae5c]/10 to-[#4834D4]/10 hover:from-[#ffae5c]/20 hover:to-[#4834D4]/20"
-                      >
-                        {isActivating ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Activating...
-                          </>
-                        ) : (
-                          'Activate Governance'
-                        )}
-                      </Button>
-                    )}
-=======
                     <Dialog
                       open={proposalDialogOpen}
                       onOpenChange={setProposalDialogOpen}
@@ -701,7 +671,6 @@ export default function GovernancePage() {
                         </Form>
                       </DialogContent>
                     </Dialog>
->>>>>>> c91e00ddd77b21927f1d46fbb0c988a07e699fbf
                   </CardFooter>
                 </Card>
               )}
@@ -790,13 +759,6 @@ export default function GovernancePage() {
                             {token.symbol}
                           </span>
                         </div>
-<<<<<<< HEAD
-                        <div>
-                          {governanceInfo?.isGovernanceActive && token.address === selectedToken && (
-                            <Badge variant="outline" className="bg-green-500/10 text-green-500">
-                              Governance Active
-                            </Badge>
-=======
                         <div className="flex items-center gap-2">
                           {governanceInfo?.isGovernanceActive &&
                           token.address === selectedToken ? (
@@ -821,7 +783,6 @@ export default function GovernancePage() {
                                 </Button>
                               </DialogTrigger>
                             </Dialog>
->>>>>>> c91e00ddd77b21927f1d46fbb0c988a07e699fbf
                           )}
                         </div>
                       </div>
