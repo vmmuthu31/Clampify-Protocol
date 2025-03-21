@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Lock,
   Menu,
   X,
   ChevronDown,
   ExternalLink,
   Shield,
   Rocket,
+  Code,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -51,9 +51,9 @@ export function Navbar() {
         },
 
         {
-          label: "Lock Liquidity",
-          href: "/lock",
-          icon: <Lock className="w-4 h-4" />,
+          label: "Clampify Paymaster SDK",
+          href: "https://www.npmjs.com/package/core-paymastersdk",
+          icon: <Code className="w-4 h-4" />,
         },
       ],
     },
