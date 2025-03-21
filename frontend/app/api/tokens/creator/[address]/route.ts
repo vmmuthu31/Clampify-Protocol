@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Token from "@/models/Token";
 
-export async function GET(
+export const GET = async (
   req: NextRequest,
-  { params }: { params: { address: string } }
-) {
+  { params }: { params: Promise<{ address: string }> }
+): Promise<NextResponse> => {
   try {
     await dbConnect();
-    const address = params.address;
-    
+    const { address } = await params;
+
     if (!address) {
       return NextResponse.json(
         { success: false, error: "Address is required" },
@@ -17,13 +17,13 @@ export async function GET(
       );
     }
 
-    const tokens = await Token.find({ 
-      creator: { $regex: new RegExp(address, 'i') }
+    const tokens = await Token.find({
+      creator: { $regex: new RegExp(address, "i") },
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      tokens 
+    return NextResponse.json({
+      success: true,
+      tokens,
     });
   } catch (error) {
     console.error("Error fetching creator tokens:", error);
@@ -32,4 +32,4 @@ export async function GET(
       { status: 500 }
     );
   }
-} 
+};
