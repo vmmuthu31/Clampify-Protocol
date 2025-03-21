@@ -126,7 +126,7 @@ export const TokenInfo = async (tokenAddress: string): Promise<TokenInfo> => {
   }
 };
 
-type GovernanceTokenInfo = {
+type GovernanceTokenInfoI = {
   address: string;
   name: string;
   symbol: string;
@@ -138,7 +138,7 @@ type GovernanceTokenInfo = {
   isGovernanceActive: boolean;
 };
 
-export const GovernanceTokenInfo = async (tokenAddress: string): Promise<GovernanceTokenInfo> => {
+export const GovernanceTokenInfo = async (tokenAddress: string): Promise<GovernanceTokenInfoI> => {
   try {
     const provider = ethereum != null 
       ? new ethers.providers.Web3Provider(ethereum)
@@ -210,7 +210,7 @@ export const GovernanceTokenInfo = async (tokenAddress: string): Promise<Governa
 
 export const UserCreatedTokens = async (
   userAddress: string
-): Promise<GovernanceTokenInfo> => {
+): Promise<GovernanceTokenInfoI> => {
   try {
     const provider =
       ethereum != null
@@ -239,10 +239,23 @@ export const UserCreatedTokens = async (
 };
 
 interface GovernanceProposalInfo {
+  id: number;
   title: string;
   description: string;
-  targetContract: string;
+  proposer: string;
+  createdAt: number;
+  endTime: number;
+  active: boolean;
+  executed: boolean;
+  target: string;
   callData: string;
+  forVotes: string;
+  againstVotes: string;
+  forPercentage: number;
+  againstPercentage: number;
+  quorumReached: boolean;
+  hasVoted: boolean;
+  userVoteDirection: boolean;
 }
 
 export const GovernanceProposalCount = async (
@@ -447,10 +460,12 @@ export const executeProposal = async (
 // Add this new function to activate governance
 export const activateGovernance = async (
   tokenAddress: string,
-  proposalThreshold: string,
+  proposalThreshold: number,
   quorum: number,
   votingPeriod: number
 ): Promise<void> => {
+
+  console.log(tokenAddress, proposalThreshold, quorum, votingPeriod);
   try {
     const provider = ethereum != null 
       ? new ethers.providers.Web3Provider(ethereum)
@@ -465,12 +480,12 @@ export const activateGovernance = async (
     const contract = new ethers.Contract(governance_address, ClampifyGovernance, signer);
     
     // Convert proposal threshold to wei
-    const proposalThresholdWei = ethers.utils.parseEther(proposalThreshold);
+
     
     // Activate governance
     const tx = await contract.activateGovernance(
       tokenAddress,
-      proposalThresholdWei,
+      proposalThreshold,
       quorum, // percentage (e.g., 51 for 51%)
       votingPeriod // in seconds
     );
@@ -483,3 +498,5 @@ export const activateGovernance = async (
     throw error;
   }
 };
+
+
