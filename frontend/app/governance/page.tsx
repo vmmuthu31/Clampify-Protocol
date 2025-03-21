@@ -18,11 +18,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { format, formatDistanceToNow } from "date-fns";
+import { Navbar } from "@/components/navbar";
+import { usePrivy } from "@privy-io/react-auth";
+import {
+  GovernanceProposalCount,
+  GovernanceProposalInfo,
+  GovernanceTokenInfo,
+  createProposal,
+  activateGovernance,
+  castVote,
+  executeProposal,
+} from "@/services/tokenCreation";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -37,27 +55,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { format, formatDistanceToNow } from "date-fns";
-import { Navbar } from "@/components/navbar";
-import { usePrivy } from "@privy-io/react-auth";
-import {
-  GovernanceProposalCount,
-  GovernanceProposalInfo,
-  GovernanceTokenInfo,
-  UserCreatedTokens,
-  createProposal,
-  activateGovernance,
-  IGovernanceProposalInfo,
-} from "@/services/tokenCreation";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
-import { GovernanceProposalData } from "@/types/token";
 
 type IGovernanceTokenInfo = {
   address: string;
@@ -79,15 +76,13 @@ const proposalFormSchema = z.object({
   description: z
     .string()
     .min(20, { message: "Description must be at least 20 characters" }),
-  targetContract: z
-    .string()
-    .startsWith("0x", { message: "Must be a valid Ethereum address" }),
-  callData: z
-    .string()
-    .startsWith("0x", { message: "Must be valid call data starting with 0x" }),
 });
 
-type ProposalFormValues = z.infer<typeof proposalFormSchema>;
+type ProposalFormValues = {
+  tokenAddress: string;
+  title: string;
+  description: string;
+};
 
 type ProposalInfo = {
   id: number;
@@ -112,10 +107,6 @@ interface Token {
   _id: string;
   address: string;
   name: string;
-  balance: string;
-  proposalThreshold: string;
-  quorum: number;
-  votingPeriod: number;
   symbol: string;
   creator: string;
   initialSupply: string;
@@ -128,19 +119,9 @@ interface Token {
   votingPeriod?: number;
 }
 
-// Add this near the top with other form schemas
-const activateFormSchema = z.object({
-  proposalThreshold: z.string().min(1, "Proposal threshold is required"),
-  quorum: z.string().min(1, "Quorum percentage is required"),
-  votingPeriod: z.string().min(1, "Voting period is required"),
-});
-
-type ActivateFormValues = z.infer<typeof activateFormSchema>;
-
 export default function GovernancePage() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
-  const [hasVoted, setHasVoted] = useState<boolean | null>(null);
   const [proposals, setProposals] = useState<ProposalInfo[]>([]);
   const [userCreatedTokens, setUserCreatedTokens] = useState<Token[]>([]);
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
@@ -149,18 +130,7 @@ export default function GovernancePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [governanceInfo, setGovernanceInfo] =
     useState<IGovernanceTokenInfo | null>(null);
-  const [activateDialogOpen, setActivateDialogOpen] = useState(false);
   const [isActivating, setIsActivating] = useState(false);
-
-  // Add this with other form declarations
-  const activateForm = useForm<ActivateFormValues>({
-    resolver: zodResolver(activateFormSchema),
-    defaultValues: {
-      proposalThreshold: "1000", // Default 1000 tokens
-      quorum: "51", // Default 51%
-      votingPeriod: "7", // Default 7 days
-    },
-  });
 
   // Fetch tokens from backend
   useEffect(() => {
@@ -220,10 +190,11 @@ export default function GovernancePage() {
             for (let i = 1; i <= proposalCount; i++) {
               proposalPromises.push(GovernanceProposalInfo(selectedToken, i));
             }
-            const proposals = await Promise.all(proposalPromises);
+
+            const newProposals = await Promise.all(proposalPromises);
             setProposals(
-              (proposals as unknown as IGovernanceProposalInfo[]).map((p) => ({
-                id: Number(p) || 0,
+              newProposals.map((p) => ({
+                id: Number(p.id) || 0,
                 title: p.title,
                 description: p.description,
                 proposer: p.proposer,
@@ -259,8 +230,6 @@ export default function GovernancePage() {
       tokenAddress: selectedToken || "",
       title: "",
       description: "",
-      targetContract: "",
-      callData: "",
     },
   });
 
@@ -288,6 +257,7 @@ export default function GovernancePage() {
     fetchGovernanceInfo();
   }, [selectedToken]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onProposalSubmit = async (values: ProposalFormValues) => {
     if (!selectedToken) {
       toast.error("Please select a token first");
@@ -305,8 +275,8 @@ export default function GovernancePage() {
         values.tokenAddress,
         values.title,
         values.description,
-        values.targetContract,
-        values.callData
+        "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67", // Static target contract (Clampify Factory)
+        "0x" // Static empty call data
       );
 
       // Reset form and close dialog
@@ -334,17 +304,17 @@ export default function GovernancePage() {
               description: p.description,
               proposer: p.proposer,
               createdAt: new Date(p.createdAt),
-              votingEndsAt: new Date(p.endTime),
-              isActive: p.active,
+              votingEndsAt: new Date(p.votingEndsAt),
+              isActive: !p.executed,
               executed: p.executed,
-              targetContract: p.target,
-              yesVotes: p.forVotes,
-              noVotes: p.againstVotes,
-              yesPercentage: p.forPercentage,
-              noPercentage: p.againstPercentage,
-              quorumReached: p.quorumReached,
-              hasVoted: p.hasVoted,
-              userVoteDirection: p.userVoteDirection,
+              targetContract: p.targetContract,
+              yesVotes: p.yesVotes.toString(),
+              noVotes: p.noVotes.toString(),
+              yesPercentage: (p.yesVotes / (p.yesVotes + p.noVotes)) * 100 || 0,
+              noPercentage: (p.noVotes / (p.yesVotes + p.noVotes)) * 100 || 0,
+              quorumReached: false,
+              hasVoted: null,
+              userVoteDirection: null,
             }))
           );
         }
@@ -362,12 +332,74 @@ export default function GovernancePage() {
 
   // Vote on a proposal
   const handleVote = async (proposalId: number, support: boolean) => {
-    console.log(proposalId, support);
+    if (!selectedToken) return;
+
+    try {
+      await castVote(selectedToken, proposalId, support);
+      toast.success("Vote cast successfully!");
+
+      // Refresh proposals to update voting status
+      const proposalInfo = await GovernanceProposalInfo(
+        selectedToken,
+        proposalId
+      );
+      setProposals(
+        proposals.map((p) =>
+          p.id === proposalId
+            ? {
+                ...p,
+                yesVotes: proposalInfo.yesVotes.toString(),
+                noVotes: proposalInfo.noVotes.toString(),
+                yesPercentage:
+                  (proposalInfo.yesVotes /
+                    (proposalInfo.yesVotes + proposalInfo.noVotes)) *
+                    100 || 0,
+                noPercentage:
+                  (proposalInfo.noVotes /
+                    (proposalInfo.yesVotes + proposalInfo.noVotes)) *
+                    100 || 0,
+                hasVoted: true,
+                userVoteDirection: support,
+              }
+            : p
+        )
+      );
+    } catch (error) {
+      console.error("Error casting vote:", error);
+      toast.error("Failed to cast vote", {
+        description:
+          error instanceof Error ? error.message : "Please try again later",
+      });
+    }
   };
 
   // Execute a proposal
   const handleExecute = async (proposalId: number) => {
-    console.log(proposalId);
+    if (!selectedToken) return;
+
+    try {
+      await executeProposal(selectedToken, proposalId);
+      toast.success("Proposal executed successfully!");
+
+      // Refresh proposals to update execution status
+      setProposals(
+        proposals.map((p) =>
+          p.id === proposalId
+            ? {
+                ...p,
+                executed: true,
+                isActive: false,
+              }
+            : p
+        )
+      );
+    } catch (error) {
+      console.error("Error executing proposal:", error);
+      toast.error("Failed to execute proposal", {
+        description:
+          error instanceof Error ? error.message : "Please try again later",
+      });
+    }
   };
 
   // Handle token selection change
@@ -383,22 +415,20 @@ export default function GovernancePage() {
 
     setIsActivating(true);
     try {
-
       console.log(selectedToken);
-      await activateGovernance(
+      const tx = await activateGovernance(
         selectedToken,
         45, // Default proposal threshold of 1000 tokens
         51, // Default quorum of 51%
         7 * 24 * 60 * 60 // Default voting period of 7 days in seconds
       );
+      console.log(tx);
 
       toast.success("Governance activated successfully!");
-      setActivateDialogOpen(false);
-      
+
       // Refresh governance info
       const info = await GovernanceTokenInfo(selectedToken);
       setGovernanceInfo(info);
-      
     } catch (error) {
       console.error("Error activating governance:", error);
       toast.error("Failed to activate governance", {
@@ -550,13 +580,15 @@ export default function GovernancePage() {
                   <CardFooter className="flex justify-between">
                     <span className="text-sm text-muted-foreground">
                       Voting period:{" "}
-                      {tokens.find((t) => t.address === selectedToken)?.votingPeriod
+                      {tokens.find((t) => t.address === selectedToken)
+                        ?.votingPeriod
                         ? formatDuration(
-                            tokens.find((t) => t.address === selectedToken)?.votingPeriod || 0
+                            tokens.find((t) => t.address === selectedToken)
+                              ?.votingPeriod || 0
                           )
                         : "N/A"}
                     </span>
-                    {userCreatedTokens.some(t => t.address === selectedToken) && !governanceInfo?.isGovernanceActive && (
+                    {!governanceInfo?.isGovernanceActive && (
                       <Button
                         onClick={handleActivateGovernance}
                         disabled={isActivating}
@@ -568,7 +600,7 @@ export default function GovernancePage() {
                             Activating...
                           </>
                         ) : (
-                          'Activate Governance'
+                          "Activate Governance"
                         )}
                       </Button>
                     )}
@@ -580,65 +612,142 @@ export default function GovernancePage() {
             {/* Proposals Section */}
             {selectedToken && (
               <div>
-                <Tabs defaultValue="active">
-                  <TabsList>
-                    <TabsTrigger value="active">Active Proposals</TabsTrigger>
-                    <TabsTrigger value="past">Past Proposals</TabsTrigger>
-                  </TabsList>
+                <div className="flex justify-between items-center mb-6">
+                  <Tabs defaultValue="active" className="w-full">
+                    <div className="flex justify-between items-center">
+                      <TabsList>
+                        <TabsTrigger value="active">
+                          Active Proposals
+                        </TabsTrigger>
+                        <TabsTrigger value="past">Past Proposals</TabsTrigger>
+                      </TabsList>
 
-                  <TabsContent value="active" className="space-y-6 mt-6">
-                    {proposals.filter((p) => p.isActive).length === 0 ? (
-                      <div className="text-center p-12 border rounded-lg">
-                        <h2 className="text-xl font-semibold mb-2">
-                          No Active Proposals
-                        </h2>
-                        <p className="text-muted-foreground">
-                          There are no active proposals for this token at the
-                          moment.
-                        </p>
-                      </div>
-                    ) : (
-                      proposals
-                        .filter((p) => p.isActive)
-                        .map((proposal) => (
-                          <ProposalCard
-                            key={`${selectedToken}-${proposal.proposer}`}
-                            proposal={proposal}
-                            onVote={handleVote}
-                            onExecute={handleExecute}
-                            userAddress={userAddress}
-                            selectedToken={selectedToken}
-                          />
-                        ))
-                    )}
-                  </TabsContent>
+                      {governanceInfo?.isGovernanceActive && (
+                        <Dialog
+                          open={proposalDialogOpen}
+                          onOpenChange={setProposalDialogOpen}
+                        >
+                          <DialogTrigger asChild>
+                            <Button>Create Proposal</Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Create New Proposal</DialogTitle>
+                              <DialogDescription>
+                                Create a new governance proposal for token
+                                holders to vote on.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <Form {...proposalForm}>
+                              <form
+                                onSubmit={proposalForm.handleSubmit(
+                                  onProposalSubmit
+                                )}
+                                className="space-y-4"
+                              >
+                                <FormField
+                                  control={proposalForm.control}
+                                  name="title"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Title</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          placeholder="Enter proposal title"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={proposalForm.control}
+                                  name="description"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Description</FormLabel>
+                                      <FormControl>
+                                        <Textarea
+                                          placeholder="Enter proposal description"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <Button type="submit" disabled={isSubmitting}>
+                                  {isSubmitting ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                      Creating...
+                                    </>
+                                  ) : (
+                                    "Create Proposal"
+                                  )}
+                                </Button>
+                              </form>
+                            </Form>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
 
-                  <TabsContent value="past" className="space-y-6 mt-6">
-                    {proposals.filter((p) => !p.isActive).length === 0 ? (
-                      <div className="text-center p-12 border rounded-lg">
-                        <h2 className="text-xl font-semibold mb-2">
-                          No Past Proposals
-                        </h2>
-                        <p className="text-muted-foreground">
-                          There are no past proposals for this token.
-                        </p>
-                      </div>
-                    ) : (
-                      proposals
-                        .filter((p) => !p.isActive)
-                        .map((proposal) => (
-                          <ProposalCard
-                            key={`${selectedToken}-${proposal.id}`}
-                            proposal={proposal}
-                            onVote={handleVote}
-                            onExecute={handleExecute}
-                            userAddress={userAddress}
-                            selectedToken={selectedToken}
-                          />
-                        ))
-                    )}
-                  </TabsContent>
-                </Tabs>
+                    <TabsContent value="active" className="space-y-6 mt-6">
+                      {proposals.filter((p) => p.isActive).length === 0 ? (
+                        <div className="text-center p-12 border rounded-lg">
+                          <h2 className="text-xl font-semibold mb-2">
+                            No Active Proposals
+                          </h2>
+                          <p className="text-muted-foreground">
+                            There are no active proposals for this token at the
+                            moment.
+                          </p>
+                        </div>
+                      ) : (
+                        proposals
+                          .filter((p) => p.isActive)
+                          .map((proposal) => (
+                            <ProposalCard
+                              key={`${selectedToken}-${proposal.proposer}`}
+                              proposal={proposal}
+                              onVote={handleVote}
+                              onExecute={handleExecute}
+                              userAddress={userAddress}
+                              selectedToken={selectedToken}
+                            />
+                          ))
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="past" className="space-y-6 mt-6">
+                      {proposals.filter((p) => !p.isActive).length === 0 ? (
+                        <div className="text-center p-12 border rounded-lg">
+                          <h2 className="text-xl font-semibold mb-2">
+                            No Past Proposals
+                          </h2>
+                          <p className="text-muted-foreground">
+                            There are no past proposals for this token.
+                          </p>
+                        </div>
+                      ) : (
+                        proposals
+                          .filter((p) => !p.isActive)
+                          .map((proposal) => (
+                            <ProposalCard
+                              key={`${selectedToken}-${proposal.id}`}
+                              proposal={proposal}
+                              onVote={handleVote}
+                              onExecute={handleExecute}
+                              userAddress={userAddress}
+                              selectedToken={selectedToken}
+                            />
+                          ))
+                      )}
+                    </TabsContent>
+                  </Tabs>
+                </div>
               </div>
             )}
 
@@ -661,11 +770,15 @@ export default function GovernancePage() {
                           </span>
                         </div>
                         <div>
-                          {governanceInfo?.isGovernanceActive && token.address === selectedToken && (
-                            <Badge variant="outline" className="bg-green-500/10 text-green-500">
-                              Governance Active
-                            </Badge>
-                          )}
+                          {governanceInfo?.isGovernanceActive &&
+                            token.address === selectedToken && (
+                              <Badge
+                                variant="outline"
+                                className="bg-green-500/10 text-green-500"
+                              >
+                                Governance Active
+                              </Badge>
+                            )}
                         </div>
                       </div>
                       <div className="space-y-2">
