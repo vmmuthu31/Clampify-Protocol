@@ -57,7 +57,11 @@ export function Navbar() {
         },
       ],
     },
-    { label: "Governance", href: "/governance" },
+    {
+      label: "Governance",
+      href: "/governance",
+    },
+    { label: "Stats", href: "/stats" },
     { label: "Docs", href: "/docs" },
   ];
 

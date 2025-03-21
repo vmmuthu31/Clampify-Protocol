@@ -48,27 +48,6 @@ import { format, formatDistanceToNow } from "date-fns";
 import { Navbar } from "@/components/navbar";
 import { usePrivy } from "@privy-io/react-auth";
 
-// This would be imported from your contract artifacts
-const GOVERNANCE_ABI = [
-  "function getGovernanceTokens() external view returns (address[] memory)",
-  "function tokenGovernance(address) external view returns (address tokenAddress, uint256 proposalThreshold, uint256 quorum, uint256 votingPeriod, bool isActive)",
-  "function proposalCount(address) external view returns (uint256)",
-  "function getProposalDetails(address tokenAddress, uint256 proposalId) external view returns (string memory, string memory, address, uint256, uint256, bool, address, uint256, uint256)",
-  "function createProposal(address tokenAddress, string memory title, string memory description, address targetContract, bytes memory callData) external returns (uint256)",
-  "function castVote(address tokenAddress, uint256 proposalId, bool support) external",
-  "function executeProposal(address tokenAddress, uint256 proposalId) external",
-  "function hasVoted(address tokenAddress, uint256 proposalId, address voter) external view returns (bool)",
-];
-
-const TOKEN_ABI = [
-  "function name() external view returns (string memory)",
-  "function symbol() external view returns (string memory)",
-  "function balanceOf(address owner) external view returns (uint256)",
-  "function totalSupply() external view returns (uint256)",
-];
-
-const GOVERNANCE_ADDRESS = "0xE383A8EFDC5D0E7a5474da69EBA775ac506953ef";
-
 // Form schema for creating proposals
 const proposalFormSchema = z.object({
   tokenAddress: z
@@ -124,9 +103,15 @@ export default function GovernancePage() {
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [hasVoted, setHasVoted] = useState<boolean | null>(null);
   const [proposals, setProposals] = useState<ProposalInfo[]>([]);
+  const [userCreatedTokens, setUserCreatedTokens] = useState<TokenInfo[]>([]);
   const [proposalDialogOpen, setProposalDialogOpen] = useState(false);
   const { authenticated, login, user } = usePrivy();
   const userAddress = user?.wallet?.address;
+
+  useEffect(() => {
+    console.log("Tokens:", tokens);
+    fetchUserCreatedTokens(userAddress || "");
+  }, [userAddress]);
 
   // Form handler for creating new proposals
   const proposalForm = useForm<ProposalFormValues>({
@@ -511,6 +496,33 @@ export default function GovernancePage() {
                         )}
                       </TabsContent>
                     </Tabs>
+                  </div>
+                )}
+
+                {userCreatedTokens.length > 0 && (
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">
+                      Your Created Tokens
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {userCreatedTokens.map((token) => (
+                        <div
+                          key={token.address}
+                          className="p-4 border rounded-lg bg-black/20 backdrop-blur-sm"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-medium">{token.name}</h3>
+                            <span className="text-sm text-muted-foreground">
+                              {token.symbol}
+                            </span>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Address: {token.address.slice(0, 6)}...
+                            {token.address.slice(-4)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </>
