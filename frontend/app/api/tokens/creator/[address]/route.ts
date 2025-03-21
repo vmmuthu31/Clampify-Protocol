@@ -2,34 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Token from "@/models/Token";
 
-export const GET = async (
-  req: NextRequest,
-  { params }: { params: Promise<{ address: string }> }
-): Promise<NextResponse> => {
+export async function GET(
+  request: NextRequest,
+  context: { params: { address: string } }
+): Promise<NextResponse> {
   try {
     await dbConnect();
-    const { address } = await params;
+    const address = context.params.address;
+    const token = await Token.findOne({ address });
 
-    if (!address) {
+    if (!token) {
       return NextResponse.json(
-        { success: false, error: "Address is required" },
-        { status: 400 }
+        { success: false, error: "Token not found" },
+        { status: 404 }
       );
     }
 
-    const tokens = await Token.find({
-      creator: { $regex: new RegExp(address, "i") },
-    });
-
-    return NextResponse.json({
-      success: true,
-      tokens,
-    });
+    return NextResponse.json({ success: true, token });
   } catch (error) {
-    console.error("Error fetching creator tokens:", error);
+    console.error("Error fetching token:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to fetch creator tokens" },
+      { success: false, error: "Failed to fetch token" },
       { status: 500 }
     );
   }
-};
+}
