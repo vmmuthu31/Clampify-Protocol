@@ -49,20 +49,9 @@ import { usePrivy } from "@privy-io/react-auth";
 import {
   GovernanceProposalCount,
   GovernanceProposalInfo,
-  GovernanceTokenInfo,
-  UserCreatedTokens,
+  IGovernanceProposalInfo,
 } from "@/services/tokenCreation";
 
-type IGovernanceTokenInfo = {
-  address: string;
-  name: string;
-  symbol: string;
-  balance: string;
-  proposalThreshold: string;
-  quorum: number;
-  votingPeriod: number;
-  activeProposals: number;
-};
 // Form schema for creating proposals
 const proposalFormSchema = z.object({
   tokenAddress: z
@@ -105,6 +94,10 @@ interface Token {
   _id: string;
   address: string;
   name: string;
+  balance: string;
+  proposalThreshold: string;
+  quorum: number;
+  votingPeriod: number;
   symbol: string;
   creator: string;
   initialSupply: string;
@@ -127,7 +120,7 @@ export default function GovernancePage() {
   useEffect(() => {
     const fetchTokens = async () => {
       try {
-        const response = await fetch('/api/tokens');
+        const response = await fetch("/api/tokens");
         const data = await response.json();
         if (data.success) {
           setTokens(data.tokens);
@@ -175,23 +168,24 @@ export default function GovernancePage() {
             }
             const proposals = await Promise.all(proposalPromises);
             setProposals(
-              (proposals as unknown as GovernanceProposalData[]).map((p) => ({
-                id: p.id,
+              (proposals as unknown as IGovernanceProposalInfo[]).map((p) => ({
+                id: Number(p) || 0,
                 title: p.title,
                 description: p.description,
                 proposer: p.proposer,
                 createdAt: new Date(p.createdAt),
-                votingEndsAt: new Date(p.endTime),
-                isActive: p.active,
+                votingEndsAt: new Date(p.votingEndsAt),
+                isActive: !p.executed,
                 executed: p.executed,
-                targetContract: p.target,
-                yesVotes: p.forVotes,
-                noVotes: p.againstVotes,
-                yesPercentage: p.forPercentage,
-                noPercentage: p.againstPercentage,
-                quorumReached: p.quorumReached,
-                hasVoted: p.hasVoted,
-                userVoteDirection: p.userVoteDirection,
+                targetContract: p.targetContract,
+                yesVotes: p.yesVotes.toString(),
+                noVotes: p.noVotes.toString(),
+                yesPercentage:
+                  (p.yesVotes / (p.yesVotes + p.noVotes)) * 100 || 0,
+                noPercentage: (p.noVotes / (p.yesVotes + p.noVotes)) * 100 || 0,
+                quorumReached: false,
+                hasVoted: null,
+                userVoteDirection: null,
               }))
             );
           }
@@ -297,8 +291,8 @@ export default function GovernancePage() {
                     </SelectTrigger>
                     <SelectContent className="bg-[#0D0B15] border border-[#ffae5c]/20 text-white shadow-lg shadow-black/50 backdrop-blur-xl">
                       {tokens.map((token) => (
-                        <SelectItem 
-                          key={token.address} 
+                        <SelectItem
+                          key={token.address}
                           value={token.address}
                           className="hover:bg-[#ffae5c]/10 focus:bg-[#ffae5c]/20 cursor-pointer text-white"
                         >
@@ -544,16 +538,12 @@ export default function GovernancePage() {
                         .filter((p) => p.isActive)
                         .map((proposal) => (
                           <ProposalCard
-                            key={`${selectedToken}-${proposal.id}`}
+                            key={`${selectedToken}-${proposal.proposer}`}
                             proposal={proposal}
                             onVote={handleVote}
                             onExecute={handleExecute}
                             userAddress={userAddress}
                             selectedToken={selectedToken}
-                            quorum={
-                              tokens.find((t) => t.address === selectedToken)
-                                ?.quorum || 0
-                            }
                           />
                         ))
                     )}
@@ -580,10 +570,6 @@ export default function GovernancePage() {
                             onExecute={handleExecute}
                             userAddress={userAddress}
                             selectedToken={selectedToken}
-                            quorum={
-                              tokens.find((t) => t.address === selectedToken)
-                                ?.quorum || 0
-                            }
                           />
                         ))
                     )}
@@ -614,7 +600,8 @@ export default function GovernancePage() {
                         {token.address.slice(-4)}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Created: {new Date(token.createdAt).toLocaleDateString()}
+                        Created:{" "}
+                        {new Date(token.createdAt).toLocaleDateString()}
                       </div>
                     </div>
                   ))}
@@ -634,14 +621,12 @@ function ProposalCard({
   onVote,
   onExecute,
   userAddress,
-  quorum,
 }: {
   proposal: ProposalInfo;
   onVote: (proposalId: number, support: boolean) => Promise<void>;
   onExecute: (proposalId: number) => Promise<void>;
   userAddress: string | undefined;
   selectedToken: string;
-  quorum: number;
 }) {
   return (
     <Card>
@@ -739,18 +724,6 @@ function ProposalCard({
             </div>
 
             <div className="mt-2 text-sm text-muted-foreground flex justify-between">
-              <span>
-                Quorum:{" "}
-                {proposal.quorumReached ? (
-                  <span className="text-green-600 dark:text-green-400">
-                    Reached
-                  </span>
-                ) : (
-                  <span className="text-amber-600 dark:text-amber-400">
-                    Needed: {quorum}% of total supply
-                  </span>
-                )}
-              </span>
               <span>
                 {proposal.hasVoted &&
                   `You voted: ${proposal.userVoteDirection ? "Yes" : "No"}`}

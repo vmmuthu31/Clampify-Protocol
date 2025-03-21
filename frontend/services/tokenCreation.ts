@@ -194,11 +194,17 @@ export const UserCreatedTokens = async (
   }
 };
 
-interface GovernanceProposalInfo {
+export interface IGovernanceProposalInfo {
   title: string;
   description: string;
   targetContract: string;
   callData: string;
+  proposer: string;
+  createdAt: number;
+  votingEndsAt: number;
+  executed: boolean;
+  yesVotes: number;
+  noVotes: number;
 }
 
 export const GovernanceProposalCount = async (
@@ -234,7 +240,7 @@ export const GovernanceProposalCount = async (
 export const GovernanceProposalInfo = async (
   tokenAddress: string,
   proposalId: number
-): Promise<GovernanceProposalInfo> => {
+): Promise<IGovernanceProposalInfo> => {
   try {
     const provider =
       ethereum != null
