@@ -1,7 +1,7 @@
-// governance/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -146,11 +146,12 @@ export default function GovernancePage() {
   const [governanceInfo, setGovernanceInfo] =
     useState<IGovernanceTokenInfo | null>(null);
   const [isActivating, setIsActivating] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   // Fetch tokens from backend
   useEffect(() => {
     const fetchTokens = async () => {
       try {
+        setLoading(true);
         const response = await fetch("/api/tokens");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -163,6 +164,8 @@ export default function GovernancePage() {
       } catch (error) {
         console.error("Error fetching tokens:", error);
         toast.error("Failed to fetch tokens");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -577,7 +580,17 @@ export default function GovernancePage() {
           Vote on proposals and shape the future of the platform
         </p>
 
-        {tokens.length === 0 ? (
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-8"
+          >
+            <p className="text-white/70">Fetching tokens...</p>
+          </motion.div>
+        )}
+
+        {tokens.length === 0 && !loading ? (
           <div className="text-center p-12 border rounded-lg">
             <h2 className="text-xl font-semibold mb-2">
               No Governance Tokens Found
