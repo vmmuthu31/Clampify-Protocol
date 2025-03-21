@@ -295,7 +295,7 @@ export const GovernanceProposalCount = async (
 };
 
 export const GovernanceProposalInfo = async (
-  tokenAddress: string,
+  tokenAddress: string | undefined,
   proposalId: number
 ): Promise<IGovernanceProposalInfo> => {
   try {
