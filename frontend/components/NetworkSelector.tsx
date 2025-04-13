@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Shield, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ethers } from "ethers";
@@ -179,8 +178,7 @@ export function NetworkSelector() {
 
   return (
     <div className="relative">
-      <Button
-        variant="ghost"
+      <button
         className={`flex items-center gap-2 px-3 py-2 rounded-xl border border-[#ffae5c]/30 bg-[#ffae5c]/5 text-white/80 hover:text-white ${
           isLoading ? "opacity-50 cursor-not-allowed" : ""
         }`}
@@ -191,7 +189,7 @@ export function NetworkSelector() {
           <Shield className="w-4 h-4 text-[#ffae5c]" />
           <motion.div
             className={`absolute -right-1 -top-1 w-2 h-2 rounded-full ${
-              isConnected ? "bg-green-400" : "bg-red-400"
+              isConnected ? "bg-[#ffae5c]" : "bg-red-400"
             }`}
             animate={{ scale: [1, 1.3, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
@@ -205,7 +203,7 @@ export function NetworkSelector() {
             isOpen ? "rotate-180" : ""
           }`}
         />
-      </Button>
+      </button>
 
       <AnimatePresence>
         {isOpen && (
@@ -220,7 +218,7 @@ export function NetworkSelector() {
               {SUPPORTED_NETWORKS.map((network) => (
                 <button
                   key={network.chainId}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white/70 hover:text-white hover:bg-[#ffae5c]/10 transition-colors ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white/70 hover:text-white hover:bg-[#ffae5c]/20 transition-colors ${
                     currentNetwork.chainId === network.chainId
                       ? "bg-[#ffae5c]/10 text-white"
                       : ""
