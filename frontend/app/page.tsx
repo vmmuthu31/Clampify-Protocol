@@ -8,14 +8,8 @@ import {
   ArrowRight,
   TrendingUp,
   ChartBar,
-  Rocket,
   Lock,
-  Users,
   Shield,
-  Timer,
-  BarChart3,
-  Vote,
-  Repeat,
   Search,
 } from "lucide-react";
 import Image from "next/image";
@@ -624,405 +618,263 @@ export default function HomePage() {
           )}
         </motion.div>
 
-        {/* Why Clampify Section */}
+        {/* Built with the Best of Web3 Section */}
         <motion.div
           className="mb-20"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl font-bold text-center mb-4 text-white">
-            Why Clampify
-          </h2>
-          <p className="text-xl text-white/60 text-center mb-12 max-w-3xl mx-auto">
-            Our revolutionary protocol prevents rug pulls and protects investors
-            through innovative supply locking mechanisms
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            {/* Left Feature */}
-            <motion.div
-              className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-8 border border-[#ffae5c]/20 relative overflow-hidden"
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.02 }}
-            >
-              <motion.div
-                className="absolute inset-0 opacity-20"
-                animate={{
-                  background: [
-                    "radial-gradient(circle at 0% 0%, #ffae5c 0%, transparent 70%)",
-                    "radial-gradient(circle at 100% 100%, #ffae5c 0%, transparent 70%)",
-                    "radial-gradient(circle at 0% 0%, #ffae5c 0%, transparent 70%)",
-                  ],
-                }}
-                transition={{ duration: 10, repeat: Infinity }}
-              />
-
-              <div className="relative">
-                <div className="mb-6">
-                  <motion.div
-                    className="w-14 h-14 rounded-xl bg-[#ffae5c]/20 border border-[#ffae5c]/30 flex items-center justify-center"
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 6, repeat: Infinity }}
-                  >
-                    <Lock className="w-7 h-7 text-[#ffae5c]" />
-                  </motion.div>
-                </div>
-
-                <h3 className="text-2xl font-bold text-white mb-4">
-                  Supply Locking Mechanism
-                </h3>
-
-                <ul className="space-y-4">
-                  {[
-                    "Time-based lockups prevent large holders from dumping tokens",
-                    "Graduated unlock schedules protect against market manipulation",
-                    "Smart contract triggers prevent coordinated selling",
-                    "Built-in protection against flash loan attacks",
-                  ].map((item, i) => (
-                    <motion.li
-                      key={i}
-                      className="flex items-start gap-3"
-                      initial={{ opacity: 0, x: -10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1 }}
-                    >
-                      <div className="mt-1 min-w-5">
-                        <motion.div
-                          className="w-5 h-5 rounded-full bg-[#ffae5c]/20 border border-[#ffae5c]/40 flex items-center justify-center"
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            delay: i * 0.2,
-                          }}
-                        >
-                          <div className="w-2 h-2 rounded-full bg-[#ffae5c]"></div>
-                        </motion.div>
-                      </div>
-                      <span className="text-white/80">{item}</span>
-                    </motion.li>
-                  ))}
-                </ul>
+          <div className="relative overflow-hidden">
+            <div className="flex items-center gap-2 mb-12">
+              <div className="text-gray-400 whitespace-nowrap">
+                <span className="inline-block mr-2">
+                  &#10095;&#10095;&#10095;&#10095;
+                </span>
+                Built with the Best of Web3
+                <span className="inline-block ml-2 border-t border-gray-700 flex-grow w-full"></span>
               </div>
-            </motion.div>
+              <div className="w-full h-px bg-gray-700"></div>
+            </div>
 
-            {/* Right Feature */}
-            <motion.div
-              className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-8 border border-[#ffae5c]/20 relative overflow-hidden"
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.02 }}
-            >
-              <motion.div
-                className="absolute inset-0 opacity-20"
-                animate={{
-                  background: [
-                    "radial-gradient(circle at 100% 0%, #ffae5c 0%, transparent 70%)",
-                    "radial-gradient(circle at 0% 100%, #ffae5c 0%, transparent 70%)",
-                    "radial-gradient(circle at 100% 0%, #ffae5c 0%, transparent 70%)",
-                  ],
-                }}
-                transition={{ duration: 10, repeat: Infinity }}
-              />
-
-              <div className="relative">
-                <div className="mb-6">
-                  <motion.div
-                    className="w-14 h-14 rounded-xl bg-[#ffae5c]/20 border border-[#ffae5c]/30 flex items-center justify-center"
-                    animate={{ rotate: [0, -10, 10, 0] }}
-                    transition={{ duration: 6, repeat: Infinity }}
-                  >
-                    <Shield className="w-7 h-7 text-[#ffae5c]" />
-                  </motion.div>
-                </div>
-
-                <h3 className="text-2xl font-bold text-white mb-4">
-                  Anti-Rug Pull Safeguards
-                </h3>
-
-                <ul className="space-y-4">
-                  {[
-                    "100% of liquidity locked in time-release smart contracts",
-                    "Algorithmic circuit breakers prevent major price manipulations",
-                    "Transparent on-chain verification of token supply distribution",
-                    "Tiered liquidity release schedules to prevent instant draining",
-                  ].map((item, i) => (
-                    <motion.li
-                      key={i}
-                      className="flex items-start gap-3"
-                      initial={{ opacity: 0, x: -10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1 }}
-                    >
-                      <div className="mt-1 min-w-5">
-                        <motion.div
-                          className="w-5 h-5 rounded-full bg-[#ffae5c]/20 border border-[#ffae5c]/40 flex items-center justify-center"
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            delay: i * 0.2,
-                          }}
-                        >
-                          <div className="w-2 h-2 rounded-full bg-[#ffae5c]"></div>
-                        </motion.div>
-                      </div>
-                      <span className="text-white/80">{item}</span>
-                    </motion.li>
-                  ))}
-                </ul>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12">
+              <div className="md:w-1/2">
+                <p className="text-lg text-white/70 leading-relaxed">
+                  From execution to security, Clampify integrates leading
+                  protocols across the ecosystem — ensuring every launch is
+                  fast, fair, and fundamentally secure.
+                </p>
               </div>
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* How It Works Section - Reimagined with lock animations */}
-        <motion.div
-          className="mb-20"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-4xl font-bold text-center mb-4 text-white">
-            How It Works
-          </h2>
-          <p className="text-xl text-white/60 text-center mb-12 max-w-3xl mx-auto">
-            Launch your secure token in three simple steps
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                step: 1,
-                title: "Connect Wallet",
-                desc: "Connect your wallet securely to the Clampify protocol",
-                icon: <Users className="w-6 h-6" />,
-                animation: {
-                  rotate: [0, 10, -10, 0],
-                  duration: 6,
-                },
-              },
-              {
-                step: 2,
-                title: "Configure Security",
-                desc: "Set your supply lock parameters and anti-rug safeguards",
-                icon: <Lock className="w-6 h-6" />,
-                animation: {
-                  scale: [1, 1.1, 1],
-                  duration: 4,
-                },
-              },
-              {
-                step: 3,
-                title: "Launch & Trade",
-                desc: "Deploy your rugproof token with confidence",
-                icon: <Rocket className="w-6 h-6" />,
-                animation: {
-                  y: [0, -5, 0],
-                  duration: 5,
-                },
-              },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-8 border border-[#ffae5c]/20 relative overflow-hidden"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.2 }}
-                whileHover={{ scale: 1.05 }}
-              >
-                <motion.div
-                  className="absolute inset-0 opacity-10"
-                  animate={{
-                    background: [
-                      `radial-gradient(circle at ${50 + i * 20}% ${
-                        50 - i * 20
-                      }%, #ffae5c 0%, transparent 70%)`,
-                      `radial-gradient(circle at ${50 - i * 20}% ${
-                        50 + i * 20
-                      }%, #ffae5c 0%, transparent 70%)`,
-                      `radial-gradient(circle at ${50 + i * 20}% ${
-                        50 - i * 20
-                      }%, #ffae5c 0%, transparent 70%)`,
-                    ],
-                  }}
-                  transition={{ duration: 8, repeat: Infinity }}
+              <div className="md:w-1/2 flex flex-wrap items-center justify-end gap-8">
+                <Image
+                  src="/logo.svg"
+                  alt="Protocol Logo"
+                  width={40}
+                  height={40}
+                  className="grayscale hover:grayscale-0 transition-all"
                 />
+                <Image
+                  src="/logo.svg"
+                  alt="Protocol Logo"
+                  width={40}
+                  height={40}
+                  className="grayscale hover:grayscale-0 transition-all"
+                />
+                <Image
+                  src="/logo.svg"
+                  alt="Protocol Logo"
+                  width={40}
+                  height={40}
+                  className="grayscale hover:grayscale-0 transition-all"
+                />
+                <Image
+                  src="/logo.svg"
+                  alt="Protocol Logo"
+                  width={40}
+                  height={40}
+                  className="grayscale hover:grayscale-0 transition-all"
+                />
+                <Image
+                  src="/logo.svg"
+                  alt="Protocol Logo"
+                  width={40}
+                  height={40}
+                  className="grayscale hover:grayscale-0 transition-all"
+                />
+                <Image
+                  src="/logo.svg"
+                  alt="Protocol Logo"
+                  width={40}
+                  height={40}
+                  className="grayscale hover:grayscale-0 transition-all"
+                />
+              </div>
+            </div>
 
-                <div className="relative">
-                  <div className="flex justify-between items-center mb-6">
-                    <motion.div
-                      className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#ffae5c] to-[#4834D4] flex items-center justify-center"
-                      animate={item.animation}
-                      transition={{
-                        duration: item.animation.duration,
-                        repeat: Infinity,
-                      }}
-                    >
-                      {item.icon}
-                    </motion.div>
+            <div className="flex items-center gap-2 mb-12">
+              <div className="text-gray-400 whitespace-nowrap">
+                <span className="inline-block mr-2">
+                  &#10095;&#10095;&#10095;&#10095;
+                </span>
+                Built Different. Locked Safer.
+                <span className="inline-block ml-2 border-t border-gray-700 flex-grow w-full"></span>
+              </div>
+              <div className="w-full h-px bg-gray-700"></div>
+            </div>
 
-                    <div className="w-10 h-10 rounded-full border border-[#ffae5c]/40 flex items-center justify-center text-xl font-bold text-white">
-                      {item.step}
-                    </div>
-                  </div>
-
-                  <h3 className="text-xl font-bold text-white mb-3">
-                    {item.title}
-                  </h3>
-                  <p className="text-white/70">{item.desc}</p>
-
-                  {i < 2 && (
-                    <motion.div
-                      className="absolute -right-12 top-12 text-[#ffae5c]/40 hidden md:block"
-                      animate={{ x: [0, 10, 0] }}
-                      transition={{ duration: 3, repeat: Infinity }}
-                    >
-                      <ArrowRight className="w-8 h-8" />
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Core Features */}
-
-        {/* Core Protocol Features Section */}
-        <motion.div
-          className="mb-20"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-4xl font-bold text-center mb-12 text-white">
-            Core Protocol Features
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                title: "Time-Lock Mechanics",
-                desc: "Gradual supply unlocking based on predefined schedules",
-                icon: <Timer className="w-6 h-6" />,
-              },
-              {
-                title: "Stability Mechanics",
-                desc: "Dynamic minting/burning features stabilize token price",
-                icon: <BarChart3 className="w-6 h-6" />,
-              },
-              {
-                title: "Governance System",
-                desc: "Decentralized community control of protocol parameters",
-                icon: <Vote className="w-6 h-6" />,
-              },
-              {
-                title: "DEX Integration",
-                desc: "Seamless trading on major decentralized exchanges",
-                icon: <Repeat className="w-6 h-6" />,
-              },
-            ].map((feature, i) => (
-              <motion.div
-                key={i}
-                className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-6 border border-[#ffae5c]/20"
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{
-                  scale: 1.05,
-                  backgroundColor: "rgba(108, 92, 231, 0.1)",
-                  borderColor: "rgba(108, 92, 231, 0.3)",
-                }}
-              >
-                <motion.div
-                  className="w-12 h-12 rounded-xl bg-[#ffae5c]/20 border border-[#ffae5c]/30 
-          flex items-center justify-center mb-4"
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 5, repeat: Infinity, delay: i * 0.5 }}
-                >
-                  {feature.icon}
-                </motion.div>
-
-                <h3 className="text-lg font-bold text-white mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-white/70">{feature.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Statistics Section with Animated Charts */}
-        <motion.div
-          className="mb-20 relative"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#ffae5c]/20 to-transparent rounded-xl blur-3xl" />
-          <div className="relative">
-            <h2 className="text-4xl font-bold text-center mb-14 text-white">
-              Protocol Analytics
+            <h2 className="text-4xl font-bold text-white mb-6">
+              Why Creators Choose Clampify
             </h2>
+            <p className="text-xl text-white/70 mb-12 max-w-3xl">
+              Our revolutionary protocol prevents rug pulls and protects
+              investors through innovative supply locking mechanisms
+            </p>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {[
-                {
-                  value: "$18.5M",
-                  label: "Total Value Locked",
-                  icon: <Lock />,
-                },
-                { value: "1,834", label: "Tokens Launched", icon: <Rocket /> },
-                {
-                  value: "$7.2M",
-                  label: "24h Trading Volume",
-                  icon: <ChartBar />,
-                },
-                { value: "56.4K", label: "Active Users", icon: <Users /> },
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-6 border border-[#ffae5c]/20"
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  whileInView={{ scale: 1, opacity: 1 }}
-                  whileHover={{ scale: 1.05 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                >
-                  <motion.div
-                    className="text-[#ffae5c] mb-4"
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                    }}
-                  >
-                    {stat.icon}
-                  </motion.div>
-                  <motion.div
-                    className="text-3xl font-bold text-white mb-2"
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                    }}
-                  >
-                    {stat.value}
-                  </motion.div>
-                  <div className="text-white/60">{stat.label}</div>
-                </motion.div>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Supply Locking */}
+              <div className="relative border border-[#3A3A3A] bg-black/20 p-6">
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#3A3A3A]"></div>
+
+                <div className="flex flex-col h-full">
+                  <div className="w-12 h-12 rounded-md bg-[#583D21] flex items-center justify-center text-[#ffae5c] mb-4">
+                    <Lock className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    Supply Locking
+                  </h3>
+                  <p className="text-white/70 text-sm mb-4">
+                    Time-based + milestone-based unlocks prevent creator/whale
+                    dumps
+                  </p>
+                </div>
+              </div>
+
+              {/* Anti-Rug Safeguards */}
+              <div className="relative border border-[#3A3A3A] bg-black/20 p-6">
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#3A3A3A]"></div>
+
+                <div className="flex flex-col h-full">
+                  <div className="w-12 h-12 rounded-md bg-[#583D21] flex items-center justify-center text-[#ffae5c] mb-4">
+                    <Shield className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    Anti-Rug Safeguards
+                  </h3>
+                  <p className="text-white/70 text-sm mb-4">
+                    Protocol-enforced LP locks and smart triggers eliminate exit
+                    scams
+                  </p>
+                </div>
+              </div>
+
+              {/* Bot & Whale Protection */}
+              <div className="relative border border-[#3A3A3A] bg-black/20 p-6">
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#3A3A3A]"></div>
+
+                <div className="flex flex-col h-full">
+                  <div className="w-12 h-12 rounded-md bg-[#583D21] flex items-center justify-center text-[#ffae5c] mb-4">
+                    <div className="text-xl">🤖</div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    Bot & Whale Protection
+                  </h3>
+                  <p className="text-white/70 text-sm mb-4">
+                    Advanced controls to limit bots + cap wallet size and
+                    transaction limits
+                  </p>
+                </div>
+              </div>
+
+              {/* AI Risk Detection */}
+              <div className="relative border border-[#3A3A3A] bg-black/20 p-6">
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#3A3A3A]"></div>
+
+                <div className="flex flex-col h-full">
+                  <div className="w-12 h-12 rounded-md bg-[#583D21] flex items-center justify-center text-[#ffae5c] mb-4">
+                    <div className="text-xl">🧠</div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    AI Risk Detection
+                  </h3>
+                  <p className="text-white/70 text-sm mb-4">
+                    Real-time launch scoring to flag risky or malicious tokens
+                  </p>
+                </div>
+              </div>
+
+              {/* Second row */}
+              {/* Auto DEX Listing */}
+              <div className="relative border border-[#3A3A3A] bg-black/20 p-6">
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#3A3A3A]"></div>
+
+                <div className="flex flex-col h-full">
+                  <div className="w-12 h-12 rounded-md bg-[#583D21] flex items-center justify-center text-[#ffae5c] mb-4">
+                    <div className="text-xl">🔄</div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    Auto DEX Listing
+                  </h3>
+                  <p className="text-white/70 text-sm mb-4">
+                    Instant listing and liquidity lock on supported DEXs
+                  </p>
+                </div>
+              </div>
+
+              {/* Supply Locking (duplicate for visualization) */}
+              <div className="relative border border-[#3A3A3A] bg-black/20 p-6">
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#3A3A3A]"></div>
+
+                <div className="flex flex-col h-full">
+                  <div className="w-12 h-12 rounded-md bg-[#583D21] flex items-center justify-center text-[#ffae5c] mb-4">
+                    <div className="text-xl">🚀</div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    Supply Locking
+                  </h3>
+                  <p className="text-white/70 text-sm mb-4">
+                    Time-based + milestone-based unlocks prevent creator/whale
+                    dumps
+                  </p>
+                </div>
+              </div>
+
+              {/* Tiered Liquidity Locks */}
+              <div className="relative border border-[#3A3A3A] bg-black/20 p-6">
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#3A3A3A]"></div>
+
+                <div className="flex flex-col h-full">
+                  <div className="w-12 h-12 rounded-md bg-[#583D21] flex items-center justify-center text-[#ffae5c] mb-4">
+                    <div className="text-xl">📊</div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    Tiered Liquidity Locks
+                  </h3>
+                  <p className="text-white/70 text-sm mb-4">
+                    Enforce time-based LP releases to prevent sudden exits
+                  </p>
+                </div>
+              </div>
+
+              {/* On-Chain Governance */}
+              <div className="relative border border-[#3A3A3A] bg-black/20 p-6">
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#3A3A3A]"></div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#3A3A3A]"></div>
+
+                <div className="flex flex-col h-full">
+                  <div className="w-12 h-12 rounded-md bg-[#583D21] flex items-center justify-center text-[#ffae5c] mb-4">
+                    <div className="text-xl">📝</div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    On-Chain Governance
+                  </h3>
+                  <p className="text-white/70 text-sm mb-4">
+                    Let holders vote on unlocks, changes, and rewards
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -1171,147 +1023,38 @@ export default function HomePage() {
           </div>
         </motion.div>
 
-        {/* Testimonials Section */}
+        {/* Banner Section */}
         <motion.div
-          className="mb-20"
+          className="mb-20 relative overflow-hidden"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl font-bold text-center mb-4 text-white">
-            Creator Testimonials
-          </h2>
-          <p className="text-xl text-white/60 text-center mb-12 max-w-3xl mx-auto">
-            Hear from token creators who&apos;ve launched with Clampify
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                quote:
-                  "Clampify's supply locking gave investors confidence in our token from day one. We've seen 10x the engagement compared to our previous launch.",
-                author: "Alex Chen",
-                role: "Founder, MoonDAO",
-                avatar: "😎",
-              },
-              {
-                quote:
-                  "The anti-rug safeguards literally saved our project. A malicious actor tried to drain liquidity but the protocol prevented it automatically.",
-                author: "Sarah Johnson",
-                role: "Lead Dev, PepeFi",
-                avatar: "👩‍💻",
-              },
-              {
-                quote:
-                  "Our community loves the transparency that Clampify provides. The time-locked supply creates a much healthier growth pattern.",
-                author: "Michael Thompson",
-                role: "Creator, DogeMeme",
-                avatar: "🧔",
-              },
-            ].map((testimonial, i) => (
-              <motion.div
-                key={i}
-                className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-8 border border-[#ffae5c]/20 relative"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.2 }}
-                whileHover={{ scale: 1.03 }}
-              >
-                <div className="absolute top-6 left-6 text-[#ffae5c] opacity-20 text-6xl font-serif">
-                  &quot;
-                </div>
-                <div className="relative">
-                  <p className="text-white/80 mb-6 text-lg leading-relaxed pt-4">
-                    {testimonial.quote}
-                  </p>
-
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#ffae5c]/20 flex items-center justify-center text-2xl">
-                      {testimonial.avatar}
-                    </div>
-                    <div>
-                      <div className="text-white font-medium">
-                        {testimonial.author}
-                      </div>
-                      <div className="text-white/50 text-sm">
-                        {testimonial.role}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Call to Action */}
-        <motion.div
-          className="rounded-xl bg-gradient-to-r from-[#ffae5c] to-[#4834D4] p-[1px] mb-20"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <div className="bg-black/80 backdrop-blur-sm rounded-xl p-12 relative overflow-hidden">
-            <motion.div
-              className="absolute inset-0"
-              animate={{
-                background: [
-                  "radial-gradient(circle at 0% 0%, rgba(108,92,231,0.2) 0%, transparent 50%)",
-                  "radial-gradient(circle at 100% 100%, rgba(108,92,231,0.2) 0%, transparent 50%)",
-                  "radial-gradient(circle at 0% 0%, rgba(108,92,231,0.2) 0%, transparent 50%)",
-                ],
-              }}
-              transition={{ duration: 10, repeat: Infinity }}
-            />
-
-            <motion.div
-              className="relative flex flex-col md:flex-row items-center justify-between gap-8"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-            >
-              <div>
-                <h2 className="text-4xl font-bold text-white mb-4">
-                  Ready to Launch Your Rugproof Token?
-                </h2>
-                <p className="text-xl text-white/70 max-w-xl">
-                  Create a token with built-in security that investors can
-                  trust. No code required.
-                </p>
-              </div>
-
-              <div className="flex gap-4">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link href="/launch">
-                    <Button
-                      className=" md:h-14 px-4 md:px-8 bg-gradient-to-r from-[#ffae5c] to-[#4834D4] text-white hover:bg-white/90 
-                        rounded-xl text-sm md:text-lg font-medium group"
-                    >
-                      Launch Token
-                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </Link>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link href="/docs">
-                    <Button
-                      className="md:h-14 px-4 md:px-8 bg-transparent border border-white/30 text-white
-                        hover:bg-white/10 rounded-xl text-sm md:text-lg font-medium"
-                    >
-                      Read Docs
-                    </Button>
-                  </Link>
-                </motion.div>
-              </div>
-            </motion.div>
+          <div className="rounded-xl bg-gradient-to-r from-[#1F1C19] to-[#2A2521] p-10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-1/2 h-full opacity-20 pointer-events-none">
+              <Image
+                src="/logo.svg"
+                alt="Clampify Logo"
+                width={300}
+                height={300}
+                className="opacity-30 object-contain absolute right-0"
+                style={{ top: "50%", transform: "translateY(-50%)" }}
+              />
+            </div>
+            <div className="relative z-10">
+              <h2 className="text-4xl font-bold text-white mb-4">
+                Ready to Launch Your Rugproof Token?
+              </h2>
+              <p className="text-xl text-white/70 max-w-xl mb-8">
+                Create a token with built-in security that investors can trust.
+                No code required.
+              </p>
+              <Link href="/launch">
+                <Button className="bg-[#ffae5c] hover:bg-[#ff9021] text-black font-medium px-8 py-6 text-lg uppercase tracking-wide">
+                  LAUNCH TOKEN NOW
+                </Button>
+              </Link>
+            </div>
           </div>
         </motion.div>
       </div>
