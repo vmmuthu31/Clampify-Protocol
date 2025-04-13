@@ -2,18 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Menu,
-  X,
-  ChevronDown,
-  ExternalLink,
-  Shield,
-  Rocket,
-  Code,
-} from "lucide-react";
+import { Menu, X, ChevronDown, ExternalLink, Rocket, Code } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import WalletButton from "./WalletButton";
+import { NetworkSelector } from "./NetworkSelector";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
@@ -183,23 +176,9 @@ export function Navbar() {
 
         {/* Right Side - Network & Connect Wallet */}
         <div className="flex items-center gap-4">
-          {/* Network Badge */}
+          {/* Network Selector */}
           <div className="hidden md:flex items-center">
-            <motion.div
-              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[#ffae5c]/30 bg-[#ffae5c]/5"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="relative">
-                <Shield className="w-4 h-4 text-[#ffae5c]" />
-                <motion.div
-                  className="absolute -right-1 -top-1 w-2 h-2 rounded-full bg-green-400"
-                  animate={{ scale: [1, 1.3, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </div>
-              <span className="text-white/80 text-sm">CoreDAO</span>
-            </motion.div>
+            <NetworkSelector />
           </div>
 
           {/* Wallet Button */}
@@ -311,14 +290,8 @@ export function Navbar() {
 
               {/* Network Badge (Mobile) */}
               <div className="mt-8 p-4 border-t border-[#ffae5c]/20">
-                <div className="flex items-center gap-2 mb-6">
-                  <div className="relative">
-                    <Shield className="w-5 h-5 text-[#ffae5c]" />
-                    <div className="absolute -right-1 -top-1 w-2 h-2 rounded-full bg-green-400" />
-                  </div>
-                  <span className="text-white/80">
-                    Connected to CoreDAO Network
-                  </span>
+                <div className="mb-6">
+                  <NetworkSelector />
                 </div>
 
                 {/* Additional Mobile Links */}

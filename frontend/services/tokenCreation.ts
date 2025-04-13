@@ -7,11 +7,43 @@ const isBrowser = (): boolean => typeof window !== "undefined";
 
 const { ethereum } = isBrowser() ? window : { ethereum: null };
 
-const contract_address: string = "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67"; // Clampify Factory Contract Address
-const governance_address: string = "0xE383A8EFDC5D0E7a5474da69EBA775ac506953ef"; // Clampify Governance Contract Address
+interface NetworkConfig {
+  factoryAddress: string;
+  governanceAddress: string;
+  rpcUrl: string;
+}
 
-// Add RPC URL for the network you're using (Core DAO testnet)
-const RPC_URL = "https://rpc.test2.btcs.network/";
+const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
+  // Core DAO Testnet
+  "1115": {
+    factoryAddress: "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67",
+    governanceAddress: "0xE383A8EFDC5D0E7a5474da69EBA775ac506953ef",
+    rpcUrl: "https://rpc.test2.btcs.network/",
+  },
+  // Polygon Amoy Testnet
+  "80002": {
+    factoryAddress: "0x73B4c3eC50D7740Bd789EAe1D2e8Fa461fcBAd70",
+    governanceAddress: "0x4ffC9a8Ca69Ce79E989c1b5556bE1d8D3f6a6C94",
+    rpcUrl: "https://rpc-amoy.polygon.technology",
+  },
+};
+
+const getNetworkConfig = async (): Promise<NetworkConfig> => {
+  if (!ethereum) {
+    // Default to Core DAO Testnet if no wallet is connected
+    return NETWORK_CONFIG["1115"];
+  }
+
+  const provider = new ethers.providers.Web3Provider(ethereum);
+  const network = await provider.getNetwork();
+  const chainId = network.chainId.toString();
+
+  if (!NETWORK_CONFIG[chainId]) {
+    throw new Error(`Network with chain ID ${chainId} is not supported`);
+  }
+
+  return NETWORK_CONFIG[chainId];
+};
 
 interface TokenInfo {
   name: string;
@@ -38,10 +70,11 @@ export const Mint = async (
   liquidityLockPeriod: string
 ): Promise<string> => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -49,7 +82,7 @@ export const Mint = async (
       throw new Error("No wallet connected");
     }
     const contract = new ethers.Contract(
-      contract_address,
+      networkConfig.factoryAddress,
       ClampifyFactory,
       signer
     );
@@ -142,10 +175,11 @@ export const GovernanceTokenInfo = async (
   tokenAddress: string
 ): Promise<GovernanceTokenInfo> => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -154,7 +188,7 @@ export const GovernanceTokenInfo = async (
     }
 
     const contract = new ethers.Contract(
-      governance_address,
+      networkConfig.governanceAddress,
       ClampifyGovernance,
       signer
     );
@@ -223,6 +257,7 @@ export const UserCreatedTokens = async (
   userAddress: string
 ): Promise<GovernanceTokenInfo> => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
@@ -235,7 +270,7 @@ export const UserCreatedTokens = async (
     }
 
     const contract = new ethers.Contract(
-      governance_address,
+      networkConfig.governanceAddress,
       ClampifyGovernance,
       signer
     );
@@ -268,6 +303,7 @@ export const GovernanceProposalCount = async (
   userAddress: string
 ): Promise<number> => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
@@ -280,7 +316,7 @@ export const GovernanceProposalCount = async (
     }
 
     const contract = new ethers.Contract(
-      governance_address,
+      networkConfig.governanceAddress,
       ClampifyGovernance,
       signer
     );
@@ -299,6 +335,7 @@ export const GovernanceProposalInfo = async (
   proposalId: number
 ): Promise<IGovernanceProposalInfo> => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
@@ -311,7 +348,7 @@ export const GovernanceProposalInfo = async (
     }
 
     const contract = new ethers.Contract(
-      governance_address,
+      networkConfig.governanceAddress,
       ClampifyGovernance,
       signer
     );
@@ -334,10 +371,11 @@ export const hasVoted = async (
   voterAddress: string
 ): Promise<boolean> => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -346,7 +384,7 @@ export const hasVoted = async (
     }
 
     const contract = new ethers.Contract(
-      governance_address,
+      networkConfig.governanceAddress,
       ClampifyGovernance,
       signer
     );
@@ -372,10 +410,11 @@ export const createProposal = async (
 ): Promise<number> => {
   try {
     console.log(tokenAddress, title, description, targetContract, callData);
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -384,7 +423,7 @@ export const createProposal = async (
     }
 
     const contract = new ethers.Contract(
-      governance_address,
+      networkConfig.governanceAddress,
       ClampifyGovernance,
       signer
     );
@@ -410,10 +449,11 @@ export const castVote = async (
   support: boolean
 ): Promise<void> => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -422,7 +462,7 @@ export const castVote = async (
     }
 
     const contract = new ethers.Contract(
-      governance_address,
+      networkConfig.governanceAddress,
       ClampifyGovernance,
       signer
     );
@@ -439,10 +479,11 @@ export const executeProposal = async (
   proposalId: number
 ): Promise<void> => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -451,7 +492,7 @@ export const executeProposal = async (
     }
 
     const contract = new ethers.Contract(
-      governance_address,
+      networkConfig.governanceAddress,
       ClampifyGovernance,
       signer
     );
@@ -471,10 +512,11 @@ export const activateGovernance = async (
   votingPeriod: number
 ): Promise<void> => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -483,7 +525,7 @@ export const activateGovernance = async (
     }
 
     const contract = new ethers.Contract(
-      governance_address,
+      networkConfig.governanceAddress,
       ClampifyGovernance,
       signer
     );
