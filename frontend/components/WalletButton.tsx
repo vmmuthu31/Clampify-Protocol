@@ -19,6 +19,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -49,7 +51,7 @@ function WalletButton() {
     return (
       <Button
         variant="outline"
-        className="cursor-not-allowed opacity-70 rounded-xl h-10 px-4 bg-black/5 border border-gray-200 dark:border-gray-800"
+        className="cursor-not-allowed opacity-70"
         disabled
       >
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -63,7 +65,7 @@ function WalletButton() {
     return (
       <Button
         onClick={login}
-        className="bg-black text-white hover:bg-black/90 rounded-xl h-10 px-4 shadow-sm transition-all"
+        className="bg-gradient-to-r rounded-full from-[#ffae5c] to-[#ff9021] border-[#ffae5c]  hover:text-black hover:bg-gradient-to-r hover:from-[#ffae5c] hover:to-[#ff9021] text-white transition-all"
       >
         <Wallet className="mr-2 h-4 w-4" />
         Connect Wallet
@@ -76,72 +78,70 @@ function WalletButton() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="bg-black text-white hover:bg-black/90 rounded-xl border-none h-10 px-4 shadow-sm transition-all"
+          className="bg-gradient-to-r rounded-full from-[#ffae5c] to-[#ff9021] border-[#ffae5c] text-[#ffae5c] hover:text-[#ffae5c] hover:bg-gradient-to-r hover:from-[#ffae5c] hover:to-[#ff9021]"
         >
-          <div className="h-6 w-6 rounded-full bg-white/10 flex items-center justify-center mr-2">
-            <Wallet className="h-3.5 w-3.5 text-white" />
+          <div className="h-6 w-6 rounded-full bg-[#ffae5c] border border-[#ffae5c] text-white mr-2 flex items-center justify-center">
+            <Wallet className="h-3 w-3 text-white" />
           </div>
-          <span className="font-medium">{truncatedAddress}</span>
+          <span className="font-medium text-white">{truncatedAddress}</span>
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
         align="end"
-        className="w-64 p-0 border-0 rounded-xl overflow-hidden shadow-lg bg-black text-white"
+        className="w-56 border-gray-700 rounded-md border p-2 bg-black"
       >
-        <div className="flex flex-col p-4 bg-white/5">
-          <p className="text-xs text-gray-400 mb-1">Connected Wallet</p>
-          <p className="font-mono text-sm truncate">{address}</p>
-        </div>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm text-gray-500">Connected Wallet</p>
+            <p className="font-mono text-xs truncate">{address}</p>
+          </div>
+        </DropdownMenuLabel>
 
-        <div className="p-1">
-          <TooltipProvider>
-            <Tooltip open={copied}>
-              <TooltipTrigger asChild>
-                <DropdownMenuItem
-                  onClick={copyAddress}
-                  className="cursor-pointer flex items-center py-2.5 rounded-lg transition-colors hover:bg-white/10"
-                >
-                  {copied ? (
-                    <Check className="mr-2 h-4 w-4 text-green-500" />
-                  ) : (
-                    <Copy className="mr-2 h-4 w-4" />
-                  )}
-                  <span>{copied ? "Copied!" : "Copy Address"}</span>
-                </DropdownMenuItem>
-              </TooltipTrigger>
-              <TooltipContent
-                side="left"
-                className="bg-black text-white border-gray-800"
+        <DropdownMenuSeparator />
+
+        <TooltipProvider>
+          <Tooltip open={copied}>
+            <TooltipTrigger asChild>
+              <DropdownMenuItem
+                onClick={copyAddress}
+                className="cursor-pointer"
               >
-                <p>Copied to clipboard!</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+                {copied ? (
+                  <Check className="mr-2 h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="mr-2 h-4 w-4" />
+                )}
+                <span>{copied ? "Copied!" : "Copy Address"}</span>
+              </DropdownMenuItem>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>Copied to clipboard!</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
-          <DropdownMenuItem
-            className="cursor-pointer py-2.5 rounded-lg transition-colors hover:bg-white/10"
-            asChild
+        <DropdownMenuItem className="cursor-pointer" asChild>
+          <a
+            href={`https://scan.test2.btcs.network/address/${address}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full items-center"
           >
-            <a
-              href={`https://scan.test2.btcs.network/address/${address}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex w-full items-center"
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              <span>View on Explorer</span>
-            </a>
-          </DropdownMenuItem>
+            <ExternalLink className="mr-2 h-4 w-4" />
+            <span>View on Explorer</span>
+          </a>
+        </DropdownMenuItem>
 
-          <DropdownMenuItem
-            onClick={logout}
-            className="cursor-pointer py-2.5 rounded-lg transition-colors hover:bg-red-900/30 text-red-400 mt-1"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Disconnect</span>
-          </DropdownMenuItem>
-        </div>
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={logout}
+          className="text-red-600 cursor-pointer hover:bg-red-50 hover:text-red-700 focus:bg-red-50 focus:text-red-700"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Disconnect</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
