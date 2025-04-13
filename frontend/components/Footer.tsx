@@ -1,163 +1,295 @@
-import { motion } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
 
 function Footer() {
   return (
-    <footer className="border-t bg-gradient-to-r from-[#0D0B15] to-[#0D0B15]/95 border-[#ffae5c]/20 py-10">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="mb-6 md:mb-0">
-            <div className="flex items-center gap-2 mb-2">
-              <motion.div
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                animate={{ rotate: [0, 360] }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-              >
-                <Image src="/logo.svg" alt="Clampify" width={32} height={32} />
-              </motion.div>
-              <span className="text-[#ffae5c] text-xl font-bold">Clampify</span>
-            </div>
-            <p className="text-[#ffae5c]/60">The rugproof token platform</p>
+    <footer className="bg-black py-8 pb-10 md:py-12 relative overflow-hidden">
+      <div
+        className="absolute inset-0 w-full h-full opacity-60"
+        style={{
+          background:
+            "radial-gradient(circle at center, rgba(20, 20, 20, 1) 0%, rgba(0, 0, 0, 1) 80%)",
+        }}
+      ></div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        {/* Header with arrows */}
+        <div className="flex items-center mb-8 md:mb-14 text-white/60 text-sm overflow-hidden">
+          <span className="mr-2 md:mr-3 text-xs md:text-sm">{">>>>"}</span>
+          <span className="mr-2 md:mr-3 text-xs md:text-sm">Footer</span>
+          <div className="flex-grow hidden md:block">
+            {Array(140)
+              .fill(">")
+              .map((_, i) => (
+                <span key={i}>{">"}</span>
+              ))}
+          </div>
+          <div className="flex-grow block md:hidden">
+            {Array(50)
+              .fill(">")
+              .map((_, i) => (
+                <span key={i}>{">"}</span>
+              ))}
+          </div>
+        </div>
+
+        {/* Main footer content with 3 columns */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 gap-y-10 md:gap-y-12 mb-12 md:mb-20">
+          {/* Message */}
+          <div className="md:col-span-6 md:pr-8">
+            <p className="text-white text-lg md:text-xl leading-relaxed">
+              clampify isn&apos;t just a token launcher—it&apos;s a movement. a
+              secure, trustless protocol built to protect creators and holders
+              alike. no rugs. no whales. no chaos. just code, community, and the
+              next era of memecoins.
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {/* Navigation and Socials on mobile - side by side */}
+          <div className="grid grid-cols-2 gap-8 md:hidden">
             <div>
-              <h4 className="text-[#ffae5c] font-medium mb-3">Product</h4>
-              <ul className="space-y-2">
+              <h3 className="text-white text-lg font-medium mb-4">
+                NAVIGATION
+              </h3>
+              <ul className="space-y-3">
                 <li>
-                  <Link
-                    href="/launch"
-                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
-                  >
-                    Token Launch
+                  <Link href="/" className="text-white hover:text-[#FFAE5C]">
+                    Home
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/#features"
-                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                    href="/features"
+                    className="text-white hover:text-[#FFAE5C]"
                   >
                     Features
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="#"
-                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                    href="/contact"
+                    className="text-white hover:text-[#FFAE5C]"
                   >
-                    Security
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
-                  >
-                    Roadmap
+                    Contact Us
                   </Link>
                 </li>
               </ul>
             </div>
-
             <div>
-              <h4 className="text-[#ffae5c] font-medium mb-3">Resources</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link
-                    href="/docs"
-                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
-                  >
-                    Documentation
-                  </Link>
-                </li>
+              <h3 className="text-white text-lg font-medium mb-4">SOCIALS</h3>
+              <ul className="space-y-3">
                 <li>
                   <a
-                    href="#"
-                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                    href="https://medium.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white hover:text-[#FFAE5C]"
                   >
-                    API
+                    Medium
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
-                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                    href="https://telegram.org"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white hover:text-[#FFAE5C]"
                   >
-                    Guides
+                    Telegram
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
-                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
+                    href="https://twitter.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white hover:text-[#FFAE5C]"
                   >
-                    Blog
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[#ffae5c] font-medium mb-3">Legal</h4>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="#"
-                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
-                  >
-                    Privacy
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
-                  >
-                    Terms
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-[#ffae5c]/60 hover:text-[#ffae5c]"
-                  >
-                    Security
+                    Twitter (X)
                   </a>
                 </li>
               </ul>
             </div>
           </div>
+
+          {/* Navigation - Desktop Only */}
+          <div className="hidden md:block md:col-span-3">
+            <h3 className="text-white text-xl font-medium mb-6">NAVIGATION</h3>
+            <ul className="space-y-4">
+              <li>
+                <Link href="/" className="text-white hover:text-[#FFAE5C]">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/features"
+                  className="text-white hover:text-[#FFAE5C]"
+                >
+                  Features
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="text-white hover:text-[#FFAE5C]"
+                >
+                  Contact Us
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Socials - Desktop Only */}
+          <div className="hidden md:block md:col-span-3">
+            <h3 className="text-white text-xl font-medium mb-6">SOCIALS</h3>
+            <ul className="space-y-4">
+              <li>
+                <a
+                  href="https://medium.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white hover:text-[#FFAE5C]"
+                >
+                  Medium
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://telegram.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white hover:text-[#FFAE5C]"
+                >
+                  Telegram
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://twitter.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white hover:text-[#FFAE5C]"
+                >
+                  Twitter (X)
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-[#ffae5c]/20 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-[#ffae5c]/50 mb-4 md:mb-0">
-            © 2025 Clampify Protocol. All rights reserved.
-          </p>
+        {/* Logo Section with L-shaped borders */}
+        <div className="relative flex justify-center items-center py-10 md:py-16 mb-8 md:mb-10">
+          {/* Box with L-shaped corners */}
+          <div className="relative w-[95%] md:w-[90%] max-w-[900px] h-[120px] md:h-[180px] flex items-center justify-center">
+            {/* Background glow effect */}
+            <div
+              className="absolute inset-0 opacity-40 rounded-[100%] blur-3xl"
+              style={{
+                background:
+                  "radial-gradient(circle at center, rgba(255, 174, 92, 0.2) 0%, rgba(30, 20, 10, 0.1) 40%, transparent 70%)",
+                width: "140%",
+                height: "140%",
+                left: "-20%",
+                top: "-20%",
+              }}
+            ></div>
 
-          <div className="flex space-x-4">
-            <Link
-              target="_blank"
-              href="https://x.com/Clampifydotfun"
-              className="text-[#ffae5c]/50 hover:text-[#ffae5c]"
-            >
-              <div className="w-10 h-10 rounded-full border border-[#ffae5c]/20 flex items-center justify-center">
-                <span className="text-lg">𝕏</span>
+            {/* Additional inner glow */}
+            <div
+              className="absolute inset-0 opacity-25 rounded-[100%] blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(circle at center, rgba(255, 174, 92, 0.3) 0%, transparent 50%)",
+                width: "100%",
+                height: "100%",
+              }}
+            ></div>
+
+            {/* L corners - visible only on larger screens */}
+            <div className="hidden md:block">
+              {/* Top-left L */}
+              <div className="absolute top-0 left-0 w-[80px] h-[80px]">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-white/60"></div>
+                <div className="absolute top-0 left-0 h-full w-[1px] bg-white/60"></div>
               </div>
-            </Link>
-            <Link
-              target="_blank"
-              href="https://www.clampify.fun/"
-              className="text-[#ffae5c]/50 hover:text-[#ffae5c]"
-            >
-              <div className="w-10 h-10 rounded-full border border-[#ffae5c]/20 flex items-center justify-center">
-                <span className="text-lg">🌐</span>
+
+              {/* Top-right L */}
+              <div className="absolute top-0 right-0 w-[80px] h-[80px]">
+                <div className="absolute top-0 right-0 w-full h-[1px] bg-white/60"></div>
+                <div className="absolute top-0 right-0 h-full w-[1px] bg-white/60"></div>
               </div>
+
+              {/* Bottom-left L */}
+              <div className="absolute bottom-0 left-0 w-[80px] h-[80px]">
+                <div className="absolute bottom-0 left-0 w-full h-[1px] bg-white/60"></div>
+                <div className="absolute bottom-0 left-0 h-full w-[1px] bg-white/60"></div>
+              </div>
+
+              {/* Bottom-right L */}
+              <div className="absolute bottom-0 right-0 w-[80px] h-[80px]">
+                <div className="absolute bottom-0 right-0 w-full h-[1px] bg-white/60"></div>
+                <div className="absolute bottom-0 right-0 h-full w-[1px] bg-white/60"></div>
+              </div>
+            </div>
+
+            {/* L corners - smaller ones for mobile */}
+            <div className="block md:hidden">
+              {/* Top-left L */}
+              <div className="absolute top-0 left-0 w-[40px] h-[40px]">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-white/60"></div>
+                <div className="absolute top-0 left-0 h-full w-[1px] bg-white/60"></div>
+              </div>
+
+              {/* Top-right L */}
+              <div className="absolute top-0 right-0 w-[40px] h-[40px]">
+                <div className="absolute top-0 right-0 w-full h-[1px] bg-white/60"></div>
+                <div className="absolute top-0 right-0 h-full w-[1px] bg-white/60"></div>
+              </div>
+
+              {/* Bottom-left L */}
+              <div className="absolute bottom-0 left-0 w-[40px] h-[40px]">
+                <div className="absolute bottom-0 left-0 w-full h-[1px] bg-white/60"></div>
+                <div className="absolute bottom-0 left-0 h-full w-[1px] bg-white/60"></div>
+              </div>
+
+              {/* Bottom-right L */}
+              <div className="absolute bottom-0 right-0 w-[40px] h-[40px]">
+                <div className="absolute bottom-0 right-0 w-full h-[1px] bg-white/60"></div>
+                <div className="absolute bottom-0 right-0 h-full w-[1px] bg-white/60"></div>
+              </div>
+            </div>
+
+            {/* Logo text */}
+            <h1 className="text-[#FFAE5C] text-4xl md:text-8xl font-serif tracking-wide drop-shadow-lg relative z-10">
+              CLAMPIFY.FUN
+            </h1>
+          </div>
+        </div>
+
+        {/* Single bottom separator line */}
+        <div
+          className="w-full h-[1px] mb-4"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2) 20%, rgba(255, 255, 255, 0.2) 80%, transparent 100%)",
+          }}
+        ></div>
+
+        {/* Bottom links */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 py-4">
+          <div className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-8 text-xs md:text-base">
+            <Link href="/privacy" className="text-white/60 hover:text-white">
+              PRIVACY POLICY
             </Link>
+            <Link href="/terms" className="text-white/60 hover:text-white">
+              TERMS OF SERVICE
+            </Link>
+            <Link href="/disclaimer" className="text-white/60 hover:text-white">
+              RISK DISCLAIMER
+            </Link>
+          </div>
+          <div className="text-white/60 text-xs md:text-base text-center mt-4 md:mt-0">
+            ©2025 CLAMPIFY™ // ALL RIGHTS RESERVED
           </div>
         </div>
       </div>

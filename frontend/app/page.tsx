@@ -18,7 +18,6 @@ import {
   Repeat,
   Search,
 } from "lucide-react";
-import { Navbar } from "@/components/navbar";
 import Image from "next/image";
 
 export default function HomePage() {
@@ -37,6 +36,14 @@ export default function HomePage() {
     maxSupply: string;
     createdAt: string;
     __v: number;
+    // Display attributes
+    displayPrice?: number;
+    displayChange?: number;
+    displayLocked?: string;
+    displayVolume?: number;
+    displayDaysAgo?: number;
+    displayIsNew?: boolean;
+    displayIsTrending?: boolean;
   }
 
   const [tokens, setTokens] = useState<Token[]>([]);
@@ -48,6 +55,29 @@ export default function HomePage() {
     setTokens(data.tokens);
     setLoading(false);
   };
+
+  // Add display attributes to tokens once they're loaded
+  useEffect(() => {
+    if (tokens.length > 0) {
+      const enhancedTokens = tokens.map((token) => {
+        // Generate consistent random values for each token based on its address
+        const seed = token.address.charCodeAt(2) / 255; // Use character code as pseudo-random seed
+
+        return {
+          ...token,
+          displayPrice: 0.0001 + seed * 0.01,
+          displayChange: (seed - 0.5) * 2 * 50, // Range from -50% to +50%
+          displayLocked: `${Math.floor(70 + seed * 30)}%`, // Range from 70% to 100%
+          displayVolume: Math.floor(10 + seed * 42), // Range from 10% to 52%
+          displayDaysAgo: Math.max(1, Math.floor(seed * 7)), // Range from 1 to 7 days
+          displayIsNew: Math.floor(seed * 7) <= 2, // New if 2 days or less
+          displayIsTrending: seed > 0.6, // 40% chance of trending
+        };
+      });
+
+      setTokens(enhancedTokens);
+    }
+  }, [tokens.length]);
 
   useEffect(() => {
     fetchTokens();
@@ -91,7 +121,6 @@ export default function HomePage() {
           ease: "easeInOut",
         }}
       />
-      <Navbar />
       {/* Content */}
       <div className="container mx-auto px-4 pt-20">
         {/* Hero Section */}
@@ -461,7 +490,15 @@ export default function HomePage() {
           className="mb-20"
         >
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-bold text-white">Trending Tokens</h2>
+            <div>
+              <h2 className="text-3xl font-bold text-white">
+                Trending Rugproof Tokens
+              </h2>
+              <p className="text-lg text-white/70 mt-2">
+                Secure launches that are gaining traction — backed by locked
+                supply & community trust.
+              </p>
+            </div>
             <div className="flex items-center gap-4">
               <div className="relative">
                 <input
@@ -469,7 +506,7 @@ export default function HomePage() {
                   placeholder="Search tokens..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-4 py-2 pr-10 rounded-lg bg-[#ffae5c]/5 border border-[#ffae5c]/20 
+                  className="px-4 py-2 pr-10 rounded-lg bg-[#1E1E1E] border border-[#3A3A3A] 
                     text-white placeholder-white/50 focus:outline-none focus:border-[#ffae5c]/40
                     transition-all duration-300"
                 />
@@ -484,57 +521,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {filteredTokens.slice(0, 8).map((token: Token, i: number) => (
-              <Link href={`/token/${token.address}`} key={token.address}>
-                <motion.div
-                  className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl p-6 border border-[#ffae5c]/20 
-                    hover:border-[#ffae5c]/40 transition-all duration-300"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  whileHover={{
-                    scale: 1.03,
-                    backgroundColor: "rgba(108, 92, 231, 0.08)",
-                  }}
-                >
-                  <div className="flex items-center gap-4 mb-5">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#ffae5c]/30 to-[#4834D4]/30 flex items-center justify-center">
-                      <span className="text-white/90 font-medium">
-                        {token.symbol}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="text-white font-medium">{token.name}</div>
-                      <div className="text-white/50 text-sm">Secure</div>
-                    </div>
-                  </div>
-
-                  {/* TODO: Add lock indicator */}
-                  {/* Lock indicator */}
-                  <div className="relative pt-1">
-                    <div className="text-white/60 text-xs flex justify-between mb-1">
-                      <span>Supply Locked</span>
-                      <span className="text-white/90 font-medium">
-                        {/* {token.locked} */}
-                      </span>
-                    </div>
-                    {/* <div className="overflow-hidden h-2 text-xs flex rounded-full bg-white/10">
-                    <motion.div
-                      style={{ width: token.locked }}
-                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-[#ffae5c] to-[#4834D4]"
-                      initial={{ width: "0%" }}
-                      animate={{ width: token.locked }}
-                      transition={{ duration: 1, delay: i * 0.1 + 0.5 }}
-                    ></motion.div>
-                  </div> */}
-                  </div>
-                </motion.div>
-              </Link>
-            ))}
-          </div>
-
-          {loading && (
+          {loading ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -542,18 +529,98 @@ export default function HomePage() {
             >
               <p className="text-white/70">Fetching tokens...</p>
             </motion.div>
-          )}
+          ) : (
+            <>
+              {filteredTokens.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-8"
+                >
+                  <p className="text-white/70">
+                    No tokens found matching &quot;{searchQuery}&quot;
+                  </p>
+                </motion.div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {filteredTokens.slice(0, 8).map((token: Token, i: number) => {
+                    return (
+                      <div key={token.address} className="relative">
+                        {/* Border styling with corner lines */}
+                        <div className="absolute inset-0 pointer-events-none">
+                          <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#3A3A3A]"></div>
+                          <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#3A3A3A]"></div>
+                          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#3A3A3A]"></div>
+                          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#3A3A3A]"></div>
+                        </div>
 
-          {filteredTokens.length === 0 && !loading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-8"
-            >
-              <p className="text-white/70">
-                No tokens found matching &quot;{searchQuery}&quot;
-              </p>
-            </motion.div>
+                        <motion.div
+                          className="bg-[#1F1C19] rounded-none p-6 h-full flex flex-col"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.1 }}
+                          whileHover={{
+                            scale: 1.02,
+                            backgroundColor: "rgba(40, 35, 30, 1)",
+                          }}
+                        >
+                          <div className="flex items-start gap-3 mb-6">
+                            <div className="w-12 h-12 rounded-full bg-[#583D21] flex items-center justify-center text-white font-semibold text-sm">
+                              CLP
+                            </div>
+                            <div>
+                              <div className="text-white font-medium text-lg">
+                                {token.name}
+                              </div>
+                              <div className="text-[#00C48C] text-sm">
+                                Secure
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 mb-auto">
+                            <div className="text-white text-sm">
+                              Supply Locked
+                            </div>
+                            <div className="text-white text-sm">
+                              Volume: +{token.displayVolume || 20}%
+                            </div>
+                            <div className="text-white text-sm">
+                              Launched: {token.displayDaysAgo || 3} days ago
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 flex-wrap mt-5 mb-4">
+                            {token.displayIsNew && (
+                              <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#F59E0B] text-black">
+                                New
+                              </span>
+                            )}
+                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#38343096] text-white">
+                              Rugproof
+                            </span>
+                            {token.displayIsTrending && (
+                              <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#38343096] text-white">
+                                Trending
+                              </span>
+                            )}
+                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#38343096] text-white">
+                              Anti-Bot
+                            </span>
+                          </div>
+
+                          <Link href={`/token/${token.address}`}>
+                            <div className="text-[#ffae5c] font-medium text-sm flex items-center">
+                              View Token <ArrowRight className="w-4 h-4 ml-1" />
+                            </div>
+                          </Link>
+                        </motion.div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
         </motion.div>
 
@@ -977,136 +1044,130 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
-              <thead>
-                <tr className="border-b border-[#ffae5c]/20">
-                  <th className="text-left p-4 text-white/70 font-medium">
-                    Token
-                  </th>
-                  <th className="text-left p-4 text-white/70 font-medium">
-                    Price
-                  </th>
-                  <th className="text-left p-4 text-white/70 font-medium">
-                    24h Change
-                  </th>
-                  <th className="text-left p-4 text-white/70 font-medium">
-                    Supply Locked
-                  </th>
-                  <th className="text-left p-4 text-white/70 font-medium">
-                    Launch Date
-                  </th>
-                  <th className="text-left p-4 text-white/70 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  {
-                    name: "SafeMoon",
-                    symbol: "SAFEMN",
-                    price: 0.0095,
-                    change: 32.4,
-                    locked: "94%",
-                    date: "2d ago",
-                  },
-                  {
-                    name: "PepeCoin",
-                    symbol: "PEPE",
-                    price: 0.0071,
-                    change: 18.7,
-                    locked: "87%",
-                    date: "3d ago",
-                  },
-                  {
-                    name: "Doge Fork",
-                    symbol: "DOGEF",
-                    price: 0.0034,
-                    change: 24.5,
-                    locked: "76%",
-                    date: "4d ago",
-                  },
-                  {
-                    name: "Shiba Lock",
-                    symbol: "SHIBALK",
-                    price: 0.0023,
-                    change: -8.3,
-                    locked: "92%",
-                    date: "5d ago",
-                  },
-                  {
-                    name: "Moon Coin",
-                    symbol: "MOON",
-                    price: 0.0042,
-                    change: 15.1,
-                    locked: "89%",
-                    date: "6d ago",
-                  },
-                ].map((token, i) => (
-                  <motion.tr
-                    key={i}
-                    className="border-b border-[#ffae5c]/10 hover:bg-[#ffae5c]/5"
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
+          <p className="text-lg text-white/70 mb-6">
+            Discover the freshest meme tokens launched on Clampify — fully
+            secured with locked supply and anti-rug safeguards. Track price
+            movements, supply lock %, and trade instantly.
+          </p>
+
+          <div className="bg-[#ffae5c]/5 backdrop-blur-sm rounded-xl border border-[#ffae5c]/20 overflow-hidden">
+            <div className="grid grid-cols-5 border-b border-[#ffae5c]/20 p-4 text-white/70">
+              <div className="col-span-1">Token</div>
+              <div className="col-span-1">Price</div>
+              <div className="col-span-1">24h Change</div>
+              <div className="col-span-1">Supply Locked</div>
+              <div className="col-span-1">Launch Date</div>
+            </div>
+
+            {loading ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-8"
+              >
+                <p className="text-white/70">Fetching latest tokens...</p>
+              </motion.div>
+            ) : (
+              <>
+                {tokens.length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-8"
                   >
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#ffae5c]/30 to-[#4834D4]/30 flex items-center justify-center">
-                          <span className="text-white/90 font-medium">
-                            {token.symbol.slice(0, 1)}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="text-white font-medium">
-                            {token.name}
-                          </div>
-                          <div className="text-white/50 text-sm">
-                            ${token.symbol}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-white font-medium">
-                      ${token.price}
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={
-                          token.change >= 0
-                            ? "text-[#00FFA3]"
-                            : "text-[#FF3B69]"
-                        }
-                      >
-                        {token.change >= 0 ? "+" : ""}
-                        {token.change}%
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <div className="relative w-20 h-2 bg-white/10 rounded-full overflow-hidden">
+                    <p className="text-white/70">No tokens available</p>
+                  </motion.div>
+                ) : (
+                  <>
+                    {/* Sort tokens by createdAt in descending order and take the latest 5 */}
+                    {tokens
+                      .sort(
+                        (a, b) =>
+                          new Date(b.createdAt).getTime() -
+                          new Date(a.createdAt).getTime()
+                      )
+                      .slice(0, 5)
+                      .map((token, i) => {
+                        return (
                           <motion.div
-                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#ffae5c] to-[#4834D4]"
-                            style={{ width: token.locked }}
-                            initial={{ width: "0%" }}
-                            whileInView={{ width: token.locked }}
+                            key={token._id}
+                            className="grid grid-cols-5 items-center border-b border-[#ffae5c]/10 hover:bg-[#ffae5c]/10 transition-colors p-4"
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ duration: 0.8, delay: i * 0.1 }}
-                          />
-                        </div>
-                        <span className="text-white">{token.locked}</span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-white/70">{token.date}</td>
-                    <td className="p-4">
-                      <Button className="bg-[#ffae5c]/20 hover:bg-[#ffae5c]/30 text-white">
-                        Trade
-                      </Button>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
+                            transition={{ delay: i * 0.1 }}
+                          >
+                            <div className="col-span-1">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#ffae5c]/30 to-[#4834D4]/30 flex items-center justify-center">
+                                  <span className="text-white/90 font-medium">
+                                    {token.symbol.charAt(0)}
+                                  </span>
+                                </div>
+                                <div>
+                                  <div className="text-white font-medium">
+                                    {token.name}
+                                  </div>
+                                  <div className="text-white/50 text-sm">
+                                    ${token.symbol}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-span-1 text-white font-medium">
+                              ${token.displayPrice?.toFixed(4) || "0.0023"}
+                            </div>
+                            <div className="col-span-1">
+                              <span
+                                className={
+                                  (token.displayChange || 0) >= 0
+                                    ? "text-[#00FFA3]"
+                                    : "text-[#FF3B69]"
+                                }
+                              >
+                                {(token.displayChange || 0) >= 0 ? "+" : ""}
+                                {token.displayChange?.toFixed(1) || "0.0"}%
+                              </span>
+                            </div>
+                            <div className="col-span-1">
+                              <div className="flex items-center gap-2">
+                                <div className="relative w-24 h-2 bg-white/10 rounded-full overflow-hidden">
+                                  <motion.div
+                                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#ffae5c] to-[#4834D4]"
+                                    style={{
+                                      width: token.displayLocked || "85%",
+                                    }}
+                                    initial={{ width: "0%" }}
+                                    whileInView={{
+                                      width: token.displayLocked || "85%",
+                                    }}
+                                    viewport={{ once: true }}
+                                    transition={{
+                                      duration: 0.8,
+                                      delay: i * 0.1,
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-white">
+                                  {token.displayLocked || "85%"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="col-span-1 flex justify-between items-center">
+                              <span className="text-white/70">
+                                {token.displayDaysAgo || 3}d ago
+                              </span>
+                              <Button className="bg-[#583D21] hover:bg-[#73512E] text-white font-medium px-5">
+                                Trade
+                              </Button>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                  </>
+                )}
+              </>
+            )}
           </div>
         </motion.div>
 
@@ -1255,7 +1316,6 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      {/* Enhanced mouse follower with lock icons */}
       {mousePosition && (
         <motion.div
           className="fixed pointer-events-none w-[600px] h-[600px] rounded-full"
