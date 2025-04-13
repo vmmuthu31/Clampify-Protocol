@@ -88,7 +88,7 @@ export function Navbar() {
               transition={{ duration: 0.5 }}
             >
               <Image
-                src="/logo.png"
+                src="/logo.svg"
                 alt="Clampify Logo"
                 width={25}
                 height={25}

@@ -121,7 +121,7 @@ export default function HomePage() {
                   className="mr-2"
                 >
                   <Image
-                    src="/logo.png"
+                    src="/logo.svg"
                     alt="Clampify Logo"
                     width={25}
                     height={25}
@@ -230,7 +230,7 @@ export default function HomePage() {
                     transition={{ delay: 0.7, duration: 0.5 }}
                   >
                     <Image
-                      src="/logo.png"
+                      src="/logo.svg"
                       alt="Clampify Logo"
                       width={200}
                       height={200}
@@ -317,7 +317,7 @@ export default function HomePage() {
                       className="inline-block mr-1"
                     >
                       <Image
-                        src="/logo.png"
+                        src="/logo.svg"
                         alt="Clampify Logo"
                         width={25}
                         height={25}
@@ -863,7 +863,7 @@ export default function HomePage() {
                         transition={{ duration: 0.5 }}
                       >
                         <Image
-                          src="/logo.png"
+                          src="/logo.svg"
                           alt="Clampify Logo"
                           width={25}
                           height={25}

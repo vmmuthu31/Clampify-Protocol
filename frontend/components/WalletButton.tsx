@@ -89,7 +89,7 @@ function WalletButton() {
 
       <DropdownMenuContent
         align="end"
-        className="w-56 border-gray-700 rounded-lg bg-black/20"
+        className="w-56 border-gray-700 rounded-md border p-2 bg-black"
       >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">

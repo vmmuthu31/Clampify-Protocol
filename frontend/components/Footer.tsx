@@ -18,7 +18,7 @@ function Footer() {
                   ease: "linear",
                 }}
               >
-                <Image src="/logo.png" alt="Clampify" width={32} height={32} />
+                <Image src="/logo.svg" alt="Clampify" width={32} height={32} />
               </motion.div>
               <span className="text-[#ffae5c] text-xl font-bold">Clampify</span>
             </div>

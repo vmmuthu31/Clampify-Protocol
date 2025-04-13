@@ -69,7 +69,7 @@ export default function Loader() {
                     data-atropos-offset="5"
                   ></div>
                   <Image
-                    src="/logo.png"
+                    src="/logo.svg"
                     alt="Clampify Logo"
                     className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.7)]"
                     width={128}
