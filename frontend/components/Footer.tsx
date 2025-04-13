@@ -10,7 +10,7 @@ function Footer() {
           <div className="mb-6 md:mb-0">
             <div className="flex items-center gap-2 mb-2">
               <motion.div
-                className="w-8 h-8 rounded-full bg-gradient-to-r from-[#ffae5c] to-[#ff9021] flex items-center justify-center"
+                className="w-8 h-8 rounded-full flex items-center justify-center"
                 animate={{ rotate: [0, 360] }}
                 transition={{
                   duration: 10,
