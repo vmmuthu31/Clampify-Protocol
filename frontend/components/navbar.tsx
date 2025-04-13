@@ -130,7 +130,9 @@ export function Navbar() {
             </div>
 
             {/* Wallet Button */}
-            <WalletButton />
+            <div className="hidden md:flex items-center">
+              <WalletButton />
+            </div>
 
             {/* Mobile Menu Button */}
             <Button
@@ -217,8 +219,9 @@ export function Navbar() {
               </div>
               {/* Network Badge (Mobile) */}
               <div className="mt-12 pt-8 border-t border-[#ffae5c]/20">
-                <div className="mb-8 flex justify-center">
+                <div className="mb-8 flex items-center justify-center gap-4 flex-col">
                   <NetworkSelector />
+                  <WalletButton />
                 </div>
               </div>
             </div>
