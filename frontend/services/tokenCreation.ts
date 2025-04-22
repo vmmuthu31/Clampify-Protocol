@@ -14,6 +14,20 @@ interface NetworkConfig {
 }
 
 const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
+  // core Mainnet
+  "1116": {
+    factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
+    governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
+    rpcUrl: "https://rpc.test2.btcs.network/",
+  },
+
+  // Soneium
+  "1868": {
+    factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
+    governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
+    rpcUrl: "https://rpc.soneium.org",
+  },
+
   // Core DAO Testnet
   "1114": {
     factoryAddress: "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67",
@@ -25,12 +39,6 @@ const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
     factoryAddress: "0x73B4c3eC50D7740Bd789EAe1D2e8Fa461fcBAd70",
     governanceAddress: "0x4ffC9a8Ca69Ce79E989c1b5556bE1d8D3f6a6C94",
     rpcUrl: "https://rpc-amoy.polygon.technology",
-  },
-  // Soneium
-  "1868": {
-    factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
-    governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
-    rpcUrl: "https://rpc.soneium.org",
   },
 };
 
