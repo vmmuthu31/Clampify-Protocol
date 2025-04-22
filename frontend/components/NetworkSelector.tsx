@@ -18,6 +18,17 @@ interface Network {
 
 const SUPPORTED_NETWORKS: Network[] = [
   {
+    name: "Soneium",
+    chainId: "1868",
+    rpcUrl: "https://rpc.soneium.org",
+    nativeCurrency: {
+      name: "ETH",
+      symbol: "ETH",
+      decimals: 18,
+    },
+    blockExplorerUrl: "https://soneium.blockscout.com",
+  },
+  {
     name: "Core Testnet",
     chainId: "1114",
     rpcUrl: "https://rpc.test2.btcs.network",
@@ -38,17 +49,6 @@ const SUPPORTED_NETWORKS: Network[] = [
       decimals: 18,
     },
     blockExplorerUrl: "https://www.oklink.com/amoy",
-  },
-  {
-    name: "Soneium",
-    chainId: "1868",
-    rpcUrl: "https://rpc.soneium.org",
-    nativeCurrency: {
-      name: "ETH",
-      symbol: "ETH",
-      decimals: 18,
-    },
-    blockExplorerUrl: "https://soneium.blockscout.com",
   },
 ];
 
