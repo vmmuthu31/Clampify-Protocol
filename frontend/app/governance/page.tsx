@@ -159,7 +159,6 @@ export default function GovernancePage() {
         const data = await response.json();
         if (data.success) {
           setTokens(data.tokens);
-          console.log("Fetched tokens:", data.tokens);
         }
       } catch (error) {
         console.error("Error fetching tokens:", error);
@@ -303,7 +302,6 @@ export default function GovernancePage() {
       try {
         const proposalCount = await GovernanceProposalCount(selectedToken);
         const count = proposalCount;
-        console.log("count", count);
 
         const selectedTokenInfo = tokens.find(
           (t) => t.address === selectedToken
@@ -319,7 +317,6 @@ export default function GovernancePage() {
         }
 
         const proposalDetails = await Promise.all(proposalPromises);
-        console.log("proposalDetails", proposalDetails);
 
         const proposalDetailsArray = (
           proposalDetails as unknown as RawProposalData[]
@@ -362,8 +359,6 @@ export default function GovernancePage() {
           userVoteDirection: null,
         }));
         setProposals(proposalDetailsArray);
-
-        console.log("proposalDetailsArray", proposalDetailsArray);
       } catch (error) {
         console.error("Error loading proposals:", error);
       }
@@ -530,14 +525,12 @@ export default function GovernancePage() {
 
     setIsActivating(true);
     try {
-      console.log(selectedToken);
-      const tx = await activateGovernance(
+      await activateGovernance(
         selectedToken,
         45, // Default proposal threshold of 1000 tokens
         51, // Default quorum of 51%
         7 * 24 * 60 * 60 // Default voting period of 7 days in seconds
       );
-      console.log(tx);
 
       toast.success("Governance activated successfully!");
 

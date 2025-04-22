@@ -14,32 +14,30 @@ interface TokenRecord {
 
 export const createTokenRecord = async (tokenData: TokenRecord) => {
   try {
-    const response = await fetch('/api/tokens', {
-      method: 'POST',
+    const response = await fetch("/api/tokens", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(tokenData),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create token record');
+      throw new Error("Failed to create token record");
     }
 
     return await response.json();
   } catch (error) {
-    console.error('Error creating token record:', error);
+    console.error("Error creating token record:", error);
     throw error;
   }
 };
 
 export const recordTransaction = async (transactionData: any) => {
-
-  console.log('transactionData', transactionData);
-  const response = await fetch('/api/transactions', {
-    method: 'POST',
+  const response = await fetch("/api/transactions", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(transactionData),
   });
@@ -47,7 +45,9 @@ export const recordTransaction = async (transactionData: any) => {
 };
 
 export const getTokenTransactions = async (tokenAddress: string) => {
-  const response = await fetch(`/api/transactions?tokenAddress=${tokenAddress}`);
+  const response = await fetch(
+    `/api/transactions?tokenAddress=${tokenAddress}`
+  );
   return response.json();
 };
 
@@ -55,11 +55,11 @@ export const getTokenDetails = async (address: string) => {
   try {
     const response = await fetch(`/api/tokens/${address}`);
     if (!response.ok) {
-      throw new Error('Failed to fetch token details');
+      throw new Error("Failed to fetch token details");
     }
     return await response.json();
   } catch (error) {
-    console.error('Error fetching token details:', error);
+    console.error("Error fetching token details:", error);
     throw error;
   }
-}; 
+};

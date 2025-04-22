@@ -15,7 +15,7 @@ interface NetworkConfig {
 
 const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
   // Core DAO Testnet
-  "1115": {
+  "1114": {
     factoryAddress: "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67",
     governanceAddress: "0xE383A8EFDC5D0E7a5474da69EBA775ac506953ef",
     rpcUrl: "https://rpc.test2.btcs.network/",
@@ -549,9 +549,7 @@ export const activateGovernance = async (
     );
 
     await tx.wait();
-    console.log(tx);
 
-    console.log("Governance activated successfully");
     return tx;
   } catch (error) {
     console.error("Error activating governance:", error);

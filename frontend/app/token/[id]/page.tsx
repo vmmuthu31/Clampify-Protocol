@@ -42,7 +42,11 @@ import {
   TokenReturnOnSell,
   getCandleData,
 } from "@/services/trade";
-import { recordTransaction, getTokenTransactions, getTokenDetails } from "@/services/api";
+import {
+  recordTransaction,
+  getTokenTransactions,
+  getTokenDetails,
+} from "@/services/api";
 import { usePrivy } from "@privy-io/react-auth";
 import {
   createChart,
@@ -246,7 +250,7 @@ export default function TokenPage() {
   }>({
     lockLiquidity: false,
     liquidityLockPeriod: "0",
-    creatorLockupPeriod: "0"
+    creatorLockupPeriod: "0",
   });
 
   // Calculate days left in lock
@@ -258,10 +262,8 @@ export default function TokenPage() {
   useEffect(() => {
     const fetchTokenInfo = async () => {
       if (tokenId) {
-        console.log("Token ID from URL:", tokenId);
         const tokenInfo = await TokenInfo(tokenId);
 
-        console.log("Token Info:", tokenInfo);
         // Format BigNumber values
         const formattedInfo = {
           ...tokenInfo,
@@ -270,11 +272,9 @@ export default function TokenPage() {
           initialPrice: ethers.utils.formatEther(tokenInfo.initialPrice || "0"),
         };
 
-        console.log("Token Info:", formattedInfo);
         setTokenDetails(formattedInfo);
 
         const topHolders = await getTopHolders(tokenInfo.contractAddress);
-        console.log("Top Holders:", topHolders);
         setTopHolders(topHolders);
         const formattedTokenBalance = ethers.utils.formatEther(
           tokenInfo.balance.toString()
@@ -288,7 +288,7 @@ export default function TokenPage() {
           setTokenLockDetails({
             lockLiquidity: token.lockLiquidity,
             liquidityLockPeriod: token.liquidityLockPeriod,
-            creatorLockupPeriod: token.creatorLockupPeriod
+            creatorLockupPeriod: token.creatorLockupPeriod,
           });
         }
       }
@@ -408,10 +408,7 @@ export default function TokenPage() {
       setTransactionStatus({ status: null });
 
       if (tradeType === "buy") {
-        console.log(coreAmount, "coreAmount");
-        console.log(estimatedReturn, "estimatedReturn");
         if (!coreAmount || !estimatedReturn) {
-          console.log("Invalid amount");
           return;
         }
         const coreAmountInWei = ethers.utils.parseEther(coreAmount);
@@ -420,7 +417,6 @@ export default function TokenPage() {
           tokenDetails?.contractAddress || "",
           coreAmountInWei.toString()
         );
-        console.log(tokenReturnOnBuy);
         setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
 
         const buy = await buyTokens(
@@ -514,7 +510,6 @@ export default function TokenPage() {
         try {
           // Fetch transactions from our database
           const { transactions } = await getTokenTransactions(tokenId);
-          console.log("DB Transactions:", transactions);
 
           if (transactions && transactions.length > 0) {
             setRecentTransactions({
@@ -744,9 +739,9 @@ export default function TokenPage() {
           <div className="flex items-center gap-4">
             {tokenImage && (
               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#ffae5c]/20">
-                <img 
-                  src={tokenImage} 
-                  alt={tokenDetails?.name || "Token"} 
+                <img
+                  src={tokenImage}
+                  alt={tokenDetails?.name || "Token"}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -921,7 +916,9 @@ export default function TokenPage() {
                   <div className="bg-black/20 backdrop-blur-sm rounded-xl border border-[#ffae5c]/20 p-6">
                     <div className="flex items-center gap-2 mb-6">
                       <PieChart className="w-5 h-5 text-[#ffae5c]" />
-                      <h3 className="text-lg font-medium text-white">Supply Distribution</h3>
+                      <h3 className="text-lg font-medium text-white">
+                        Supply Distribution
+                      </h3>
                     </div>
 
                     <div className="space-y-4">
@@ -934,9 +931,21 @@ export default function TokenPage() {
                             <div
                               className="h-full bg-gradient-to-r from-[#ffae5c]/80 to-[#4834D4]/80"
                               style={{
-                                width: `${((parseInt(tokenDetails?.initialSupply || "0") / 2 + 
-                                  (tokenLockDetails.lockLiquidity ? parseInt(tokenDetails?.initialSupply || "0") * 0.2 : 0)) / 
-                                  parseInt(tokenDetails?.totalSupply || "1") * 100)}%`,
+                                width: `${
+                                  ((parseInt(
+                                    tokenDetails?.initialSupply || "0"
+                                  ) /
+                                    2 +
+                                    (tokenLockDetails.lockLiquidity
+                                      ? parseInt(
+                                          tokenDetails?.initialSupply || "0"
+                                        ) * 0.2
+                                      : 0)) /
+                                    parseInt(
+                                      tokenDetails?.totalSupply || "1"
+                                    )) *
+                                  100
+                                }%`,
                               }}
                             />
                           </div>
@@ -954,8 +963,12 @@ export default function TokenPage() {
                             <span className="inline-block w-3 h-3 rounded-full bg-[#ffae5c]/20 mr-2"></span>
                             Locked:{" "}
                             {formatNumber(
-                              (parseInt(tokenDetails?.initialSupply || "0") / 2) +
-                              (tokenLockDetails.lockLiquidity ? parseInt(tokenDetails?.initialSupply || "0") * 0.2 : 0)
+                              parseInt(tokenDetails?.initialSupply || "0") / 2 +
+                                (tokenLockDetails.lockLiquidity
+                                  ? parseInt(
+                                      tokenDetails?.initialSupply || "0"
+                                    ) * 0.2
+                                  : 0)
                             )}{" "}
                             ({70}%)
                           </div>
@@ -963,19 +976,38 @@ export default function TokenPage() {
                       </div>
 
                       <div className="mt-4">
-                        <div className="text-white font-medium mb-2">Lock Details</div>
+                        <div className="text-white font-medium mb-2">
+                          Lock Details
+                        </div>
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span className="text-white/60">Creator Lock:</span>
                             <span className="text-white">
-                              {formatNumber(parseInt(tokenDetails?.initialSupply || "0") / 2)} ({formatLockDuration(tokenLockDetails.creatorLockupPeriod)})
+                              {formatNumber(
+                                parseInt(tokenDetails?.initialSupply || "0") / 2
+                              )}{" "}
+                              (
+                              {formatLockDuration(
+                                tokenLockDetails.creatorLockupPeriod
+                              )}
+                              )
                             </span>
                           </div>
                           {tokenLockDetails.lockLiquidity && (
                             <div className="flex justify-between text-sm">
-                              <span className="text-white/60">Liquidity Lock:</span>
+                              <span className="text-white/60">
+                                Liquidity Lock:
+                              </span>
                               <span className="text-white">
-                                {formatNumber(parseInt(tokenDetails?.initialSupply || "0") * 0.2)} ({formatLockDuration(tokenLockDetails.liquidityLockPeriod)})
+                                {formatNumber(
+                                  parseInt(tokenDetails?.initialSupply || "0") *
+                                    0.2
+                                )}{" "}
+                                (
+                                {formatLockDuration(
+                                  tokenLockDetails.liquidityLockPeriod
+                                )}
+                                )
                               </span>
                             </div>
                           )}
