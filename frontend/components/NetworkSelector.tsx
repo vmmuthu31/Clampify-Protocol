@@ -230,7 +230,7 @@ export function NetworkSelector() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="absolute top-full left-0 mt-2 w-48 bg-black/90 border border-[#ffae5c]/20 rounded-xl backdrop-blur-xl overflow-hidden z-50"
+            className="absolute top-full left-0 mt-2 w-60 bg-black/90 border border-[#ffae5c]/20 rounded-xl backdrop-blur-xl overflow-hidden z-50"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
