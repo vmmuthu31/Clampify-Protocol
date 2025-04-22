@@ -18,7 +18,7 @@ const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
   "1116": {
     factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
     governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
-    rpcUrl: "https://rpc.ankr.com/core",
+    rpcUrl: "https://rpc.coredao.org",
   },
 
   // Soneium
@@ -103,7 +103,7 @@ export const Mint = async (
     const initialPriceWei = ethers.utils.parseEther(initialPrice);
     const depositAmount = ethers.utils.parseEther("0.01");
 
-    // Create token
+    // Create token with higher gas limit to handle mainnet's EVM differences
     const tx = await contract.createToken(
       name,
       symbol,
@@ -125,6 +125,26 @@ export const Mint = async (
     return tokenAddress;
   } catch (error) {
     console.error("Detailed error:", error);
+
+    if (error instanceof Error) {
+      // Handle MCOPY error specifically
+      if (error.message.includes("invalid opcode: MCOPY")) {
+        throw new Error(
+          "This contract requires Solidity ≤0.8.17 and is not compatible with Core Mainnet currently. Please try using Core Testnet."
+        );
+      }
+
+      // Handle transaction failure
+      if (
+        error.message.includes("transaction failed") ||
+        error.message.includes("CALL_EXCEPTION")
+      ) {
+        throw new Error(
+          "Transaction failed. Please check that you have enough CORE for gas and the contract deposit (0.01 CORE). The contract may also have requirements that weren't met."
+        );
+      }
+    }
+
     throw error;
   }
 };
