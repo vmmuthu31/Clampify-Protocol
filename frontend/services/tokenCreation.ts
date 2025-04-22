@@ -26,6 +26,12 @@ const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
     governanceAddress: "0x4ffC9a8Ca69Ce79E989c1b5556bE1d8D3f6a6C94",
     rpcUrl: "https://rpc-amoy.polygon.technology",
   },
+  // Soneium
+  "1868": {
+    factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
+    governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
+    rpcUrl: "https://rpc.soneium.org",
+  },
 };
 
 const getNetworkConfig = async (): Promise<NetworkConfig> => {

@@ -39,6 +39,17 @@ const SUPPORTED_NETWORKS: Network[] = [
     },
     blockExplorerUrl: "https://www.oklink.com/amoy",
   },
+  {
+    name: "Soneium",
+    chainId: "1868",
+    rpcUrl: "https://rpc.soneium.org",
+    nativeCurrency: {
+      name: "ETH",
+      symbol: "ETH",
+      decimals: 18,
+    },
+    blockExplorerUrl: "https://soneium.blockscout.com",
+  },
 ];
 
 export function NetworkSelector() {
