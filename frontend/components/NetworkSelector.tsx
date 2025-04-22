@@ -18,9 +18,9 @@ interface Network {
 
 const SUPPORTED_NETWORKS: Network[] = [
   {
-    name: "Core Mainnet",
+    name: "Core Blockchain Mainnet",
     chainId: "1116",
-    rpcUrl: "https://rpc.coredao.org",
+    rpcUrl: "https://rpc.ankr.com/core",
     nativeCurrency: {
       name: "CORE",
       symbol: "CORE",

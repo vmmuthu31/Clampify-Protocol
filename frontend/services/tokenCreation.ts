@@ -18,7 +18,7 @@ const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
   "1116": {
     factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
     governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
-    rpcUrl: "https://rpc.test2.btcs.network/",
+    rpcUrl: "https://rpc.ankr.com/core",
   },
 
   // Soneium
@@ -44,8 +44,8 @@ const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
 
 const getNetworkConfig = async (): Promise<NetworkConfig> => {
   if (!ethereum) {
-    // Default to Core DAO Testnet if no wallet is connected
-    return NETWORK_CONFIG["1115"];
+    // Default to Core DAO Mainnet if no wallet is connected
+    return NETWORK_CONFIG["1116"];
   }
 
   const provider = new ethers.providers.Web3Provider(ethereum);

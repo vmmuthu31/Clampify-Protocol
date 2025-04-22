@@ -6,10 +6,40 @@ const isBrowser = (): boolean => typeof window !== "undefined";
 
 const { ethereum } = isBrowser() ? window : { ethereum: null };
 
-const contract_address: string = "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67"; // Clampify Factory Contract Address
+interface NetworkConfig {
+  factoryAddress: string;
+  governanceAddress: string;
+  rpcUrl: string;
+}
 
-// Add RPC URL for the network you're using (Core DAO testnet)
-const RPC_URL = "https://rpc.test2.btcs.network/";
+const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
+  // core Mainnet
+  "1116": {
+    factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
+    governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
+    rpcUrl: "https://rpc.ankr.com/core",
+  },
+
+  // Soneium
+  "1868": {
+    factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
+    governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
+    rpcUrl: "https://rpc.soneium.org",
+  },
+
+  // Core DAO Testnet
+  "1114": {
+    factoryAddress: "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67",
+    governanceAddress: "0xE383A8EFDC5D0E7a5474da69EBA775ac506953ef",
+    rpcUrl: "https://rpc.test2.btcs.network/",
+  },
+  // Polygon Amoy Testnet
+  "80002": {
+    factoryAddress: "0x73B4c3eC50D7740Bd789EAe1D2e8Fa461fcBAd70",
+    governanceAddress: "0x4ffC9a8Ca69Ce79E989c1b5556bE1d8D3f6a6C94",
+    rpcUrl: "https://rpc-amoy.polygon.technology",
+  },
+};
 
 interface TokenInfo {
   name: string;
@@ -18,6 +48,23 @@ interface TokenInfo {
   tokenAmount: string;
   contractAddress: string;
 }
+
+const getNetworkConfig = async (): Promise<NetworkConfig> => {
+  if (!ethereum) {
+    // Default to Core DAO Mainnet if no wallet is connected
+    return NETWORK_CONFIG["1116"];
+  }
+
+  const provider = new ethers.providers.Web3Provider(ethereum);
+  const network = await provider.getNetwork();
+  const chainId = network.chainId.toString();
+
+  if (!NETWORK_CONFIG[chainId]) {
+    throw new Error(`Network with chain ID ${chainId} is not supported`);
+  }
+
+  return NETWORK_CONFIG[chainId];
+};
 
 export const Mint = async (
   name: string,
@@ -30,10 +77,11 @@ export const Mint = async (
   liquidityLockPeriod: string
 ): Promise<string> => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -41,7 +89,7 @@ export const Mint = async (
       throw new Error("No wallet connected");
     }
     const contract = new ethers.Contract(
-      contract_address,
+      networkConfig.factoryAddress,
       ClampifyFactory,
       signer
     );
@@ -117,10 +165,11 @@ export const buyTokens = async (
   tokenAmount: string
 ): Promise<{ hash: string }> => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -155,10 +204,11 @@ export const getRecentTransactions = async (
   count: number
 ) => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -186,10 +236,11 @@ export const getRecentTransactions = async (
 
 export const getTokenBalance = async (tokenAddress: string) => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -214,10 +265,11 @@ export const TokenReturnOnSell = async (
   amount: string
 ) => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const contract = new ethers.Contract(tokenAddress, ClampifyToken, provider);
 
@@ -236,10 +288,11 @@ export const TokenReturnOnSell = async (
 
 export const sellTokens = async (tokenAddress: string, amount: string) => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
@@ -264,10 +317,11 @@ export const sellTokens = async (tokenAddress: string, amount: string) => {
 
 export const getTokenPrice = async (tokenAddress: string): Promise<string> => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const contract = new ethers.Contract(tokenAddress, ClampifyToken, provider);
 
@@ -281,10 +335,11 @@ export const getTokenPrice = async (tokenAddress: string): Promise<string> => {
 
 export const getTopHolders = async (tokenAddress: string) => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const contract = new ethers.Contract(tokenAddress, ClampifyToken, provider);
 
@@ -304,10 +359,11 @@ export const getCandleData = async (
   count: number = 24
 ) => {
   try {
+    const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(RPC_URL);
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const contract = new ethers.Contract(tokenAddress, ClampifyToken, provider);
 
