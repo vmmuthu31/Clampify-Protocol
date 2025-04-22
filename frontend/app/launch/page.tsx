@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import {
@@ -85,6 +85,38 @@ export default function LaunchPage() {
   const [launchSuccess, setLaunchSuccess] = useState(false);
   const { ready, authenticated, login, user } = usePrivy();
   const router = useRouter();
+  const [currentNetwork, setCurrentNetwork] = useState({
+    name: "Core",
+    symbol: "CORE",
+  });
+
+  // Fetch current network on component mount
+  useEffect(() => {
+    const fetchNetwork = async () => {
+      try {
+        if (window.ethereum) {
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const network = await provider.getNetwork();
+          const chainId = network.chainId.toString();
+
+          // Check network based on chainId
+          if (chainId === "1116") {
+            setCurrentNetwork({ name: "Core", symbol: "CORE" });
+          } else if (chainId === "1114") {
+            setCurrentNetwork({ name: "Core Testnet", symbol: "tCORE" });
+          } else if (chainId === "1868") {
+            setCurrentNetwork({ name: "Soneium", symbol: "ETH" });
+          } else if (chainId === "80002") {
+            setCurrentNetwork({ name: "Polygon Amoy", symbol: "POL" });
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching network:", error);
+      }
+    };
+
+    fetchNetwork();
+  }, []);
 
   // Form state
   const [tokenForm, setTokenForm] = useState<TokenForm>({
@@ -485,6 +517,20 @@ export default function LaunchPage() {
                 By launching this token, you agree to lock{" "}
                 {tokenForm.creatorLockupPeriod}% of the supply and enable
                 anti-rug protection features. This process is irreversible.
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 p-4 rounded-xl bg-black/30 border border-[#ffae5c]/20">
+            <div className="flex items-start gap-2">
+              <Wallet className="w-5 h-5 text-[#ffae5c] mt-1 flex-shrink-0" />
+              <div className="text-sm text-white/70">
+                <p className="font-medium text-white mb-1">
+                  Token Creation Fee:
+                </p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Fee Per Token: 0.01 {currentNetwork.symbol} (~$0.07)</li>
+                </ul>
               </div>
             </div>
           </div>
