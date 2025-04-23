@@ -529,7 +529,7 @@ export default function LaunchPage() {
                   Token Creation Fee:
                 </p>
                 <ul className="list-disc list-inside space-y-1">
-                  <li>Fee Per Token: 0.01 {currentNetwork.symbol} (~$0.07)</li>
+                  <li>Fee Per Token: 0.01 {currentNetwork.symbol}</li>
                 </ul>
               </div>
             </div>
