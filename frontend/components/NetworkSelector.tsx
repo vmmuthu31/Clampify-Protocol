@@ -17,6 +17,7 @@ interface Network {
 }
 
 const SUPPORTED_NETWORKS: Network[] = [
+  //
   {
     name: "Core Blockchain Mainnet",
     chainId: "1116",
@@ -28,17 +29,17 @@ const SUPPORTED_NETWORKS: Network[] = [
     },
     blockExplorerUrl: "https://scan.coredao.org",
   },
-  {
-    name: "Soneium",
-    chainId: "1868",
-    rpcUrl: "https://rpc.soneium.org",
-    nativeCurrency: {
-      name: "ETH",
-      symbol: "ETH",
-      decimals: 18,
-    },
-    blockExplorerUrl: "https://soneium.blockscout.com",
-  },
+  // {
+  //   name: "Soneium",
+  //   chainId: "1868",
+  //   rpcUrl: "https://rpc.soneium.org",
+  //   nativeCurrency: {
+  //     name: "ETH",
+  //     symbol: "ETH",
+  //     decimals: 18,
+  //   },
+  //   blockExplorerUrl: "https://soneium.blockscout.com",
+  // },
   {
     name: "Core Testnet",
     chainId: "1114",
@@ -49,6 +50,17 @@ const SUPPORTED_NETWORKS: Network[] = [
       decimals: 18,
     },
     blockExplorerUrl: "https://scan.test2.btcs.network",
+  },
+  {
+    name: "BNB Testnet",
+    chainId: "97",
+    rpcUrl: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
+    nativeCurrency: {
+      name: "tBNB",
+      symbol: "tBNB",
+      decimals: 18,
+    },
+    blockExplorerUrl: "https://testnet.bscscan.com",
   },
   {
     name: "Polygon Amoy",

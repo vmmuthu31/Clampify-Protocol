@@ -13,16 +13,11 @@ interface NetworkConfig {
   rpcUrl: string;
 }
 
-// proxy owner address: 0xcFFA8607Eb754e25211B547086A5713c466CBe0B
-// CORE TESTNET Proxy Factory Contract Address: 0x7ce30dB2dced278130ed4EA7fc7Bf0825c4dfD23
-// BNB TestNET proxy factory contract address: 0x7b63Cb427e32dBE0E24b818DafBA8196Dc2C74ca
-// BNB testnet governance contract Address: 0xEf9715f165219ce6E4BA020882B4564E79f620e6
-
 const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
-  // core Mainnet
+  // core Mainnet with proxy
   // "1116": {
-  //   factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
-  //   governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
+  //   factoryAddress: "0x472Bd08194e7AFF981FaC9990af780b328D9cE0b",
+  //   governanceAddress: "0x699bf4037D72107142D4600b8B2F18940e06dBB2",
   //   rpcUrl: "https://rpc.coredao.org",
   // },
 
@@ -38,11 +33,11 @@ const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
     governanceAddress: "0xEf9715f165219ce6E4BA020882B4564E79f620e6",
     rpcUrl: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
   },
-  // Core DAO Testnet with proxy
+  // Core DAO Testnet with non proxy
   "1114": {
-    factoryAddress: "0x7ce30dB2dced278130ed4EA7fc7Bf0825c4dfD23",
-    governanceAddress: "0x1407B12cE8d5eF9D4F882969297820C10197294e",
-    rpcUrl: "https://rpc.test2.btcs.network/",
+    factoryAddress: "0xfBFe5E3b50355bC76718E48e118c48f4167954B0",
+    governanceAddress: "0xc02Ced956D028F567cdd293F235F2f51955De8aB",
+    rpcUrl: "https://rpc.test2.btcs.network",
   },
   // Polygon Amoy Testnet with proxy
   "80002": {
