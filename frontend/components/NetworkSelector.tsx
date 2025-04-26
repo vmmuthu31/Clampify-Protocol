@@ -47,6 +47,18 @@ export const SUPPORTED_NETWORKS: Network[] = [
   //   },
   //   blockExplorerUrl: "https://soneium.blockscout.com",
   // },
+  // Holesky
+  {
+    name: "Holesky",
+    chainId: "17000",
+    rpcUrl: "https://1rpc.io/holesky",
+    nativeCurrency: {
+      name: "ETH",
+      symbol: "ETH",
+      decimals: 18,
+    },
+    blockExplorerUrl: "https://holesky.beaconcha.in",
+  },
   {
     name: "Core Testnet",
     chainId: "1114",
