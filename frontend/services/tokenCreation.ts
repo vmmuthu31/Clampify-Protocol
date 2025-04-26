@@ -13,31 +13,41 @@ interface NetworkConfig {
   rpcUrl: string;
 }
 
+// proxy owner address: 0xcFFA8607Eb754e25211B547086A5713c466CBe0B
+// CORE TESTNET Proxy Factory Contract Address: 0x7ce30dB2dced278130ed4EA7fc7Bf0825c4dfD23
+// BNB TestNET proxy factory contract address: 0x7b63Cb427e32dBE0E24b818DafBA8196Dc2C74ca
+// BNB testnet governance contract Address: 0xEf9715f165219ce6E4BA020882B4564E79f620e6
+
 const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
   // core Mainnet
-  "1116": {
-    factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
-    governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
-    rpcUrl: "https://rpc.coredao.org",
-  },
+  // "1116": {
+  //   factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
+  //   governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
+  //   rpcUrl: "https://rpc.coredao.org",
+  // },
 
-  // Soneium
-  "1868": {
-    factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
-    governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
-    rpcUrl: "https://rpc.soneium.org",
+  // // Soneium
+  // "1868": {
+  //   factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
+  //   governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
+  //   rpcUrl: "https://rpc.soneium.org",
+  // },
+  // BNB Testnet
+  "97": {
+    factoryAddress: "0x7b63Cb427e32dBE0E24b818DafBA8196Dc2C74ca",
+    governanceAddress: "0xEf9715f165219ce6E4BA020882B4564E79f620e6",
+    rpcUrl: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
   },
-
-  // Core DAO Testnet
+  // Core DAO Testnet with proxy
   "1114": {
-    factoryAddress: "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67",
-    governanceAddress: "0xE383A8EFDC5D0E7a5474da69EBA775ac506953ef",
+    factoryAddress: "0x7ce30dB2dced278130ed4EA7fc7Bf0825c4dfD23",
+    governanceAddress: "0x1407B12cE8d5eF9D4F882969297820C10197294e",
     rpcUrl: "https://rpc.test2.btcs.network/",
   },
-  // Polygon Amoy Testnet
+  // Polygon Amoy Testnet with proxy
   "80002": {
-    factoryAddress: "0x73B4c3eC50D7740Bd789EAe1D2e8Fa461fcBAd70",
-    governanceAddress: "0x4ffC9a8Ca69Ce79E989c1b5556bE1d8D3f6a6C94",
+    factoryAddress: "0x36CeB484d0e74135c1D2790dfCc2B27ED8f5992B",
+    governanceAddress: "0x94f1d9F568f6eED939942c6ab2048B57fda46ebe",
     rpcUrl: "https://rpc-amoy.polygon.technology",
   },
 };

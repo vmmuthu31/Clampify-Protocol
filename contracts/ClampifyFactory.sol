@@ -1,23 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "./ClampifyToken.sol";
 
 /**
  * @title ClampifyFactory
  * @dev Factory contract for creating new meme tokens with bonding curve, supply locking, and automatic/manual token graduation
+ * @notice This contract is upgradeable using the UUPS proxy pattern
  */
-contract ClampifyFactory is Ownable, ReentrancyGuard {
+contract ClampifyFactory is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable {
     // Fee structure
-    uint256 public creationFee = 0.01 ether;
-    uint256 public tradingFeePercent = 2; // 2% trading fee
+    uint256 public creationFee;
+    uint256 public tradingFeePercent; // 2% trading fee
 
     // Graduation requirements (owner can update)
-    uint256 public graduationMarketCap = 100 ether; // Example: 100 ETH market cap
-    uint256 public graduationVolume = 100_000 * 10**18; // Example: 100,000 tokens traded
+    uint256 public graduationMarketCap; // Example: 100 ETH market cap
+    uint256 public graduationVolume; // Example: 100,000 tokens traded
 
     // Token details structure
     struct TokenInfo {
@@ -43,8 +46,32 @@ contract ClampifyFactory is Ownable, ReentrancyGuard {
     event FeesUpdated(uint256 creationFee, uint256 tradingFeePercent);
     event FeesCollected(uint256 amount);
     event GraduationThresholdsUpdated(uint256 marketCap, uint256 volume);
+    event Withdrawn(address indexed to, uint256 amount);
 
-    constructor() Ownable(msg.sender) {}
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /**
+     * @dev Initializes the contract replacing the constructor for upgradeable contracts
+     */
+    function initialize(address initialOwner) public initializer {
+        __Ownable_init(initialOwner);
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+        
+        creationFee = 0.01 ether;
+        tradingFeePercent = 2; // 2% trading fee
+        graduationMarketCap = 100 ether; // Example: 100 ETH market cap
+        graduationVolume = 100_000 * 10**18; // Example: 100,000 tokens traded
+    }
+
+    /**
+     * @dev Required by the UUPS module
+     * @param newImplementation address of the new implementation
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /**
      * @dev Create a new token with bonding curve
@@ -150,7 +177,7 @@ contract ClampifyFactory is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Collect fees
+     * @dev Collect all fees
      */
     function collectFees() external onlyOwner {
         uint256 balance = address(this).balance;
@@ -158,6 +185,20 @@ contract ClampifyFactory is Ownable, ReentrancyGuard {
         (bool success, ) = payable(owner()).call{value: balance}("");
         require(success, "Fee transfer failed");
         emit FeesCollected(balance);
+    }
+
+    /**
+     * @dev Withdraw a specific amount of ETH from the contract
+     * @param amount Amount of ETH to withdraw
+     */
+    function withdraw(uint256 amount) external onlyOwner nonReentrant {
+        require(amount > 0, "Amount must be greater than 0");
+        require(amount <= address(this).balance, "Insufficient balance");
+        
+        (bool success, ) = payable(owner()).call{value: amount}("");
+        require(success, "Withdrawal failed");
+        
+        emit Withdrawn(owner(), amount);
     }
 
     /**
