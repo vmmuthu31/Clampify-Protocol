@@ -18,17 +18,17 @@ interface Network {
 
 const SUPPORTED_NETWORKS: Network[] = [
   //
-  {
-    name: "Core Blockchain Mainnet",
-    chainId: "1116",
-    rpcUrl: "https://rpc.coredao.org",
-    nativeCurrency: {
-      name: "CORE",
-      symbol: "CORE",
-      decimals: 18,
-    },
-    blockExplorerUrl: "https://scan.coredao.org",
-  },
+  // {
+  //   name: "Core Blockchain Mainnet",
+  //   chainId: "1116",
+  //   rpcUrl: "https://rpc.coredao.org",
+  //   nativeCurrency: {
+  //     name: "CORE",
+  //     symbol: "CORE",
+  //     decimals: 18,
+  //   },
+  //   blockExplorerUrl: "https://scan.coredao.org",
+  // },
   // {
   //   name: "Soneium",
   //   chainId: "1868",

@@ -50,7 +50,7 @@ const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
 const getNetworkConfig = async (): Promise<NetworkConfig> => {
   if (!ethereum) {
     // Default to Core DAO Mainnet if no wallet is connected
-    return NETWORK_CONFIG["1116"];
+    return NETWORK_CONFIG["1114"];
   }
 
   const provider = new ethers.providers.Web3Provider(ethereum);
