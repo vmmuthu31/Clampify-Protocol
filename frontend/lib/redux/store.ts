@@ -7,6 +7,7 @@ import logger from "redux-logger";
 // Import reducers
 import tokensReducer from "./slices/tokensSlice";
 import transactionsReducer from "./slices/transactionsSlice";
+import networkReducer from "./slices/networkSlice";
 
 // Create a custom storage that works in both client and server environments
 const createNoopStorage = () => {
@@ -25,12 +26,13 @@ const reduxStorage =
 const persistConfig = {
   key: "root",
   storage: reduxStorage,
-  whitelist: ["tokens", "transactions"], // only these reducers will be persisted
+  whitelist: ["tokens", "transactions", "network"], // only these reducers will be persisted
 };
 
 const rootReducer = combineReducers({
   tokens: tokensReducer,
   transactions: transactionsReducer,
+  network: networkReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

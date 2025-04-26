@@ -10,8 +10,11 @@ import {
 import { Shield, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ethers } from "ethers";
+import { useDispatch, useSelector } from "react-redux";
+import { setNetwork } from "@/lib/redux/slices/networkSlice";
+import { RootState } from "@/lib/redux/store";
 
-interface Network {
+export interface Network {
   name: string;
   chainId: string;
   icon?: string;
@@ -114,8 +117,13 @@ export function useNetwork() {
 }
 
 export function NetworkProvider({ children }: { children: ReactNode }) {
+  const dispatch = useDispatch();
+  const selectedNetwork = useSelector(
+    (state: RootState) => state.network.selectedNetwork
+  );
+
   const [currentNetwork, setCurrentNetwork] = useState<Network>(
-    SUPPORTED_NETWORKS[0]
+    selectedNetwork || SUPPORTED_NETWORKS[0]
   );
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -167,95 +175,100 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
     };
   }, [checkNetwork]);
 
-  const switchNetwork = useCallback(async (network: Network) => {
-    if (!window.ethereum) {
-      alert("Please install MetaMask to switch networks!");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Validate network connection first
-      const provider = new ethers.providers.JsonRpcProvider(network.rpcUrl);
-      const networkInfo = await provider.getNetwork();
-
-      // Verify chain ID matches
-      if (networkInfo.chainId.toString() !== network.chainId) {
-        throw new Error(
-          "Network chain ID mismatch. Please check network configuration."
-        );
+  const switchNetwork = useCallback(
+    async (network: Network) => {
+      if (!window.ethereum) {
+        alert("Please install MetaMask to switch networks!");
+        return;
       }
 
-      // Try to switch to the network
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: `0x${parseInt(network.chainId).toString(16)}` }],
-      });
+      setIsLoading(true);
+      try {
+        // Validate network connection first
+        const provider = new ethers.providers.JsonRpcProvider(network.rpcUrl);
+        const networkInfo = await provider.getNetwork();
 
-      setCurrentNetwork(network);
-    } catch (switchError: unknown) {
-      if (
-        typeof switchError === "object" &&
-        switchError &&
-        "code" in switchError
-      ) {
-        // This error code indicates that the chain has not been added to MetaMask
-        if (switchError.code === 4902) {
-          try {
-            // Validate network connection before adding
-            const provider = new ethers.providers.JsonRpcProvider(
-              network.rpcUrl
-            );
-            await provider.getNetwork();
-
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [
-                {
-                  chainId: `0x${parseInt(network.chainId).toString(16)}`,
-                  chainName: network.name,
-                  nativeCurrency: network.nativeCurrency,
-                  rpcUrls: [network.rpcUrl],
-                  blockExplorerUrls: [network.blockExplorerUrl],
-                },
-              ],
-            });
-
-            // After adding the chain, try to switch to it
-            await window.ethereum.request({
-              method: "wallet_switchEthereumChain",
-              params: [
-                { chainId: `0x${parseInt(network.chainId).toString(16)}` },
-              ],
-            });
-
-            setCurrentNetwork(network);
-          } catch (addError) {
-            console.error("Error adding network:", addError);
-            if (addError instanceof Error) {
-              alert(`Failed to add network: ${addError.message}`);
-            } else {
-              alert(
-                "Failed to add network to MetaMask. Please verify the network configuration and try again."
-              );
-            }
-          }
-        } else {
-          alert(
-            "Failed to switch network. Please verify the network configuration and try again."
+        // Verify chain ID matches
+        if (networkInfo.chainId.toString() !== network.chainId) {
+          throw new Error(
+            "Network chain ID mismatch. Please check network configuration."
           );
         }
-      } else if (switchError instanceof Error) {
-        alert(`Network Error: ${switchError.message}`);
-      } else {
-        alert(
-          "An unknown error occurred while switching networks. Please try again."
-        );
+
+        // Try to switch to the network
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: `0x${parseInt(network.chainId).toString(16)}` }],
+        });
+
+        setCurrentNetwork(network);
+        dispatch(setNetwork(network));
+      } catch (switchError: unknown) {
+        if (
+          typeof switchError === "object" &&
+          switchError &&
+          "code" in switchError
+        ) {
+          // This error code indicates that the chain has not been added to MetaMask
+          if (switchError.code === 4902) {
+            try {
+              // Validate network connection before adding
+              const provider = new ethers.providers.JsonRpcProvider(
+                network.rpcUrl
+              );
+              await provider.getNetwork();
+
+              await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [
+                  {
+                    chainId: `0x${parseInt(network.chainId).toString(16)}`,
+                    chainName: network.name,
+                    nativeCurrency: network.nativeCurrency,
+                    rpcUrls: [network.rpcUrl],
+                    blockExplorerUrls: [network.blockExplorerUrl],
+                  },
+                ],
+              });
+
+              // After adding the chain, try to switch to it
+              await window.ethereum.request({
+                method: "wallet_switchEthereumChain",
+                params: [
+                  { chainId: `0x${parseInt(network.chainId).toString(16)}` },
+                ],
+              });
+
+              setCurrentNetwork(network);
+              dispatch(setNetwork(network));
+            } catch (addError) {
+              console.error("Error adding network:", addError);
+              if (addError instanceof Error) {
+                alert(`Failed to add network: ${addError.message}`);
+              } else {
+                alert(
+                  "Failed to add network to MetaMask. Please verify the network configuration and try again."
+                );
+              }
+            }
+          } else {
+            alert(
+              "Failed to switch network. Please verify the network configuration and try again."
+            );
+          }
+        } else if (switchError instanceof Error) {
+          alert(`Network Error: ${switchError.message}`);
+        } else {
+          alert(
+            "An unknown error occurred while switching networks. Please try again."
+          );
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [dispatch]
+  );
 
   // Use memoized value for the context to prevent unnecessary re-renders
   const contextValue = useMemo(
