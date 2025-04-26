@@ -1,7 +1,15 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const TransactionSchema = new mongoose.Schema({
   tokenAddress: {
+    type: String,
+    required: true,
+  },
+  chainId: {
+    type: String,
+    required: true,
+  },
+  chainName: {
     type: String,
     required: true,
   },
@@ -11,7 +19,7 @@ const TransactionSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['BUY', 'SELL', 'CREATE'],
+    enum: ["BUY", "SELL", "CREATE"],
     required: true,
   },
   amount: String,
@@ -22,7 +30,8 @@ const TransactionSchema = new mongoose.Schema({
   timestamp: {
     type: Date,
     default: Date.now,
-  }
+  },
 });
 
-export default mongoose.models.Transaction || mongoose.model('Transaction', TransactionSchema); 
+export default mongoose.models.Transaction ||
+  mongoose.model("Transaction", TransactionSchema);

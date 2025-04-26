@@ -1,4 +1,12 @@
-import { useState, useEffect } from "react";
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  ReactNode,
+  useMemo,
+  useCallback,
+} from "react";
 import { Shield, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ethers } from "ethers";
@@ -16,7 +24,7 @@ interface Network {
   blockExplorerUrl: string;
 }
 
-const SUPPORTED_NETWORKS: Network[] = [
+export const SUPPORTED_NETWORKS: Network[] = [
   {
     name: "Core Blockchain Mainnet",
     chainId: "1116",
@@ -74,29 +82,32 @@ const SUPPORTED_NETWORKS: Network[] = [
   // },
 ];
 
-export function NetworkSelector() {
+// Create Network Context
+interface NetworkContextType {
+  currentNetwork: Network;
+  isConnected: boolean;
+  isLoading: boolean;
+  switchNetwork: (network: Network) => Promise<void>;
+}
+
+const NetworkContext = createContext<NetworkContextType | undefined>(undefined);
+
+export function useNetwork() {
+  const context = useContext(NetworkContext);
+  if (context === undefined) {
+    throw new Error("useNetwork must be used within a NetworkProvider");
+  }
+  return context;
+}
+
+export function NetworkProvider({ children }: { children: ReactNode }) {
   const [currentNetwork, setCurrentNetwork] = useState<Network>(
     SUPPORTED_NETWORKS[0]
   );
-  const [isOpen, setIsOpen] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    checkNetwork();
-    if (window.ethereum) {
-      window.ethereum.on("chainChanged", checkNetwork);
-      window.ethereum.on("accountsChanged", checkNetwork);
-    }
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener("chainChanged", checkNetwork);
-        window.ethereum.removeListener("accountsChanged", checkNetwork);
-      }
-    };
-  }, []);
-
-  const checkNetwork = async () => {
+  const checkNetwork = useCallback(async () => {
     if (window.ethereum) {
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -116,9 +127,34 @@ export function NetworkSelector() {
         setIsConnected(false);
       }
     }
-  };
+  }, []);
 
-  const switchNetwork = async (network: Network) => {
+  useEffect(() => {
+    let mounted = true;
+
+    const initializeNetwork = async () => {
+      if (mounted) {
+        await checkNetwork();
+      }
+
+      if (window.ethereum && mounted) {
+        window.ethereum.on("chainChanged", checkNetwork);
+        window.ethereum.on("accountsChanged", checkNetwork);
+      }
+    };
+
+    initializeNetwork();
+
+    return () => {
+      mounted = false;
+      if (window.ethereum) {
+        window.ethereum.removeListener("chainChanged", checkNetwork);
+        window.ethereum.removeListener("accountsChanged", checkNetwork);
+      }
+    };
+  }, [checkNetwork]);
+
+  const switchNetwork = useCallback(async (network: Network) => {
     if (!window.ethereum) {
       alert("Please install MetaMask to switch networks!");
       return;
@@ -205,9 +241,26 @@ export function NetworkSelector() {
       }
     } finally {
       setIsLoading(false);
-      setIsOpen(false);
     }
-  };
+  }, []);
+
+  // Use memoized value for the context to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({ currentNetwork, isConnected, isLoading, switchNetwork }),
+    [currentNetwork, isConnected, isLoading, switchNetwork]
+  );
+
+  return (
+    <NetworkContext.Provider value={contextValue}>
+      {children}
+    </NetworkContext.Provider>
+  );
+}
+
+export function NetworkSelector() {
+  const [isOpen, setIsOpen] = useState(false);
+  const { currentNetwork, isConnected, isLoading, switchNetwork } =
+    useNetwork();
 
   return (
     <div className="relative">

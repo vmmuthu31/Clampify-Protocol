@@ -7,22 +7,25 @@ export async function GET(
   { params }: { params: Promise<{ address: string }> }
 ) {
   try {
-    const address = (await params).address;
-    await dbConnect();
-    const token = await Token.findOne({ address });
+    const creator = (await params).address;
+    const { searchParams } = new URL(request.url);
+    const chainId = searchParams.get("chainId");
 
-    if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Token not found" },
-        { status: 404 }
-      );
+    await dbConnect();
+
+    // Create query with required creator and optional chainId
+    const query: { creator: string; chainId?: string } = { creator };
+    if (chainId) {
+      query.chainId = chainId;
     }
 
-    return NextResponse.json({ success: true, token });
+    const tokens = await Token.find(query);
+
+    return NextResponse.json({ success: true, tokens });
   } catch (error) {
-    console.error("Error fetching token:", error);
+    console.error("Error fetching tokens:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to fetch token" },
+      { success: false, error: "Failed to fetch tokens" },
       { status: 500 }
     );
   }

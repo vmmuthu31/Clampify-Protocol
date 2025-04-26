@@ -5,6 +5,8 @@ import WalletButtonProvider from "@/providers/WalletButtonProvider";
 import Footer from "@/components/Footer";
 import { Navbar } from "@/components/navbar";
 import { WalletProvider } from "@/providers/WalletProvider";
+import { NetworkProvider } from "@/providers/NetworkProvider";
+import { ReduxProvider } from "@/providers/ReduxProvider";
 import Loader from "@/components/Loader";
 
 function ClientBody({ children }: { children: ReactNode }) {
@@ -17,13 +19,17 @@ function ClientBody({ children }: { children: ReactNode }) {
   return (
     <div>
       {isLoading && <Loader />}
-      <WalletProvider>
-        <WalletButtonProvider>
-          <Navbar />
-          {children}
-          <Footer />
-        </WalletButtonProvider>
-      </WalletProvider>
+      <ReduxProvider>
+        <NetworkProvider>
+          <WalletProvider>
+            <WalletButtonProvider>
+              <Navbar />
+              {children}
+              <Footer />
+            </WalletButtonProvider>
+          </WalletProvider>
+        </NetworkProvider>
+      </ReduxProvider>
     </div>
   );
 }

@@ -9,6 +9,8 @@ export async function POST(req: Request) {
 
     const transaction = await Transaction.create({
       tokenAddress: body.address,
+      chainId: body.chainId,
+      chainName: body.chainName,
       userAddress: body.creator,
       type: body.type, // For token creation
       amount: body.amount,
@@ -33,8 +35,18 @@ export async function GET(req: Request) {
     await dbConnect();
     const { searchParams } = new URL(req.url);
     const tokenAddress = searchParams.get("tokenAddress");
+    const chainId = searchParams.get("chainId");
 
-    const transactions = await Transaction.find({ tokenAddress })
+    // Create query with optional tokenAddress and chainId
+    const query: { tokenAddress?: string; chainId?: string } = {};
+    if (tokenAddress) {
+      query.tokenAddress = tokenAddress;
+    }
+    if (chainId) {
+      query.chainId = chainId;
+    }
+
+    const transactions = await Transaction.find(query)
       .sort({ timestamp: -1 })
       .limit(10);
 

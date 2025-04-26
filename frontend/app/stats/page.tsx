@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { ChartBar, TrendingUp, Users, Lock, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { TokenInfo } from "@/services/tokenCreation";
 import { ethers } from "ethers";
+import { useNetworkApi } from "@/hooks/useNetworkApi";
+import { useNetwork } from "@/components/NetworkSelector";
 
 interface Token {
   _id: string;
@@ -25,11 +27,18 @@ export default function StatsPage() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const fetchTokens = async () => {
+  const [tokensLoaded, setTokensLoaded] = useState(false);
+
+  const networkApi = useNetworkApi();
+  const { currentNetwork } = useNetwork();
+
+  // Memoized fetch function to prevent repeated API calls
+  const fetchTokens = useCallback(async () => {
+    if (tokensLoaded) return;
+
     setLoading(true);
     try {
-      const response = await fetch("/api/tokens");
-      const data = await response.json();
+      const data = await networkApi.getTokens();
 
       // Fetch balance info for each token
       const tokensWithInfo = await Promise.all(
@@ -52,16 +61,23 @@ export default function StatsPage() {
       );
 
       setTokens(tokensWithInfo);
+      setTokensLoaded(true);
     } catch (error) {
       console.error("Error fetching tokens:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [networkApi, tokensLoaded]);
 
+  // Reset loaded state when network changes
+  useEffect(() => {
+    setTokensLoaded(false);
+  }, [currentNetwork]);
+
+  // Fetch tokens only when needed
   useEffect(() => {
     fetchTokens();
-  }, []);
+  }, [fetchTokens]);
 
   const filteredTokens = tokens.filter(
     (token) =>

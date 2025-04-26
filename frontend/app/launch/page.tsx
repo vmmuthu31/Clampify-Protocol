@@ -27,7 +27,7 @@ import { Mint } from "@/services/tokenCreation";
 import { useRouter } from "next/navigation";
 import { ethers } from "ethers";
 import { usePrivy } from "@privy-io/react-auth";
-import { createTokenRecord, recordTransaction } from "@/services/api";
+import { useNetworkApi } from "@/hooks/useNetworkApi";
 
 // Lock period options in seconds
 const CREATOR_LOCK_PERIODS = [
@@ -89,6 +89,7 @@ export default function LaunchPage() {
     name: "Core",
     symbol: "CORE",
   });
+  const networkApi = useNetworkApi();
 
   // Fetch current network on component mount
   useEffect(() => {
@@ -222,26 +223,24 @@ export default function LaunchPage() {
       );
 
       // Create token record with all fields
-      await createTokenRecord({
+      await networkApi.createToken({
         address: tokenAddress,
         name: tokenForm.name,
         symbol: tokenForm.symbol,
-        creator: user?.wallet?.address || "",
-        initialSupply: tokenForm.initialSupply,
-        maxSupply: tokenForm.maxSupply,
-        initialPrice: priceInEth,
-        creatorLockupPeriod: tokenForm.creatorLockupPeriod,
-        lockLiquidity: tokenForm.lockLiquidity,
-        liquidityLockPeriod: tokenForm.liquidityLockPeriod,
-        image: tokenForm.image,
+        amount: tokenForm.initialSupply,
+        price: priceInEth,
+        txHash: tokenAddress,
+        id: tokenAddress,
+        type: "CREATE",
+        timestamp: new Date().toISOString(),
       });
 
-      await recordTransaction({
+      // Record the transaction
+      await networkApi.recordTransaction({
         address: tokenAddress,
-        creator: user?.wallet?.address,
+        creator: user?.wallet?.address || "",
         type: "CREATE",
         amount: tokenForm.initialSupply,
-        price: tokenForm.initialPrice,
         txHash: tokenAddress,
         name: tokenForm.name,
         symbol: tokenForm.symbol,

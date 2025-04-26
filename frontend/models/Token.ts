@@ -1,10 +1,17 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const TokenSchema = new mongoose.Schema({
   address: {
     type: String,
     required: true,
-    unique: true,
+  },
+  chainId: {
+    type: String,
+    required: true,
+  },
+  chainName: {
+    type: String,
+    required: true,
   },
   name: {
     type: String,
@@ -30,8 +37,11 @@ const TokenSchema = new mongoose.Schema({
   liquidityLockPeriod: String,
   image: {
     type: String,
-    default: '', // Empty string as default if no image provided
+    default: "", // Empty string as default if no image provided
   },
 });
 
-export default mongoose.models.Token || mongoose.model('Token', TokenSchema); 
+// Create a compound index for uniqueness on both address and chainId
+TokenSchema.index({ address: 1, chainId: 1 }, { unique: true });
+
+export default mongoose.models.Token || mongoose.model("Token", TokenSchema);

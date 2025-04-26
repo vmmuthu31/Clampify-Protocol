@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useParams } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import {
   ArrowUpRight,
@@ -30,7 +31,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
-import { useParams } from "next/navigation";
 import { TokenInfo } from "@/services/tokenCreation";
 import { ethers } from "ethers";
 import {
@@ -42,11 +42,7 @@ import {
   TokenReturnOnSell,
   getCandleData,
 } from "@/services/trade";
-import {
-  recordTransaction,
-  getTokenTransactions,
-  getTokenDetails,
-} from "@/services/api";
+import { getTokenTransactions } from "@/services/api";
 import { usePrivy } from "@privy-io/react-auth";
 import {
   createChart,
@@ -58,6 +54,10 @@ import {
   Time,
   CandlestickData,
 } from "lightweight-charts";
+import { useNetworkApi } from "@/hooks/useNetworkApi";
+import { useTokens } from "@/hooks/useTokens";
+import { useTransactions } from "@/hooks/useTransactions";
+import { SUPPORTED_NETWORKS } from "@/components/NetworkSelector";
 
 interface TokenData {
   id: string;
@@ -74,6 +74,7 @@ interface TokenData {
   twitter: string;
   telegram: string;
   contractAddress: string;
+  address?: string;
   decimals: number;
   totalSupply: string;
   circulatingSupply: string;
@@ -183,9 +184,46 @@ interface CandleDataPoint {
   volume: number;
 }
 
+// Add proper typing for debounce
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export default function TokenPage() {
-  const params = useParams();
-  const tokenId = params.id as string; // Get the ID from URL
+  // Use the useParams hook to access route parameters
+  const params = useParams<{ id: string }>();
+  const tokenId = params.id;
+
+  // Redux hooks
+  const {
+    currentToken,
+    fetchTokenById,
+    // We don't use this value but keep it using underscore prefix
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    loading: _tokenLoading,
+    updatePrice,
+  } = useTokens();
+
+  const {
+    recordTransaction,
+    fetchTokenTransactions,
+    // We don't use this value but keep it using underscore prefix
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    loading: _transactionsLoading,
+  } = useTransactions();
+
   const [isClient, setIsClient] = useState(false);
   const [copiedText, setCopiedText] = useState("");
   const [activeTimeframe, setActiveTimeframe] = useState("1D");
@@ -199,6 +237,7 @@ export default function TokenPage() {
   const [topHolders, setTopHolders] = useState<number>(0);
   const [tokenDetails, setTokenDetails] = useState<{
     name: string;
+    chainId: string;
     symbol: string;
     totalSupply: string;
     decimals: number;
@@ -206,7 +245,7 @@ export default function TokenPage() {
     creatorLockupPeriod: string;
     initialSupply: string;
     initialPrice: string;
-    contractAddress: string;
+    address: string;
     marketCap: string;
     volume24h: string;
   } | null>(null);
@@ -253,16 +292,61 @@ export default function TokenPage() {
     creatorLockupPeriod: "0",
   });
 
+  const networkApi = useNetworkApi();
+
   // Calculate days left in lock
   const daysLeft = Math.ceil(
     (new Date(tokenData.unlockEnd as string).getTime() - new Date().getTime()) /
       (1000 * 60 * 60 * 24)
   );
 
+  // Use the Redux data if available
   useEffect(() => {
-    const fetchTokenInfo = async () => {
-      if (tokenId) {
+    if (currentToken && tokenDetails) {
+      // Only update if the data is different to prevent infinite updates
+      if (
+        currentToken.name !== tokenDetails.name ||
+        currentToken.symbol !== tokenDetails.symbol ||
+        currentToken.totalSupply !== tokenDetails.totalSupply ||
+        currentToken.address !== tokenDetails.address
+      ) {
+        setTokenDetails({
+          ...tokenDetails,
+          name: currentToken.name,
+          symbol: currentToken.symbol,
+          totalSupply: currentToken.totalSupply,
+          address: currentToken.address,
+          decimals: tokenDetails.decimals,
+          balance: tokenDetails.balance,
+          creatorLockupPeriod: tokenDetails.creatorLockupPeriod,
+          initialSupply: tokenDetails.initialSupply,
+          initialPrice: tokenDetails.initialPrice,
+          marketCap: tokenDetails.marketCap,
+          volume24h: tokenDetails.volume24h,
+        });
+      }
+    }
+  }, [currentToken, tokenDetails]);
+
+  // Fetch token details from Redux
+  useEffect(() => {
+    let mounted = true;
+
+    const loadTokenData = async () => {
+      if (!tokenId) return;
+
+      try {
+        // Fetch token data from Redux store
+        await fetchTokenById(tokenId);
+
+        // Fetch transactions
+        await fetchTokenTransactions(tokenId);
+
+        // We'll still need to call some direct APIs for specific data not in Redux
         const tokenInfo = await TokenInfo(tokenId);
+
+        // Only update state if component is still mounted
+        if (!mounted) return;
 
         // Format BigNumber values
         const formattedInfo = {
@@ -270,11 +354,18 @@ export default function TokenPage() {
           totalSupply: tokenInfo.totalSupply.toString(),
           balance: tokenInfo.balance.toString(),
           initialPrice: ethers.utils.formatEther(tokenInfo.initialPrice || "0"),
+          address: tokenInfo.contractAddress,
+          chainId: "1", // Fallback to a simple default chain ID
         };
 
-        setTokenDetails(formattedInfo);
+        // Safely set token details
+        try {
+          setTokenDetails(formattedInfo);
+        } catch (error) {
+          console.error("Error setting token details:", error);
+        }
 
-        const topHolders = await getTopHolders(tokenInfo.contractAddress);
+        const topHolders = await getTopHolders(tokenInfo.contractAddress || "");
         setTopHolders(topHolders);
         const formattedTokenBalance = ethers.utils.formatEther(
           tokenInfo.balance.toString()
@@ -282,19 +373,34 @@ export default function TokenPage() {
         setTokenBalance(formattedTokenBalance);
 
         // Get token details including image and lock info
-        const { token } = await getTokenDetails(tokenId);
-        if (token) {
+        const { token } = await networkApi.getTokenDetails(tokenId);
+        if (token && mounted) {
           setTokenImage(token.image);
           setTokenLockDetails({
             lockLiquidity: token.lockLiquidity,
             liquidityLockPeriod: token.liquidityLockPeriod,
             creatorLockupPeriod: token.creatorLockupPeriod,
           });
+
+          // Update tokenDetails with the chainId from the token
+          if (token.chainId) {
+            setTokenDetails((prev) =>
+              prev ? { ...prev, chainId: token.chainId } : prev
+            );
+          }
         }
+      } catch (error) {
+        console.error("Error fetching token information:", error);
       }
     };
 
-    fetchTokenInfo();
+    loadTokenData();
+
+    // Cleanup function
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokenId]);
 
   // Percent unlocked so far
@@ -335,45 +441,54 @@ export default function TokenPage() {
     }
   };
 
-  // Update the input handler
-  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Apply debounce to input changes to prevent excessive API calls
+  const debouncedCoreAmount = useDebounce(coreAmount, 500);
+  const debouncedTokenAmount = useDebounce(tokenAmount, 500);
+
+  // Update to use debounced values for API calls
+  useEffect(() => {
+    const address = tokenDetails?.address;
+    if (tradeType === "buy" && debouncedCoreAmount && address) {
+      const amountInWei = ethers.utils.parseEther(debouncedCoreAmount);
+      calculateEstimatedReturn(amountInWei.toString(), address);
+    }
+  }, [debouncedCoreAmount, tokenDetails, tradeType]);
+
+  useEffect(() => {
+    const address = tokenDetails?.address;
+    if (tradeType === "sell" && debouncedTokenAmount && address) {
+      calculateEstimatedSellReturn();
+    }
+  }, [debouncedTokenAmount, tokenDetails, tradeType]);
+
+  // Add this function to calculate sell return separately
+  const calculateEstimatedSellReturn = async () => {
+    const address = tokenDetails?.address;
+    if (!tokenAmount || !address) return;
+
+    setIsCalculating(true);
+    try {
+      const sellReturn = await TokenReturnOnSell(address, tokenAmount);
+      setEstimatedReturn(sellReturn.ethAmount.toString());
+      setCoreAmount(sellReturn.ethAmount);
+    } catch (error) {
+      console.error("Error calculating sell return:", error);
+      setEstimatedReturn("0");
+      setCoreAmount("0");
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
+  // Update the input handler to not make API calls directly
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
     if (value === "" || isValidNumber(value)) {
       if (tradeType === "buy") {
         setCoreAmount(value);
-        if (value && tokenDetails?.contractAddress) {
-          const amountInWei = ethers.utils.parseEther(value);
-          await calculateEstimatedReturn(
-            amountInWei.toString(),
-            tokenDetails.contractAddress
-          );
-        } else {
-          setEstimatedReturn("0");
-        }
       } else {
-        // For sell, only update token amount and calculate return once
         setTokenAmount(value);
-        if (value && tokenDetails?.contractAddress) {
-          setIsCalculating(true);
-          try {
-            const sellReturn = await TokenReturnOnSell(
-              tokenDetails.contractAddress,
-              value
-            );
-            setEstimatedReturn(sellReturn.ethAmount);
-            setCoreAmount(sellReturn.ethAmount);
-          } catch (error) {
-            console.error("Error calculating sell return:", error);
-            setEstimatedReturn("0");
-            setCoreAmount("0");
-          } finally {
-            setIsCalculating(false);
-          }
-        } else {
-          setEstimatedReturn("0");
-          setCoreAmount("0");
-        }
       }
     }
   };
@@ -386,9 +501,9 @@ export default function TokenPage() {
   };
 
   const fetchCurrentPrice = async () => {
-    if (tokenDetails?.contractAddress) {
+    if (tokenDetails?.address) {
       try {
-        const price = await getTokenPrice(tokenDetails.contractAddress);
+        const price = await getTokenPrice(tokenDetails.address);
         setCurrentPrice(price);
       } catch (error) {
         console.error("Error fetching price:", error);
@@ -397,10 +512,10 @@ export default function TokenPage() {
   };
 
   useEffect(() => {
-    if (tokenDetails?.contractAddress) {
+    if (tokenDetails?.address) {
       fetchCurrentPrice();
     }
-  }, [tokenDetails?.contractAddress]);
+  }, [tokenDetails?.address]);
 
   const handleTrade = async () => {
     try {
@@ -414,63 +529,73 @@ export default function TokenPage() {
         const coreAmountInWei = ethers.utils.parseEther(coreAmount);
 
         const tokenReturnOnBuy = await TokenReturnOnBuy(
-          tokenDetails?.contractAddress || "",
+          tokenDetails?.address || "",
           coreAmountInWei.toString()
         );
         setEstimatedReturn(tokenReturnOnBuy.tokenAmount.toString());
 
         const buy = await buyTokens(
-          tokenDetails?.contractAddress || "",
+          tokenDetails?.address || "",
           estimatedReturn,
           coreAmount
         );
-        if (buy.hash) {
-          // Record the buy transaction
+        if (buy.hash && tokenDetails?.address && user?.wallet?.address) {
+          // Record the buy transaction using Redux
           await recordTransaction({
-            address: tokenDetails?.contractAddress,
-            creator: user?.wallet?.address,
+            address: tokenDetails.address,
+            creator: user.wallet.address,
             type: "BUY",
             amount: estimatedReturn,
             price: currentPrice,
             txHash: buy.hash,
-            name: tokenDetails?.name,
-            symbol: tokenDetails?.symbol,
+            name: tokenDetails.name,
+            symbol: tokenDetails.symbol,
           });
 
           setTransactionStatus({
             status: "success",
             hash: buy.hash,
           });
+
+          // Update the price in Redux
+          updatePrice(tokenId, parseFloat(currentPrice));
           await fetchCurrentPrice();
         }
       } else {
         const tokenReturnOnBuy = await TokenReturnOnSell(
-          tokenDetails?.contractAddress || "",
+          tokenDetails?.address || "",
           tokenAmount
         );
         setEstimatedReturn(tokenReturnOnBuy.ethAmount.toString());
 
-        const sell = await sellTokens(
-          tokenDetails?.contractAddress || "",
-          tokenAmount
-        );
+        const sell = await sellTokens(tokenDetails?.address || "", tokenAmount);
         if (sell.hash) {
-          // Record the sell transaction
-          await recordTransaction({
-            address: tokenDetails?.contractAddress,
-            creator: user?.wallet?.address,
-            type: "SELL",
-            amount: tokenAmount,
-            price: currentPrice,
-            txHash: sell.hash,
-            name: tokenDetails?.name,
-            symbol: tokenDetails?.symbol,
-          });
+          // Record the sell transaction using Redux
+          if (
+            tokenDetails?.address &&
+            user?.wallet?.address &&
+            tokenDetails?.name &&
+            tokenDetails?.symbol
+          ) {
+            await recordTransaction({
+              address: tokenDetails.address,
+              creator: user.wallet.address,
+              type: "SELL",
+              amount: tokenAmount,
+              price: currentPrice,
+              txHash: sell.hash,
+              name: tokenDetails.name,
+              symbol: tokenDetails.symbol,
+            });
+          }
 
           setTransactionStatus({
             status: "success",
             hash: sell.hash,
           });
+
+          // Update the price in Redux
+          updatePrice(tokenId, parseFloat(currentPrice));
           await fetchCurrentPrice();
         }
       }
@@ -486,16 +611,24 @@ export default function TokenPage() {
   };
 
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(label);
-    toast({
-      title: "Copied!",
-      description: `${label} copied to clipboard`,
-    });
+    try {
+      navigator.clipboard.writeText(text);
+      setCopiedText(label);
+      toast({
+        title: "Copied!",
+        description: `${label} copied to clipboard`,
+      });
 
-    setTimeout(() => {
-      setCopiedText("");
-    }, 2000);
+      setTimeout(() => {
+        setCopiedText("");
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+      toast({
+        title: "Error",
+        description: "Failed to copy to clipboard",
+      });
+    }
   };
 
   const formatNumber = (num: number) => {
@@ -540,139 +673,11 @@ export default function TokenPage() {
     fetchData();
   }, [tokenId]);
 
-  // Update the initializeChart function
-  const initializeChart = useCallback(() => {
-    if (!chartContainerRef.current || candleData.length === 0) return;
-
-    const chartOptions = {
-      layout: {
-        background: { type: ColorType.Solid, color: "#0D0B15" },
-        textColor: "#d1d4dc",
-      },
-      grid: {
-        vertLines: { color: "rgba(42, 46, 57, 0.6)" },
-        horzLines: { color: "rgba(42, 46, 57, 0.6)" },
-      },
-      width: chartContainerRef.current.clientWidth,
-      height: 400,
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: false,
-        borderColor: "rgba(42, 46, 57, 0.6)",
-        textColor: "#d1d4dc",
-      },
-      rightPriceScale: {
-        borderColor: "rgba(42, 46, 57, 0.6)",
-        textColor: "#d1d4dc",
-      },
-      crosshair: {
-        mode: CrosshairMode.Normal,
-        vertLine: {
-          color: "#758696",
-          width: 1 as LineWidth,
-          style: LineStyle.Dashed,
-        },
-        horzLine: {
-          color: "#758696",
-          width: 1 as LineWidth,
-          style: LineStyle.Dashed,
-        },
-      },
-    };
-
-    const chart = createChart(chartContainerRef.current, chartOptions);
-    // Create series with professional styling
-    const mainSeries = chart.addSeries(LineSeries, {
-      title: "Price",
-      lastValueVisible: true,
-      priceLineVisible: false,
-      baseLineVisible: false,
-      color: "#26a69a",
-    });
-
-    // Set the data
-    mainSeries.setData(
-      candleData
-        .sort((a, b) => a.time - b.time)
-        .map((d) => ({
-          time: d.time as Time,
-          value: d.close,
-        }))
-    );
-
-    // Add volume series
-    const volumeSeries = chart.addSeries(LineSeries, {
-      title: "Volume",
-      lastValueVisible: true,
-      priceLineVisible: false,
-      baseLineVisible: false,
-      color: "rgba(38, 166, 154, 0.5)",
-      priceScaleId: "",
-    });
-
-    // Set volume data
-    volumeSeries.setData(
-      candleData
-        .sort((a, b) => a.time - b.time)
-        .map((d) => ({
-          time: d.time as Time,
-          value: d.volume,
-        }))
-    );
-
-    // Handle legend updates
-    const legend = document.createElement("div");
-    legend.style.position = "absolute";
-    legend.style.left = "12px";
-    legend.style.top = "12px";
-    legend.style.zIndex = "1";
-    legend.style.fontSize = "12px";
-    legend.style.color = "#d1d4dc";
-    legend.style.fontFamily = "sans-serif";
-    chartContainerRef.current.appendChild(legend);
-
-    chart.subscribeCrosshairMove((param) => {
-      if (param.time) {
-        const data = param.seriesData.get(mainSeries) as CandlestickData;
-        if (data) {
-          legend.innerHTML = `
-            <div style="font-size: 13px; margin: 4px 0;">
-              O <span style="color: #d1d4dc">${data.open.toFixed(6)}</span> 
-              H <span style="color: #d1d4dc">${data.high.toFixed(6)}</span> 
-              L <span style="color: #d1d4dc">${data.low.toFixed(6)}</span> 
-              C <span style="color: #d1d4dc">${data.close.toFixed(6)}</span>
-            </div>
-          `;
-        }
-      } else {
-        legend.innerHTML = "";
-      }
-    });
-
-    // Fit content and add margin
-    chart.timeScale().fitContent();
-
-    // Handle resize
-    const handleResize = () => {
-      if (chartContainerRef.current) {
-        chart.applyOptions({
-          width: chartContainerRef.current.clientWidth,
-        });
-      }
-    };
-    window.addEventListener("resize", handleResize);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      chart.remove();
-    };
-  }, [candleData]);
-
   // Update the useEffect for fetching candle data
   useEffect(() => {
+    let isMounted = true;
     const fetchCandleData = async () => {
-      if (tokenId) {
+      if (tokenId && candleData.length === 0) {
         try {
           const data = await getCandleData(tokenId);
           // Format the data for the chart
@@ -684,7 +689,10 @@ export default function TokenPage() {
             close: d.close,
             volume: d.volume,
           }));
-          setCandleData(formattedData);
+
+          if (isMounted) {
+            setCandleData(formattedData);
+          }
         } catch (error) {
           console.error("Error fetching candle data:", error);
         }
@@ -692,28 +700,168 @@ export default function TokenPage() {
     };
 
     fetchCandleData();
-  }, [tokenId]);
 
-  // Initialize chart when candle data changes
-  useEffect(() => {
-    const cleanup = initializeChart();
     return () => {
-      if (cleanup) cleanup();
+      isMounted = false;
     };
-  }, [initializeChart]);
+  }, [tokenId, candleData.length]);
 
-  // Add resize handler
-  useEffect(() => {
-    const handleResize = () => {
-      if (chartContainerRef.current) {
-        const cleanup = initializeChart();
-        if (cleanup) cleanup();
-      }
-    };
+  // Update the initializeChart function with memoization to prevent excessive rerenders
+  const initializeChart = useCallback(() => {
+    if (!chartContainerRef.current || candleData.length === 0) {
+      return undefined;
+    }
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [initializeChart]);
+    // Clear existing chart if any
+    chartContainerRef.current.innerHTML = "";
+
+    try {
+      const chartOptions = {
+        layout: {
+          background: { type: ColorType.Solid, color: "#0D0B15" },
+          textColor: "#d1d4dc",
+        },
+        grid: {
+          vertLines: { color: "rgba(42, 46, 57, 0.6)" },
+          horzLines: { color: "rgba(42, 46, 57, 0.6)" },
+        },
+        width: chartContainerRef.current.clientWidth,
+        height: 400,
+        timeScale: {
+          timeVisible: true,
+          secondsVisible: false,
+          borderColor: "rgba(42, 46, 57, 0.6)",
+          textColor: "#d1d4dc",
+        },
+        rightPriceScale: {
+          borderColor: "rgba(42, 46, 57, 0.6)",
+          textColor: "#d1d4dc",
+        },
+        crosshair: {
+          mode: CrosshairMode.Normal,
+          vertLine: {
+            color: "#758696",
+            width: 1 as LineWidth,
+            style: LineStyle.Dashed,
+          },
+          horzLine: {
+            color: "#758696",
+            width: 1 as LineWidth,
+            style: LineStyle.Dashed,
+          },
+        },
+      };
+
+      const chart = createChart(chartContainerRef.current, chartOptions);
+
+      // Create series with professional styling
+      const mainSeries = chart.addSeries(LineSeries, {
+        title: "Price",
+        lastValueVisible: true,
+        priceLineVisible: false,
+        baseLineVisible: false,
+        color: "#26a69a",
+      });
+
+      // Limit the amount of data points to improve performance
+      const sortedData = [...candleData].sort((a, b) => a.time - b.time);
+      const dataToShow =
+        sortedData.length > 100
+          ? sortedData.slice(sortedData.length - 100)
+          : sortedData;
+
+      // Set the data
+      mainSeries.setData(
+        dataToShow.map((d) => ({
+          time: d.time as Time,
+          value: d.close,
+        }))
+      );
+
+      // Add volume series
+      const volumeSeries = chart.addSeries(LineSeries, {
+        title: "Volume",
+        lastValueVisible: true,
+        priceLineVisible: false,
+        baseLineVisible: false,
+        color: "rgba(38, 166, 154, 0.5)",
+        priceScaleId: "",
+      });
+
+      // Set volume data
+      volumeSeries.setData(
+        dataToShow.map((d) => ({
+          time: d.time as Time,
+          value: d.volume,
+        }))
+      );
+
+      // Handle legend updates
+      const legend = document.createElement("div");
+      legend.style.position = "absolute";
+      legend.style.left = "12px";
+      legend.style.top = "12px";
+      legend.style.zIndex = "1";
+      legend.style.fontSize = "12px";
+      legend.style.color = "#d1d4dc";
+      legend.style.fontFamily = "sans-serif";
+      chartContainerRef.current.appendChild(legend);
+
+      // Use a lower frequency update for crosshair to prevent performance issues
+      let lastUpdateTime = 0;
+      chart.subscribeCrosshairMove((param) => {
+        const now = Date.now();
+        if (now - lastUpdateTime < 50) return; // Limit updates to 20fps
+        lastUpdateTime = now;
+
+        if (param.time) {
+          const data = param.seriesData.get(mainSeries) as CandlestickData;
+          if (data) {
+            legend.innerHTML = `
+              <div style="font-size: 13px; margin: 4px 0;">
+                O <span style="color: #d1d4dc">${
+                  data.open?.toFixed(6) || 0
+                }</span> 
+                H <span style="color: #d1d4dc">${
+                  data.high?.toFixed(6) || 0
+                }</span> 
+                L <span style="color: #d1d4dc">${
+                  data.low?.toFixed(6) || 0
+                }</span> 
+                C <span style="color: #d1d4dc">${
+                  data.close?.toFixed(6) || 0
+                }</span>
+              </div>
+            `;
+          }
+        } else {
+          legend.innerHTML = "";
+        }
+      });
+
+      // Fit content and add margin
+      chart.timeScale().fitContent();
+
+      // Handle resize
+      const handleResize = () => {
+        if (chartContainerRef.current) {
+          chart.applyOptions({
+            width: chartContainerRef.current.clientWidth,
+          });
+        }
+      };
+      window.addEventListener("resize", handleResize);
+
+      // Cleanup
+      return () => {
+        window.removeEventListener("resize", handleResize);
+        chart.remove();
+      };
+    } catch (error) {
+      console.error("Chart initialization error:", error);
+      return undefined;
+    }
+  }, [candleData]);
 
   // Add helper function to format duration
   const formatLockDuration = (seconds: string) => {
@@ -724,6 +872,63 @@ export default function TokenPage() {
     const hours = Math.floor(parseInt(seconds) / 3600);
     return `${hours} hours`;
   };
+
+  // Initialize chart when candle data changes
+  useEffect(() => {
+    let chartCleanup: (() => void) | undefined;
+
+    // Only initialize the chart if we have data
+    if (candleData.length > 0 && chartContainerRef.current) {
+      chartCleanup = initializeChart();
+    }
+
+    return () => {
+      if (chartCleanup) chartCleanup();
+    };
+  }, [initializeChart, candleData]);
+
+  // Add resize handler with debounce to improve performance
+  useEffect(() => {
+    let resizeTimeout: NodeJS.Timeout;
+
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (chartContainerRef.current && candleData.length > 0) {
+          const cleanup = initializeChart();
+          if (cleanup) cleanup();
+        }
+      }, 250); // 250ms debounce
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      clearTimeout(resizeTimeout);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [initializeChart, candleData.length]);
+
+  // Create memoized handlers to prevent unnecessary re-renders
+  const handleTimeframeClick = useCallback(
+    (e: React.MouseEvent, timeframe: string) => {
+      e.preventDefault();
+      if (activeTimeframe !== timeframe) {
+        setActiveTimeframe(timeframe);
+      }
+    },
+    [activeTimeframe]
+  );
+
+  const handleTabClick = useCallback(
+    (e: React.MouseEvent, tabValue: string) => {
+      e.preventDefault();
+      if (activeTab !== tabValue) {
+        setActiveTab(tabValue);
+      }
+    },
+    [activeTab]
+  );
 
   if (!isClient) {
     return null;
@@ -805,7 +1010,7 @@ export default function TokenPage() {
                             ? "bg-[#ffae5c] text-white"
                             : "text-white/70 hover:text-white"
                         }`}
-                        onClick={() => setActiveTimeframe(timeframe)}
+                        onClick={(e) => handleTimeframeClick(e, timeframe)}
                       >
                         {timeframe}
                       </Button>
@@ -846,7 +1051,7 @@ export default function TokenPage() {
                           ? "bg-gradient-to-r from-[#ffae5c] to-[#4834D4] text-white shadow-md shadow-[#ffae5c]/20 font-medium"
                           : "text-white/60 hover:text-white hover:bg-white/5"
                       }`}
-                      onClick={() => setActiveTab(tab.value)}
+                      onClick={(e) => handleTabClick(e, tab.value)}
                     >
                       <span
                         className={
@@ -1299,16 +1504,26 @@ export default function TokenPage() {
                             <a
                               href={
                                 recentTransactions?.type[i] === "CREATE"
-                                  ? `https://scan.test2.btcs.network/address/${recentTransactions.txHashes[i]}`
-                                  : `https://scan.test2.btcs.network/tx/${recentTransactions.txHashes[i]}`
+                                  ? `${
+                                      SUPPORTED_NETWORKS.find(
+                                        (network) =>
+                                          network.chainId ===
+                                          tokenDetails?.chainId
+                                      )?.blockExplorerUrl
+                                    }/tx/${recentTransactions.txHashes[i]}`
+                                  : `${
+                                      SUPPORTED_NETWORKS.find(
+                                        (network) =>
+                                          network.chainId ===
+                                          tokenDetails?.chainId
+                                      )?.blockExplorerUrl
+                                    }/tx/${recentTransactions.txHashes[i]}`
                               }
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-[#6C5CE7] hover:underline"
                             >
-                              {recentTransactions?.type[i] === "CREATE"
-                                ? "View Contract"
-                                : "View Tx"}
+                              View Tx
                             </a>
                           )}
                         </div>
@@ -1604,12 +1819,6 @@ export default function TokenPage() {
                       : "bg-gradient-to-r from-[#ffae5c] to-[#4834D4] text-white hover:opacity-90"
                   }`}
                   onClick={handleTrade}
-                  // disabled={
-                  //   !tokenAmount ||
-                  //   parseFloat(tokenAmount) <= 0 ||
-                  //   !coreAmount ||
-                  //   parseFloat(coreAmount) <= 0
-                  // }
                 >
                   Place Trade
                 </button>
@@ -1638,7 +1847,7 @@ export default function TokenPage() {
                   </div>
                   <div className="flex items-center justify-between bg-black/30 rounded-lg p-3">
                     <span className="text-white text-sm truncate mr-2">
-                      {tokenDetails?.contractAddress || "Loading..."}
+                      {tokenDetails?.address || "Loading..."}
                     </span>
                     <Button
                       size="icon"
@@ -1646,7 +1855,7 @@ export default function TokenPage() {
                       className="h-8 w-8 rounded-md hover:bg-[#ffae5c]/10"
                       onClick={() =>
                         copyToClipboard(
-                          tokenDetails?.contractAddress || "",
+                          tokenDetails?.address || "",
                           "Contract address"
                         )
                       }
@@ -1669,11 +1878,6 @@ export default function TokenPage() {
                   </div>
                   <div>
                     <div className="text-white/60 text-sm">Launch Date</div>
-                    {/* <div className="text-white">
-                      {tokenDetails?.createdAt
-                        ? new Date(tokenDetails.createdAt).toLocaleDateString()
-                        : "Loading..."}
-                    </div> */}
                   </div>
                 </div>
 

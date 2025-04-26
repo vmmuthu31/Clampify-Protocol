@@ -16,6 +16,7 @@ import {
   FaChartBar,
   FaUsers,
 } from "react-icons/fa";
+import { useNetworkApi } from "@/hooks/useNetworkApi";
 
 // Reusable section header component
 const SectionHeader = ({ title }: { title: string }) => (
@@ -41,68 +42,110 @@ const SectionHeader = ({ title }: { title: string }) => (
   </div>
 );
 
+// Define interface for token data
+interface TokenData {
+  _id?: string;
+  id?: string;
+  name: string;
+  symbol: string;
+  address?: string;
+  initialPrice?: string;
+  price?: number;
+  creator?: string;
+  chainId?: string;
+  chainName?: string;
+  initialSupply?: string;
+  maxSupply?: string;
+  creatorLockupPeriod?: string;
+  lockLiquidity?: boolean;
+  liquidityLockPeriod?: string;
+  image?: string;
+  createdAt?: string;
+
+  // Display properties
+  displayPrice?: number;
+  displayChange?: number;
+  displayLocked?: string;
+  displayVolume?: number;
+  displayDaysAgo?: number;
+  displayIsNew?: boolean;
+  displayIsTrending?: boolean;
+}
+
 export default function HomePage() {
   // Client-side state
   const [isClient, setIsClient] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  interface Token {
-    _id: string;
-    address: string;
-    name: string;
-    symbol: string;
-    creator: string;
-    initialSupply: string;
-    maxSupply: string;
-    createdAt: string;
-    __v: number;
-    // Display attributes
-    displayPrice?: number;
-    displayChange?: number;
-    displayLocked?: string;
-    displayVolume?: number;
-    displayDaysAgo?: number;
-    displayIsNew?: boolean;
-    displayIsTrending?: boolean;
-  }
+  const [processedTokens, setProcessedTokens] = useState<TokenData[]>([]);
+  const [isDataFetched, setIsDataFetched] = useState(false);
 
-  const [tokens, setTokens] = useState<Token[]>([]);
+  // Use network API directly to avoid Redux issues
+  const networkApi = useNetworkApi();
 
-  const fetchTokens = async () => {
-    setLoading(true);
-    const response = await fetch("/api/tokens");
-    const data = await response.json();
-    setTokens(data.tokens);
-    setLoading(false);
-  };
-
-  // Add display attributes to tokens once they're loaded
+  // Fetch tokens directly from the API - ONCE only
   useEffect(() => {
-    if (tokens.length > 0) {
-      const enhancedTokens = tokens.map((token) => {
-        // Generate consistent random values for each token based on its address
-        const seed = token.address.charCodeAt(2) / 255; // Use character code as pseudo-random seed
+    // Only fetch if we're on client and haven't fetched data yet
+    if (isClient && !isDataFetched && !loading) {
+      const fetchTokens = async () => {
+        try {
+          setLoading(true);
+          const response = await networkApi.getTokens();
 
-        return {
-          ...token,
-          displayPrice: 0.0001 + seed * 0.01,
-          displayChange: (seed - 0.5) * 2 * 50, // Range from -50% to +50%
-          displayLocked: `${Math.floor(70 + seed * 30)}%`, // Range from 70% to 100%
-          displayVolume: Math.floor(10 + seed * 42), // Range from 10% to 52%
-          displayDaysAgo: Math.max(1, Math.floor(seed * 7)), // Range from 1 to 7 days
-          displayIsNew: Math.floor(seed * 7) <= 2, // New if 2 days or less
-          displayIsTrending: seed > 0.6, // 40% chance of trending
-        };
-      });
+          const tokensData = response.tokens || [];
 
-      setTokens(enhancedTokens);
+          // Check if we received valid data
+          if (Array.isArray(tokensData) && tokensData.length > 0) {
+            // Apply consistent random properties
+            const processedData = tokensData.map((token) => {
+              // Use a consistent seed based on token ID or address
+              const seedStr = token._id || token.address || "";
+              let seed = 0;
+
+              // Simple hash function for consistent randomness
+              for (let i = 0; i < seedStr.length; i++) {
+                seed = (seed << 5) - seed + seedStr.charCodeAt(i);
+                seed = seed & seed; // Convert to 32bit integer
+              }
+
+              // Normalize to 0-1 range
+              seed = Math.abs(seed % 1000) / 1000;
+
+              // Ensure initialPrice is converted to a number
+              const initialPriceNum = token.initialPrice
+                ? parseFloat(token.initialPrice)
+                : null;
+              const calculatedPrice = 0.0001 + seed * 0.01;
+
+              return {
+                ...token,
+                id: token._id, // Map _id to id for consistency
+                displayPrice: initialPriceNum || calculatedPrice,
+                displayChange: (seed - 0.5) * 2 * 50, // Range from -50% to +50%
+                displayLocked: `${Math.floor(70 + seed * 30)}%`, // Range from 70% to 100%
+                displayVolume: Math.floor(10 + seed * 42), // Range from 10% to 52%
+                displayDaysAgo: Math.max(1, Math.floor(seed * 7)), // Range from 1 to 7 days
+                displayIsNew: Math.floor(seed * 7) <= 2, // New if 2 days or less
+                displayIsTrending: seed > 0.6, // 40% chance of trending
+              };
+            });
+
+            setProcessedTokens(processedData);
+          } else {
+            console.log("No tokens found or invalid data", tokensData);
+          }
+        } catch (error) {
+          console.error("Error fetching tokens:", error);
+        } finally {
+          setLoading(false);
+          setIsDataFetched(true); // Mark as fetched regardless of result
+        }
+      };
+
+      fetchTokens();
     }
-  }, [tokens.length]);
-
-  useEffect(() => {
-    fetchTokens();
-  }, []);
+  }, [networkApi, isClient, isDataFetched, loading]);
 
   useEffect(() => {
     setIsClient(true);
@@ -114,7 +157,8 @@ export default function HomePage() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  const filteredTokens = tokens.filter(
+  // Filter tokens based on search input
+  const filteredTokens = processedTokens.filter(
     (token) =>
       token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
@@ -306,9 +350,12 @@ export default function HomePage() {
                 </motion.div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {filteredTokens.slice(0, 8).map((token: Token, i: number) => {
+                  {filteredTokens.slice(0, 8).map((token, i) => {
                     return (
-                      <div key={token.address} className="relative">
+                      <div
+                        key={token.id || token._id || i}
+                        className="relative"
+                      >
                         {/* Border styling with corner lines */}
                         <div className="absolute inset-0 pointer-events-none">
                           <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#3A3A3A]"></div>
@@ -329,7 +376,7 @@ export default function HomePage() {
                         >
                           <div className="flex items-start gap-3 mb-6">
                             <div className="w-12 h-12 rounded-full bg-[#583D21] flex items-center justify-center text-white font-semibold text-sm">
-                              CLP
+                              {token.symbol.substring(0, 3)}
                             </div>
                             <div>
                               <div className="text-white font-medium text-lg">
@@ -849,7 +896,7 @@ export default function HomePage() {
               </motion.div>
             ) : (
               <>
-                {tokens.length === 0 ? (
+                {processedTokens.length === 0 ? (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -860,17 +907,17 @@ export default function HomePage() {
                 ) : (
                   <>
                     {/* Sort tokens by createdAt in descending order and take the latest 5 */}
-                    {tokens
+                    {processedTokens
                       .sort(
                         (a, b) =>
-                          new Date(b.createdAt).getTime() -
-                          new Date(a.createdAt).getTime()
+                          new Date(b.createdAt || 0).getTime() -
+                          new Date(a.createdAt || 0).getTime()
                       )
                       .slice(0, 5)
                       .map((token, i) => {
                         return (
                           <motion.div
-                            key={token._id}
+                            key={token.id || token._id || i}
                             className="sm:grid sm:grid-cols-5 flex flex-col items-start sm:items-center border-b border-[#ffae5c]/10 hover:bg-[#ffae5c]/10 transition-colors p-4"
                             initial={{ opacity: 0, y: 10 }}
                             whileInView={{ opacity: 1, y: 0 }}
@@ -899,7 +946,10 @@ export default function HomePage() {
                                 Price:
                               </span>
                               <span className="text-white font-medium text-sm sm:text-base">
-                                ${token.displayPrice?.toFixed(4) || "0.0023"}
+                                $
+                                {typeof token.displayPrice === "number"
+                                  ? token.displayPrice.toFixed(8)
+                                  : "0.0000001"}
                               </span>
                             </div>
                             <div className="flex justify-between w-full sm:w-auto sm:block sm:col-span-1 pb-2 sm:pb-0 border-b border-[#ffae5c]/10 sm:border-0 mb-2 sm:mb-0">
@@ -914,7 +964,10 @@ export default function HomePage() {
                                 }`}
                               >
                                 {(token.displayChange || 0) >= 0 ? "+" : ""}
-                                {token.displayChange?.toFixed(1) || "0.0"}%
+                                {typeof token.displayChange === "number"
+                                  ? token.displayChange.toFixed(1)
+                                  : "0.0"}
+                                %
                               </span>
                             </div>
                             <div className="flex justify-between w-full sm:w-auto sm:block sm:col-span-1 pb-2 sm:pb-0 border-b border-[#ffae5c]/10 sm:border-0 mb-2 sm:mb-0">
@@ -926,11 +979,15 @@ export default function HomePage() {
                                   <motion.div
                                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#ffae5c] to-[#4834D4]"
                                     style={{
-                                      width: token.displayLocked || "85%",
+                                      width: token.lockLiquidity
+                                        ? "95%"
+                                        : token.displayLocked || "85%",
                                     }}
                                     initial={{ width: "0%" }}
                                     whileInView={{
-                                      width: token.displayLocked || "85%",
+                                      width: token.lockLiquidity
+                                        ? "95%"
+                                        : token.displayLocked || "85%",
                                     }}
                                     viewport={{ once: true }}
                                     transition={{
@@ -940,7 +997,9 @@ export default function HomePage() {
                                   />
                                 </div>
                                 <span className="text-white text-xs sm:text-sm">
-                                  {token.displayLocked || "85%"}
+                                  {token.lockLiquidity
+                                    ? "95%"
+                                    : token.displayLocked || "85%"}
                                 </span>
                               </div>
                             </div>
@@ -950,12 +1009,21 @@ export default function HomePage() {
                                   Created:
                                 </span>
                                 <span className="text-white/70 text-xs sm:text-sm">
-                                  {token.displayDaysAgo || 3}d ago
+                                  {token.displayDaysAgo ||
+                                    new Date().getDate() -
+                                      new Date(
+                                        token.createdAt || 0
+                                      ).getDate() ||
+                                    3}
+                                  d ago
                                 </span>
                               </div>
-                              <Button className="bg-[#583D21] hover:bg-[#73512E] text-white font-medium text-xs sm:text-sm px-3 sm:px-5 py-1 sm:py-2 h-auto">
+                              <Link
+                                href={`/token/${token.address}`}
+                                className="bg-[#583D21] hover:bg-[#73512E] text-white font-medium text-xs sm:text-sm px-3 sm:px-5 py-1 sm:py-2 h-auto"
+                              >
                                 Trade
-                              </Button>
+                              </Link>
                             </div>
                           </motion.div>
                         );

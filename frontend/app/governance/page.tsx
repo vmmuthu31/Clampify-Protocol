@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Card,
@@ -33,6 +33,7 @@ import {
   activateGovernance,
   castVote,
   executeProposal,
+  NETWORK_CONFIG,
 } from "@/services/tokenCreation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -56,6 +57,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TokenInfo } from "@/services/tokenCreation";
 import { ethers } from "ethers";
+import { useNetworkApi } from "@/hooks/useNetworkApi";
+import { useNetwork } from "@/components/NetworkSelector";
 
 type IGovernanceTokenInfo = {
   address: string;
@@ -121,19 +124,6 @@ interface Token {
   votingPeriod?: number;
 }
 
-interface RawProposalData {
-  0: string; // title
-  1: string; // description
-  2: string; // proposer
-  3: { _hex: string; _isBigNumber: boolean }; // createdAt
-  4: { _hex: string; _isBigNumber: boolean }; // votingEndsAt
-  5: boolean; // executed
-  6: string; // targetContract
-  7: { _hex: string; _isBigNumber: boolean }; // yesVotes
-  8: { _hex: string; _isBigNumber: boolean }; // noVotes
-  [key: number]: string | boolean | { _hex: string; _isBigNumber: boolean };
-}
-
 export default function GovernancePage() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
@@ -147,113 +137,148 @@ export default function GovernancePage() {
     useState<IGovernanceTokenInfo | null>(null);
   const [isActivating, setIsActivating] = useState(false);
   const [loading, setLoading] = useState(false);
-  // Fetch tokens from backend
-  useEffect(() => {
-    const fetchTokens = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("/api/tokens");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        if (data.success) {
-          setTokens(data.tokens);
-        }
-      } catch (error) {
-        console.error("Error fetching tokens:", error);
-        toast.error("Failed to fetch tokens");
-      } finally {
-        setLoading(false);
+  const [tokensLoaded, setTokensLoaded] = useState(false);
+  const [userTokensLoaded, setUserTokensLoaded] = useState(false);
+
+  // Get network API
+  const networkApi = useNetworkApi();
+  const { currentNetwork } = useNetwork();
+
+  // Memoize API callbacks to avoid re-renders
+  const fetchTokensApi = useCallback(async () => {
+    if (tokensLoaded) return;
+    try {
+      setLoading(true);
+      const data = await networkApi.getTokens();
+      if (data.success) {
+        setTokens(data.tokens);
+        setTokensLoaded(true);
       }
-    };
-
-    fetchTokens();
-  }, []);
-
-  // Fetch user's created tokens
-  useEffect(() => {
-    const fetchUserTokens = async () => {
-      if (userAddress) {
-        try {
-          const response = await fetch(`/api/tokens/user/${userAddress}`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
-          if (data.success) {
-            // Fetch balance info for each token
-            const tokensWithBalance = await Promise.all(
-              data.tokens.map(async (token: Token) => {
-                try {
-                  const tokenInfo = await TokenInfo(token.address);
-                  return {
-                    ...token,
-                    balance: tokenInfo.balance,
-                    totalSupply: tokenInfo.totalSupply,
-                  };
-                } catch (error) {
-                  console.error(
-                    `Error fetching info for token ${token.address}:`,
-                    error
-                  );
-                  return token;
-                }
-              })
-            );
-            setUserCreatedTokens(tokensWithBalance);
-          }
-        } catch (error) {
-          console.error("Error fetching user tokens:", error);
-          toast.error("Failed to fetch user tokens");
-        }
-      }
-    };
-
-    if (userAddress) {
-      fetchUserTokens();
+    } catch (error) {
+      console.error("Error fetching tokens:", error);
+      toast.error("Failed to fetch tokens");
+    } finally {
+      setLoading(false);
     }
-  }, [userAddress]);
+  }, [networkApi, tokensLoaded]);
 
+  const fetchUserTokensApi = useCallback(async () => {
+    if (!userAddress || userTokensLoaded) return;
+    try {
+      const data = await networkApi.getUserTokens(userAddress);
+      if (data.success) {
+        // Fetch balance info for each token
+        const tokensWithBalance = await Promise.all(
+          data.tokens.map(async (token: Token) => {
+            try {
+              const tokenInfo = await TokenInfo(token.address);
+              return {
+                ...token,
+                balance: tokenInfo.balance,
+                totalSupply: tokenInfo.totalSupply,
+              };
+            } catch (error) {
+              console.error(
+                `Error fetching info for token ${token.address}:`,
+                error
+              );
+              return token;
+            }
+          })
+        );
+        setUserCreatedTokens(tokensWithBalance);
+        setUserTokensLoaded(true);
+      }
+    } catch (error) {
+      console.error("Error fetching user tokens:", error);
+      toast.error("Failed to fetch user tokens");
+    }
+  }, [networkApi, userAddress, userTokensLoaded]);
+
+  // Reset loaded state when network changes
+  useEffect(() => {
+    setTokensLoaded(false);
+    setUserTokensLoaded(false);
+  }, [currentNetwork]);
+
+  // Fetch tokens only once when needed
+  useEffect(() => {
+    fetchTokensApi();
+  }, [fetchTokensApi]);
+
+  // Fetch user's created tokens only once when needed
+  useEffect(() => {
+    if (userAddress) {
+      fetchUserTokensApi();
+    }
+  }, [fetchUserTokensApi, userAddress]);
+
+  // Fetch proposals
   useEffect(() => {
     const fetchProposals = async () => {
-      if (selectedToken) {
-        try {
-          const proposalCount = await GovernanceProposalCount(selectedToken);
-          if (proposalCount > 0) {
-            const proposalPromises = [];
-            for (let i = 1; i <= proposalCount; i++) {
-              proposalPromises.push(GovernanceProposalInfo(selectedToken, i));
-            }
+      if (!selectedToken) return;
 
-            const newProposals = await Promise.all(proposalPromises);
-            setProposals(
-              newProposals.map((p) => ({
-                ...p,
-                createdAt: p?.createdAt?.toString(),
-                votingEndsAt: p?.votingEndsAt?.toString(),
-                yesVotes: p?.yesVotes?.toString(),
-                noVotes: p?.noVotes?.toString(),
-                isActive: !p?.executed,
-                yesPercentage:
-                  (p?.yesVotes / (p?.yesVotes + p?.noVotes)) * 100 || 0,
-                noPercentage:
-                  (p?.noVotes / (p?.yesVotes + p?.noVotes)) * 100 || 0,
-                quorumReached: false,
-                hasVoted: null,
-                userVoteDirection: null,
-                proposer: p?.proposer,
-              }))
-            );
+      try {
+        const proposalCount = await GovernanceProposalCount(selectedToken);
+        if (proposalCount > 0) {
+          const proposalPromises = [];
+          for (let i = 1; i <= proposalCount; i++) {
+            proposalPromises.push(GovernanceProposalInfo(selectedToken, i));
           }
-        } catch (error) {
-          console.error("Error fetching proposals:", error);
+
+          const newProposals = await Promise.all(proposalPromises);
+          setProposals(
+            newProposals.map((p) => ({
+              ...p,
+              createdAt: p?.createdAt?.toString(),
+              votingEndsAt: p?.votingEndsAt?.toString(),
+              yesVotes: p?.yesVotes?.toString(),
+              noVotes: p?.noVotes?.toString(),
+              isActive: !p?.executed,
+              yesPercentage:
+                (p?.yesVotes / (p?.yesVotes + p?.noVotes)) * 100 || 0,
+              noPercentage:
+                (p?.noVotes / (p?.yesVotes + p?.noVotes)) * 100 || 0,
+              quorumReached: false,
+              hasVoted: null,
+              userVoteDirection: null,
+              proposer: p?.proposer,
+            }))
+          );
+        } else {
+          // Reset proposals if none found
+          setProposals([]);
         }
+      } catch (error) {
+        console.error("Error fetching proposals:", error);
       }
     };
 
     fetchProposals();
-  }, [selectedToken]);
+  }, [selectedToken]); // Only depend on selectedToken
+
+  // Fetch governance info
+  useEffect(() => {
+    const fetchGovernanceInfo = async () => {
+      if (!selectedToken) return;
+
+      try {
+        // Get both governance info and token balance
+        const tokenInfo = await TokenInfo(selectedToken);
+        const govInfo = await GovernanceTokenInfo(selectedToken);
+
+        setGovernanceInfo({
+          ...govInfo,
+          balance: tokenInfo.balance,
+        });
+      } catch (error) {
+        console.error("Error fetching governance info:", error);
+        toast.error("Failed to fetch governance information");
+      }
+    };
+
+    fetchGovernanceInfo();
+  }, [selectedToken]); // Only depend on selectedToken
 
   // Form handler for creating new proposals
   const proposalForm = useForm<ProposalFormValues>({
@@ -265,107 +290,12 @@ export default function GovernancePage() {
     },
   });
 
+  // Update form value when selected token changes
   useEffect(() => {
-    // Update form value when selected token changes
     if (selectedToken) {
       proposalForm.setValue("tokenAddress", selectedToken);
     }
   }, [selectedToken, proposalForm]);
-
-  // Modify the effect that fetches governance info
-  useEffect(() => {
-    const fetchGovernanceInfo = async () => {
-      if (selectedToken) {
-        try {
-          // Get both governance info and token balance
-          const tokenInfo = await TokenInfo(selectedToken);
-          const govInfo = await GovernanceTokenInfo(selectedToken);
-
-          setGovernanceInfo({
-            ...govInfo,
-            balance: tokenInfo.balance, // Use the actual token balance
-          });
-        } catch (error) {
-          console.error("Error fetching governance info:", error);
-          toast.error("Failed to fetch governance information");
-        }
-      }
-    };
-
-    fetchGovernanceInfo();
-  }, [selectedToken]);
-
-  useEffect(() => {
-    const loadProposals = async () => {
-      if (!selectedToken) return;
-
-      try {
-        const proposalCount = await GovernanceProposalCount(selectedToken);
-        const count = proposalCount;
-
-        const selectedTokenInfo = tokens.find(
-          (t) => t.address === selectedToken
-        );
-
-        const selectedTokenAddress = selectedTokenInfo?.address;
-
-        const proposalPromises = [];
-        for (let i = 1; i <= count; i++) {
-          proposalPromises.push(
-            GovernanceProposalInfo(selectedTokenAddress, i)
-          );
-        }
-
-        const proposalDetails = await Promise.all(proposalPromises);
-
-        const proposalDetailsArray = (
-          proposalDetails as unknown as RawProposalData[]
-        ).map((p, index) => ({
-          title: (p[0] as string) || "",
-          description: (p[1] as string) || "",
-          proposer: (p[2] as string) || "",
-          createdAt: String(
-            (p[3] as { _hex: string })?._hex
-              ? parseInt((p[3] as { _hex: string })._hex, 16)
-              : 0
-          ),
-          votingEndsAt: String(
-            (p[4] as { _hex: string })?._hex
-              ? parseInt((p[4] as { _hex: string })._hex, 16)
-              : 0
-          ),
-          executed: (p[5] as boolean) || false,
-          targetContract: (p[6] as string) || "",
-          yesVotes: (p[7] as { _hex: string })?._hex
-            ? parseInt((p[7] as { _hex: string })._hex, 16).toString()
-            : "0",
-          noVotes: (p[8] as { _hex: string })?._hex
-            ? parseInt((p[8] as { _hex: string })._hex, 16).toString()
-            : "0",
-          isActive: !(p[5] as boolean),
-          id: index + 1,
-          yesPercentage:
-            (parseInt((p[7] as { _hex: string })?._hex || "0", 16) /
-              (parseInt((p[7] as { _hex: string })?._hex || "0", 16) +
-                parseInt((p[8] as { _hex: string })?._hex || "0", 16) || 1)) *
-              100 || 0,
-          noPercentage:
-            (parseInt((p[8] as { _hex: string })?._hex || "0", 16) /
-              (parseInt((p[7] as { _hex: string })?._hex || "0", 16) +
-                parseInt((p[8] as { _hex: string })?._hex || "0", 16))) *
-              100 || 0,
-          quorumReached: false,
-          hasVoted: null,
-          userVoteDirection: null,
-        }));
-        setProposals(proposalDetailsArray);
-      } catch (error) {
-        console.error("Error loading proposals:", error);
-      }
-    };
-
-    loadProposals();
-  }, [selectedToken, tokens, userAddress]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onProposalSubmit = async (values: ProposalFormValues) => {
@@ -381,11 +311,12 @@ export default function GovernancePage() {
 
     setIsSubmitting(true);
     try {
+      const chainId = currentNetwork.chainId;
       await createProposal(
         values.tokenAddress,
         values.title,
         values.description,
-        "0xB0E24F418A4A36B6F08947A949196e0F3FD09B67", // Static target contract (Clampify Factory)
+        NETWORK_CONFIG[chainId as keyof typeof NETWORK_CONFIG].factoryAddress,
         "0x" // Static empty call data
       );
 

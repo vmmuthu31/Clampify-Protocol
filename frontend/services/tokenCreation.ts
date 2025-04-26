@@ -13,7 +13,7 @@ interface NetworkConfig {
   rpcUrl: string;
 }
 
-const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
+export const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
   // core Mainnet with proxy
   "1116": {
     factoryAddress: "0x472Bd08194e7AFF981FaC9990af780b328D9cE0b",
@@ -447,7 +447,6 @@ export const createProposal = async (
   callData: string
 ): Promise<number> => {
   try {
-    console.log(tokenAddress, title, description, targetContract, callData);
     const networkConfig = await getNetworkConfig();
     const provider =
       ethereum != null
