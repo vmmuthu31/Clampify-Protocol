@@ -25,61 +25,61 @@ interface Network {
 }
 
 export const SUPPORTED_NETWORKS: Network[] = [
+  {
+    name: "Core Blockchain Mainnet",
+    chainId: "1116",
+    rpcUrl: "https://rpc.coredao.org",
+    nativeCurrency: {
+      name: "CORE",
+      symbol: "CORE",
+      decimals: 18,
+    },
+    blockExplorerUrl: "https://scan.coredao.org",
+  },
+  {
+    name: "Soneium",
+    chainId: "1868",
+    rpcUrl: "https://rpc.soneium.org",
+    nativeCurrency: {
+      name: "ETH",
+      symbol: "ETH",
+      decimals: 18,
+    },
+    blockExplorerUrl: "https://soneium.blockscout.com",
+  },
   // {
-  //   name: "Core Blockchain Mainnet",
-  //   chainId: "1116",
-  //   rpcUrl: "https://rpc.coredao.org",
+  //   name: "Core Testnet",
+  //   chainId: "1114",
+  //   rpcUrl: "https://rpc.test2.btcs.network",
   //   nativeCurrency: {
-  //     name: "CORE",
-  //     symbol: "CORE",
+  //     name: "Core",
+  //     symbol: "tCORE2",
   //     decimals: 18,
   //   },
-  //   blockExplorerUrl: "https://scan.coredao.org",
+  //   blockExplorerUrl: "https://scan.test2.btcs.network",
   // },
   // {
-  //   name: "Soneium",
-  //   chainId: "1868",
-  //   rpcUrl: "https://rpc.soneium.org",
+  //   name: "BNB Testnet",
+  //   chainId: "97",
+  //   rpcUrl: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
   //   nativeCurrency: {
-  //     name: "ETH",
-  //     symbol: "ETH",
+  //     name: "tBNB",
+  //     symbol: "tBNB",
   //     decimals: 18,
   //   },
-  //   blockExplorerUrl: "https://soneium.blockscout.com",
+  //   blockExplorerUrl: "https://testnet.bscscan.com",
   // },
-  {
-    name: "Core Testnet",
-    chainId: "1114",
-    rpcUrl: "https://rpc.test2.btcs.network",
-    nativeCurrency: {
-      name: "Core",
-      symbol: "tCORE2",
-      decimals: 18,
-    },
-    blockExplorerUrl: "https://scan.test2.btcs.network",
-  },
-  {
-    name: "BNB Testnet",
-    chainId: "97",
-    rpcUrl: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
-    nativeCurrency: {
-      name: "tBNB",
-      symbol: "tBNB",
-      decimals: 18,
-    },
-    blockExplorerUrl: "https://testnet.bscscan.com",
-  },
-  {
-    name: "Polygon Amoy",
-    chainId: "80002",
-    rpcUrl: "https://rpc-amoy.polygon.technology",
-    nativeCurrency: {
-      name: "Matic",
-      symbol: "MATIC",
-      decimals: 18,
-    },
-    blockExplorerUrl: "https://www.oklink.com/amoy",
-  },
+  // {
+  //   name: "Polygon Amoy",
+  //   chainId: "80002",
+  //   rpcUrl: "https://rpc-amoy.polygon.technology",
+  //   nativeCurrency: {
+  //     name: "Matic",
+  //     symbol: "MATIC",
+  //     decimals: 18,
+  //   },
+  //   blockExplorerUrl: "https://www.oklink.com/amoy",
+  // },
 ];
 
 // Create Network Context
