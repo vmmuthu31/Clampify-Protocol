@@ -50,11 +50,6 @@ interface TokenInfo {
 }
 
 const getNetworkConfig = async (): Promise<NetworkConfig> => {
-  if (!ethereum) {
-    // Default to Core DAO Mainnet if no wallet is connected
-    return NETWORK_CONFIG["1116"];
-  }
-
   const provider = new ethers.providers.Web3Provider(ethereum);
   const network = await provider.getNetwork();
   const chainId = network.chainId.toString();
