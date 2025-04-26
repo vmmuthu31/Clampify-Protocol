@@ -15,36 +15,35 @@ interface NetworkConfig {
 
 const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
   // core Mainnet with proxy
-  // "1116": {
-  //   factoryAddress: "0x472Bd08194e7AFF981FaC9990af780b328D9cE0b",
-  //   governanceAddress: "0x699bf4037D72107142D4600b8B2F18940e06dBB2",
-  //   rpcUrl: "https://rpc.coredao.org",
-  // },
-
-  // // Soneium
-  // "1868": {
-  //   factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
-  //   governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
-  //   rpcUrl: "https://rpc.soneium.org",
-  // },
+  "1116": {
+    factoryAddress: "0x472Bd08194e7AFF981FaC9990af780b328D9cE0b",
+    governanceAddress: "0x699bf4037D72107142D4600b8B2F18940e06dBB2",
+    rpcUrl: "https://rpc.coredao.org",
+  },
+  // Soneium
+  "1868": {
+    factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
+    governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
+    rpcUrl: "https://rpc.soneium.org",
+  },
   // BNB Testnet
-  "97": {
-    factoryAddress: "0x7b63Cb427e32dBE0E24b818DafBA8196Dc2C74ca",
-    governanceAddress: "0xEf9715f165219ce6E4BA020882B4564E79f620e6",
-    rpcUrl: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
-  },
-  // Core DAO Testnet with non proxy
-  "1114": {
-    factoryAddress: "0xfBFe5E3b50355bC76718E48e118c48f4167954B0",
-    governanceAddress: "0xc02Ced956D028F567cdd293F235F2f51955De8aB",
-    rpcUrl: "https://rpc.test2.btcs.network",
-  },
-  // Polygon Amoy Testnet with proxy
-  "80002": {
-    factoryAddress: "0x36CeB484d0e74135c1D2790dfCc2B27ED8f5992B",
-    governanceAddress: "0x94f1d9F568f6eED939942c6ab2048B57fda46ebe",
-    rpcUrl: "https://rpc-amoy.polygon.technology",
-  },
+  // "97": {
+  //   factoryAddress: "0x7b63Cb427e32dBE0E24b818DafBA8196Dc2C74ca",
+  //   governanceAddress: "0xEf9715f165219ce6E4BA020882B4564E79f620e6",
+  //   rpcUrl: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
+  // },
+  // // Core DAO Testnet with non proxy
+  // "1114": {
+  //   factoryAddress: "0xfBFe5E3b50355bC76718E48e118c48f4167954B0",
+  //   governanceAddress: "0xc02Ced956D028F567cdd293F235F2f51955De8aB",
+  //   rpcUrl: "https://rpc.test2.btcs.network",
+  // },
+  // // Polygon Amoy Testnet with proxy
+  // "80002": {
+  //   factoryAddress: "0x36CeB484d0e74135c1D2790dfCc2B27ED8f5992B",
+  //   governanceAddress: "0x94f1d9F568f6eED939942c6ab2048B57fda46ebe",
+  //   rpcUrl: "https://rpc-amoy.polygon.technology",
+  // },
 };
 
 const getNetworkConfig = async (): Promise<NetworkConfig> => {
