@@ -1738,15 +1738,17 @@ export default function TokenPage() {
                         <div className="flex items-center gap-2 bg-[#ffae5c]/20 px-3 py-2 rounded-lg">
                           {tradeType === "buy" ? (
                             <>
-                              <div className="w-6 h-6 rounded-full bg-[#ffae5c]/30 flex items-center justify-center">
-                                C
-                              </div>
-                              <span>CoreDAO</span>
+                              <span>
+                                {SUPPORTED_NETWORKS.find(
+                                  (network) =>
+                                    network.chainId === tokenDetails?.chainId
+                                )?.nativeCurrency.symbol || "..."}
+                              </span>
                             </>
                           ) : (
                             <>
                               <div className="w-6 h-6 rounded-full bg-[#ffae5c]/30 flex items-center justify-center">
-                                🐸
+                                {tokenDetails?.symbol?.slice(0, 2)}
                               </div>
                               <span>{tokenDetails?.symbol || "..."}</span>
                             </>

@@ -26,6 +26,12 @@ export const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
     governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
     rpcUrl: "https://rpc.soneium.org",
   },
+  // Holesky
+  // "17000": {
+  //   factoryAddress: "0x2B65Eba61bac37Ae872bEFf9d1932129B0ed24ee",
+  //   governanceAddress: "0x653c13Fb7C1E5d855448af2A385F2D97a623384E",
+  //   rpcUrl: "https://1rpc.io/holesky",
+  // },
   // BNB Testnet
   // "97": {
   //   factoryAddress: "0x7b63Cb427e32dBE0E24b818DafBA8196Dc2C74ca",

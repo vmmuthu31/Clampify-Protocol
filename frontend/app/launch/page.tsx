@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/navbar";
 import {
@@ -28,6 +28,7 @@ import { useRouter } from "next/navigation";
 import { ethers } from "ethers";
 import { usePrivy } from "@privy-io/react-auth";
 import { useNetworkApi } from "@/hooks/useNetworkApi";
+import { SUPPORTED_NETWORKS, useNetwork } from "@/components/NetworkSelector";
 
 // Lock period options in seconds
 const CREATOR_LOCK_PERIODS = [
@@ -85,44 +86,8 @@ export default function LaunchPage() {
   const [launchSuccess, setLaunchSuccess] = useState(false);
   const { ready, authenticated, login, user } = usePrivy();
   const router = useRouter();
-  const [currentNetwork, setCurrentNetwork] = useState({
-    name: "Core",
-    symbol: "CORE",
-    chainId: "1116",
-  });
+  const { currentNetwork } = useNetwork();
   const networkApi = useNetworkApi();
-
-  // Fetch current network on component mount
-  useEffect(() => {
-    const fetchNetwork = async () => {
-      try {
-        if (window.ethereum) {
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          const network = await provider.getNetwork();
-          const chainId = network.chainId.toString();
-
-          // Check network based on chainId
-          if (chainId === "1116") {
-            setCurrentNetwork({ name: "Core", symbol: "CORE", chainId });
-          } else if (chainId === "1114") {
-            setCurrentNetwork({
-              name: "Core Testnet",
-              symbol: "tCORE",
-              chainId,
-            });
-          } else if (chainId === "1868") {
-            setCurrentNetwork({ name: "Soneium", symbol: "ETH", chainId });
-          } else if (chainId === "80002") {
-            setCurrentNetwork({ name: "Polygon Amoy", symbol: "POL", chainId });
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching network:", error);
-      }
-    };
-
-    fetchNetwork();
-  }, []);
 
   // Form state
   const [tokenForm, setTokenForm] = useState<TokenForm>({
@@ -537,7 +502,12 @@ export default function LaunchPage() {
                   Token Creation Fee:
                 </p>
                 <ul className="list-disc list-inside space-y-1">
-                  <li>Fee Per Token: 0.01 {currentNetwork.symbol}</li>
+                  <li>
+                    Fee Per Token: 0.01{" "}
+                    {SUPPORTED_NETWORKS.find(
+                      (network) => network.chainId === currentNetwork.chainId
+                    )?.nativeCurrency.symbol || "..."}
+                  </li>
                 </ul>
               </div>
             </div>
