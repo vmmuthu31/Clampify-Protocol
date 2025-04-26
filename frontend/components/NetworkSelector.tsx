@@ -335,7 +335,12 @@ export function NetworkSelector() {
                       ? "bg-[#ffae5c]/10 text-white"
                       : ""
                   } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                  onClick={() => !isLoading && switchNetwork(network)}
+                  onClick={async () => {
+                    if (!isLoading) {
+                      await switchNetwork(network);
+                      setIsOpen(false);
+                    }
+                  }}
                   disabled={isLoading}
                 >
                   <span>{network.name}</span>
