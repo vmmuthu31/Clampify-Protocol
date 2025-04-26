@@ -10,12 +10,15 @@ interface TransactionApiResponse {
 interface RecordTransactionParams {
   address: string;
   creator: string;
-  type: "BUY" | "SELL";
+  type: "BUY" | "SELL" | "CREATE";
   amount: string;
   price: string;
   txHash: string;
   name: string;
   symbol: string;
+  chainId: string;
+  chainName: string;
+  userAddress?: string; // Optional since creator is used as userAddress if not provided
 }
 
 // Fetch transactions for a specific token
@@ -25,13 +28,22 @@ export const fetchTransactionsThunk = createAsyncThunk<
   { rejectValue: string }
 >("transactions/fetchTransactions", async (tokenId, { rejectWithValue }) => {
   try {
-    const response = await fetch(`/api/transactions?tokenId=${tokenId}`);
+    // Use tokenAddress parameter since we're passing a contract address
+    const response = await fetch(`/api/transactions?tokenAddress=${tokenId}`);
+
+    console.log(`Thunk: Fetching transactions for token address: ${tokenId}`);
 
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
 
     const data: TransactionApiResponse = await response.json();
+
+    console.log(
+      `Thunk: Received ${
+        data.transactions?.length || 0
+      } transactions for token ${tokenId}`
+    );
 
     if (data.error) {
       return rejectWithValue(data.error);
@@ -59,12 +71,18 @@ export const recordTransactionThunk = createAsyncThunk<
   "transactions/recordTransaction",
   async (transactionData, { rejectWithValue }) => {
     try {
+      // Ensure userAddress is set (use creator if not explicitly provided)
+      const dataToSend = {
+        ...transactionData,
+        userAddress: transactionData.userAddress || transactionData.creator,
+      };
+
       const response = await fetch("/api/transactions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(transactionData),
+        body: JSON.stringify(dataToSend),
       });
 
       if (!response.ok) {
@@ -90,6 +108,7 @@ export const recordTransactionThunk = createAsyncThunk<
         timestamp: result.timestamp || new Date().toISOString(),
       };
     } catch (error) {
+      console.error("Error recording transaction:", error);
       const errorMessage =
         error instanceof Error
           ? error.message

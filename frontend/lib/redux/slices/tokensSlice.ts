@@ -27,6 +27,8 @@ export interface TokenData {
   telegram?: string;
   buyTax?: string;
   sellTax?: string;
+  chainId?: string;
+  chainName?: string;
 }
 
 export interface TokenState {

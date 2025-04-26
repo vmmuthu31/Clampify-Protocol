@@ -1,19 +1,25 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createSelector } from "@reduxjs/toolkit";
 import {
   fetchTransactionsThunk,
   recordTransactionThunk,
 } from "../thunks/transactionThunks";
+import { RootState } from "../store";
 
 // Define types for transaction data
 export interface Transaction {
   id?: string;
   tokenId: string;
   userAddress: string;
-  type: "BUY" | "SELL";
+  type: "BUY" | "SELL" | "CREATE";
   amount: string;
   price: string;
   timestamp: string;
   txHash: string;
+  name?: string;
+  symbol?: string;
+  tokenAddress?: string;
+  chainId?: string;
+  chainName?: string;
 }
 
 export interface TransactionState {
@@ -136,3 +142,50 @@ const transactionsSlice = createSlice({
 
 export const { clearTransactions } = transactionsSlice.actions;
 export default transactionsSlice.reducer;
+
+// Add memoized selectors
+const selectTransactionsState = (state: RootState) => state.transactions;
+
+export const selectAllTransactions = createSelector(
+  [selectTransactionsState],
+  (transactionsState) => transactionsState.transactions
+);
+
+export const selectRecentTransactions = createSelector(
+  [selectTransactionsState],
+  (transactionsState) => {
+    return transactionsState.recentTransactions.map(
+      (id) => transactionsState.transactions[id]
+    );
+  }
+);
+
+export const selectTransactionsByToken = createSelector(
+  [selectTransactionsState, (state: RootState, tokenId: string) => tokenId],
+  (transactionsState, tokenId) => {
+    const transactionIds = transactionsState.tokenTransactions[tokenId] || [];
+    return transactionIds.map((id) => transactionsState.transactions[id]);
+  }
+);
+
+export const selectTransactionsByUser = createSelector(
+  [
+    selectTransactionsState,
+    (state: RootState, userAddress: string) => userAddress,
+  ],
+  (transactionsState, userAddress) => {
+    const transactionIds =
+      transactionsState.userTransactions[userAddress] || [];
+    return transactionIds.map((id) => transactionsState.transactions[id]);
+  }
+);
+
+export const selectTransactionsLoading = createSelector(
+  [selectTransactionsState],
+  (transactionsState) => transactionsState.loading
+);
+
+export const selectTransactionsError = createSelector(
+  [selectTransactionsState],
+  (transactionsState) => transactionsState.error
+);

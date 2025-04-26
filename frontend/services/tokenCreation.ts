@@ -155,45 +155,154 @@ export const Mint = async (
 
 export const TokenInfo = async (tokenAddress: string): Promise<TokenInfo> => {
   try {
+    // Get network config to ensure we're using the correct RPC
+    const networkConfig = await getNetworkConfig();
+
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider();
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
     if (!signer) {
       throw new Error("No wallet connected");
     }
+
+    console.log(`TokenInfo called for address: ${tokenAddress}`);
+
     const userAddress: string = await signer.getAddress();
     const contract = new ethers.Contract(tokenAddress, ClampifyToken, signer);
-    const name = await contract.name();
-    const symbol = await contract.symbol();
-    const totalSupply = await contract.totalSupply();
-    const decimals = await contract.decimals();
-    const initialSupply = await contract.initialSupply();
-    const initialPrice = await contract.getCurrentPrice();
-    const creatorLockupPeriod = await contract.creatorLockupPeriod();
-    const marketCap = await contract.marketCap();
-    const volume24h = await contract.totalVolume();
-    const balance = await contract.balanceOf(userAddress);
+
+    // Add try/catch blocks around each call to prevent one failure from failing everything
+    let name,
+      symbol,
+      totalSupply,
+      decimals,
+      initialSupply,
+      initialPrice,
+      creatorLockupPeriod,
+      marketCap,
+      volume24h,
+      balance;
+
+    try {
+      name = await contract.name();
+    } catch (error) {
+      console.error("Failed to get name:", error);
+      name = "Clampify";
+    }
+
+    try {
+      symbol = await contract.symbol();
+    } catch (error) {
+      console.error("Failed to get symbol:", error);
+      symbol = "CLM";
+    }
+
+    try {
+      totalSupply = await contract.totalSupply();
+    } catch (error) {
+      console.error("Failed to get totalSupply:", error);
+      totalSupply = ethers.BigNumber.from(0);
+    }
+
+    try {
+      decimals = await contract.decimals();
+    } catch (error) {
+      console.error("Failed to get decimals:", error);
+      decimals = 18;
+    }
+
+    try {
+      initialSupply = await contract.initialSupply();
+    } catch (error) {
+      console.error("Failed to get initialSupply:", error);
+      initialSupply = ethers.BigNumber.from(0);
+    }
+
+    try {
+      initialPrice = await contract.getCurrentPrice();
+    } catch (error) {
+      console.error("Failed to get initialPrice:", error);
+      initialPrice = ethers.BigNumber.from(0);
+    }
+
+    try {
+      creatorLockupPeriod = await contract.creatorLockupPeriod();
+    } catch (error) {
+      console.error("Failed to get creatorLockupPeriod:", error);
+      creatorLockupPeriod = ethers.BigNumber.from(0);
+    }
+
+    try {
+      marketCap = await contract.marketCap();
+    } catch (error) {
+      console.error("Failed to get marketCap:", error);
+      marketCap = ethers.BigNumber.from(0);
+    }
+
+    try {
+      volume24h = await contract.totalVolume();
+    } catch (error) {
+      console.error("Failed to get volume24h:", error);
+      volume24h = ethers.BigNumber.from(0);
+    }
+
+    try {
+      balance = await contract.balanceOf(userAddress);
+    } catch (error) {
+      console.error("Failed to get balance:", error);
+      balance = ethers.BigNumber.from(0);
+    }
 
     return {
       name,
       symbol,
-      totalSupply: ethers.utils.formatEther(totalSupply),
+      totalSupply: formatSafely(totalSupply),
       decimals,
-      balance,
-      creatorLockupPeriod,
-      initialSupply,
-      initialPrice,
-      contractAddress: tokenAddress,
-      marketCap,
-      volume24h,
+      balance: formatSafely(balance),
+      creatorLockupPeriod: formatSafely(creatorLockupPeriod),
+      initialSupply: formatSafely(initialSupply),
+      initialPrice: formatSafely(initialPrice),
+      contractAddress: tokenAddress, // Always use the address that was requested
+      marketCap: formatSafely(marketCap),
+      volume24h: formatSafely(volume24h),
     };
   } catch (error) {
-    console.error("Detailed error:", error);
-    throw error;
+    console.error("Critical error in TokenInfo:", error);
+
+    // Return default values on error rather than throwing
+    return {
+      name: "Clampify",
+      symbol: "CLM",
+      totalSupply: "0",
+      decimals: 18,
+      balance: "0",
+      creatorLockupPeriod: "0",
+      initialSupply: "0",
+      initialPrice: "0",
+      contractAddress: tokenAddress,
+      marketCap: "0",
+      volume24h: "0",
+    };
+  }
+};
+
+// Helper function to safely format a value that might already be in decimal format
+const formatSafely = (value: string | number | ethers.BigNumber): string => {
+  if (!value) return "0";
+
+  // If it's already a string with a decimal point, return it as is
+  if (typeof value === "string" && value.includes(".")) {
+    return value;
+  }
+
+  try {
+    return ethers.utils.formatEther(value.toString());
+  } catch (error) {
+    console.error("Error formatting value:", error);
+    return "0";
   }
 };
 

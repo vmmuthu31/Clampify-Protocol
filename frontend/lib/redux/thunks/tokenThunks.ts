@@ -38,9 +38,9 @@ export const fetchTokenDetailsThunk = createAsyncThunk<
   TokenData | null,
   string,
   { rejectValue: string }
->("tokens/fetchTokenDetails", async (tokenId, { rejectWithValue }) => {
+>("tokens/fetchTokenDetails", async (address, { rejectWithValue }) => {
   try {
-    return await apiService.getTokenById(tokenId);
+    return await apiService.getTokenById(address);
   } catch (error) {
     const errorMessage =
       error instanceof Error

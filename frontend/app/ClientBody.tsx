@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import { Navbar } from "@/components/navbar";
 import { WalletProvider } from "@/providers/WalletProvider";
 import { NetworkProvider } from "@/providers/NetworkProvider";
-import { ReduxProvider } from "@/providers/ReduxProvider";
+import ReduxProvider from "@/providers/ReduxProvider";
 import Loader from "@/components/Loader";
 
 function ClientBody({ children }: { children: ReactNode }) {

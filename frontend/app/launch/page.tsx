@@ -88,6 +88,7 @@ export default function LaunchPage() {
   const [currentNetwork, setCurrentNetwork] = useState({
     name: "Core",
     symbol: "CORE",
+    chainId: "1116",
   });
   const networkApi = useNetworkApi();
 
@@ -102,13 +103,17 @@ export default function LaunchPage() {
 
           // Check network based on chainId
           if (chainId === "1116") {
-            setCurrentNetwork({ name: "Core", symbol: "CORE" });
+            setCurrentNetwork({ name: "Core", symbol: "CORE", chainId });
           } else if (chainId === "1114") {
-            setCurrentNetwork({ name: "Core Testnet", symbol: "tCORE" });
+            setCurrentNetwork({
+              name: "Core Testnet",
+              symbol: "tCORE",
+              chainId,
+            });
           } else if (chainId === "1868") {
-            setCurrentNetwork({ name: "Soneium", symbol: "ETH" });
+            setCurrentNetwork({ name: "Soneium", symbol: "ETH", chainId });
           } else if (chainId === "80002") {
-            setCurrentNetwork({ name: "Polygon Amoy", symbol: "POL" });
+            setCurrentNetwork({ name: "Polygon Amoy", symbol: "POL", chainId });
           }
         }
       } catch (error) {
@@ -131,6 +136,8 @@ export default function LaunchPage() {
     liquidityLockPeriod: "2592000", // 30 days in seconds
     image: "",
   });
+
+  console.log("user", user);
 
   // Validation
   const [errors, setErrors] = useState<FormErrors>({});
@@ -227,12 +234,14 @@ export default function LaunchPage() {
         address: tokenAddress,
         name: tokenForm.name,
         symbol: tokenForm.symbol,
-        amount: tokenForm.initialSupply,
-        price: priceInEth,
-        txHash: tokenAddress,
-        id: tokenAddress,
-        type: "CREATE",
-        timestamp: new Date().toISOString(),
+        creator: user?.wallet?.address || "",
+        initialSupply: tokenForm.initialSupply,
+        maxSupply: tokenForm.maxSupply,
+        initialPrice: priceInEth,
+        creatorLockupPeriod: tokenForm.creatorLockupPeriod,
+        lockLiquidity: tokenForm.lockLiquidity,
+        liquidityLockPeriod: tokenForm.liquidityLockPeriod,
+        image: tokenForm.image,
       });
 
       // Record the transaction

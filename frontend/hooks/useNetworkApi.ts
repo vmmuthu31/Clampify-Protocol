@@ -16,6 +16,8 @@ export function useNetworkApi() {
       try {
         const result = await api.createTokenRecord({
           ...tokenData,
+          chainId: currentNetwork.chainId,
+          chainName: currentNetwork.name,
         });
 
         return result;
