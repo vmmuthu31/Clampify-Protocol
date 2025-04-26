@@ -42,22 +42,23 @@ import {
   TokenReturnOnSell,
   getCandleData,
 } from "@/services/trade";
-import { getTokenTransactions } from "@/services/api";
 import { usePrivy } from "@privy-io/react-auth";
 import {
   createChart,
   ColorType,
   CrosshairMode,
   LineStyle,
-  LineSeries,
   LineWidth,
   Time,
   CandlestickData,
+  CandlestickSeries,
+  LineSeries,
 } from "lightweight-charts";
 import { useNetworkApi } from "@/hooks/useNetworkApi";
 import { useTokens } from "@/hooks/useTokens";
 import { useTransactions } from "@/hooks/useTransactions";
-import { SUPPORTED_NETWORKS } from "@/components/NetworkSelector";
+import { SUPPORTED_NETWORKS, useNetwork } from "@/components/NetworkSelector";
+import { Transaction } from "@/lib/redux/slices/transactionsSlice";
 
 interface TokenData {
   id: string;
@@ -94,15 +95,6 @@ interface TokenData {
     reserveRatio: number;
     currentReserve: number;
   };
-}
-
-interface Transaction {
-  userAddress: string;
-  type: string;
-  amount: string;
-  price: string;
-  timestamp: string;
-  txHash: string;
 }
 
 // Simulated token data
@@ -201,10 +193,28 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
+// Helper function to format price values that might be in Wei or already in decimal format
+const formatPriceValue = (value: string | number) => {
+  // If the value is already a decimal string (contains a decimal point), return it as is
+  if (typeof value === "string" && value.includes(".")) {
+    return value;
+  }
+
+  try {
+    // Otherwise, treat it as a wei value and format it to ether
+    return ethers.utils.formatEther(value.toString());
+  } catch (error) {
+    console.error("Error formatting price value:", error);
+    return "0";
+  }
+};
+
 export default function TokenPage() {
   // Use the useParams hook to access route parameters
   const params = useParams<{ id: string }>();
   const tokenId = params.id;
+
+  console.log("tokenId", tokenId);
 
   // Redux hooks
   const {
@@ -252,21 +262,12 @@ export default function TokenPage() {
   const [estimatedReturn, setEstimatedReturn] = useState<string>("");
   const [isCalculating, setIsCalculating] = useState(false);
   const [isTransacting, setIsTransacting] = useState(false);
+  const { currentNetwork } = useNetwork();
   const [transactionStatus, setTransactionStatus] = useState<{
     status: "success" | "error" | null;
     hash?: string;
     error?: string;
   }>({ status: null });
-  const [recentTransactions, setRecentTransactions] = useState<{
-    accounts: string[];
-    isBuys: boolean[];
-    tokenAmounts: string[];
-    ethAmounts: string[];
-    prices: string[];
-    timestamps: string[];
-    type: string[];
-    txHashes: string[];
-  } | null>(null);
   const [tokenBalance, setTokenBalance] = useState<string>("");
   const [currentPrice, setCurrentPrice] = useState<string>("0");
   const { user } = usePrivy();
@@ -328,69 +329,94 @@ export default function TokenPage() {
     }
   }, [currentToken, tokenDetails]);
 
-  // Fetch token details from Redux
+  // Update the main token fetching useEffect to prevent excessive API calls
   useEffect(() => {
     let mounted = true;
+    // Add a flag to prevent duplicate calls
+    let isFetching = false;
 
     const loadTokenData = async () => {
-      if (!tokenId) return;
+      if (!tokenId || isFetching) return;
+
+      // Set fetching flag to prevent duplicate calls
+      isFetching = true;
 
       try {
+        console.log("Starting token data fetch for:", tokenId);
+
         // Fetch token data from Redux store
-        await fetchTokenById(tokenId);
-
-        // Fetch transactions
-        await fetchTokenTransactions(tokenId);
-
-        // We'll still need to call some direct APIs for specific data not in Redux
-        const tokenInfo = await TokenInfo(tokenId);
+        const token = await fetchTokenById(tokenId);
+        console.log("fetched token", token);
+        // Fetch transactions - only once
 
         // Only update state if component is still mounted
         if (!mounted) return;
 
-        // Format BigNumber values
+        // We'll still need to call some direct APIs for specific data not in Redux
+        const tokenInfo = await TokenInfo(tokenId);
+        console.log("tokenInfo fetched", tokenInfo);
         const formattedInfo = {
           ...tokenInfo,
           totalSupply: tokenInfo.totalSupply.toString(),
           balance: tokenInfo.balance.toString(),
-          initialPrice: ethers.utils.formatEther(tokenInfo.initialPrice || "0"),
+          initialPrice: formatPriceValue(tokenInfo.initialPrice || "0"),
           address: tokenInfo.contractAddress,
-          chainId: "1", // Fallback to a simple default chain ID
+          chainId: currentNetwork?.chainId,
         };
 
-        // Safely set token details
         try {
           setTokenDetails(formattedInfo);
         } catch (error) {
           console.error("Error setting token details:", error);
         }
 
+        // Only fetch these secondary details if we're still mounted
+        if (!mounted) return;
+
+        // Get holders data
         const topHolders = await getTopHolders(tokenInfo.contractAddress || "");
         setTopHolders(topHolders);
-        const formattedTokenBalance = ethers.utils.formatEther(
+
+        // Format token balance
+        const formattedTokenBalance = formatPriceValue(
           tokenInfo.balance.toString()
         );
         setTokenBalance(formattedTokenBalance);
 
-        // Get token details including image and lock info
-        const { token } = await networkApi.getTokenDetails(tokenId);
-        if (token && mounted) {
-          setTokenImage(token.image);
-          setTokenLockDetails({
-            lockLiquidity: token.lockLiquidity,
-            liquidityLockPeriod: token.liquidityLockPeriod,
-            creatorLockupPeriod: token.creatorLockupPeriod,
-          });
+        // Only continue if still mounted
+        if (!mounted) return;
 
-          // Update tokenDetails with the chainId from the token
-          if (token.chainId) {
-            setTokenDetails((prev) =>
-              prev ? { ...prev, chainId: token.chainId } : prev
-            );
+        // Get token details including image and lock info - only call once
+        try {
+          const { token } = await networkApi.getTokenDetails(tokenId);
+
+          if (token && mounted) {
+            setTokenImage(token.image);
+            setTokenLockDetails({
+              lockLiquidity: token.lockLiquidity,
+              liquidityLockPeriod: token.liquidityLockPeriod,
+              creatorLockupPeriod: token.creatorLockupPeriod,
+            });
+
+            // Update tokenDetails with the chainId from the token if it matches current network
+            if (token.chainId && token.chainId === currentNetwork?.chainId) {
+              setTokenDetails((prev) =>
+                prev ? { ...prev, chainId: token.chainId } : prev
+              );
+            } else if (currentNetwork?.chainId) {
+              // If token chainId doesn't match current network, use current network chainId
+              setTokenDetails((prev) =>
+                prev ? { ...prev, chainId: currentNetwork.chainId } : prev
+              );
+            }
           }
+        } catch (error) {
+          console.error("Error fetching token details:", error);
         }
       } catch (error) {
-        console.error("Error fetching token information:", error);
+        console.error("Error in loadTokenData:", error);
+      } finally {
+        isFetching = false;
       }
     };
 
@@ -400,8 +426,7 @@ export default function TokenPage() {
     return () => {
       mounted = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenId]);
+  }, [tokenId, currentNetwork?.chainId]);
 
   // Percent unlocked so far
   const percentUnlocked = Math.min(
@@ -426,9 +451,7 @@ export default function TokenPage() {
       try {
         const tokenReturnOnBuy = await TokenReturnOnBuy(contractAddress, value);
         // Format the token amount from Wei to ETH
-        const formattedAmount = ethers.utils.formatEther(
-          tokenReturnOnBuy.tokenAmount
-        );
+        const formattedAmount = formatPriceValue(tokenReturnOnBuy.tokenAmount);
         setEstimatedReturn(formattedAmount);
       } catch (error) {
         console.error("Error calculating return:", error);
@@ -637,32 +660,25 @@ export default function TokenPage() {
     });
   };
 
+  const [reduxRecentTransactions, setReduxRecentTransactions] = useState<
+    Transaction[]
+  >([]);
+
+  // Update the useEffect for fetching transactions
   useEffect(() => {
     const fetchData = async () => {
       if (tokenId) {
         try {
-          // Fetch transactions from our database
-          const { transactions } = await getTokenTransactions(tokenId);
+          console.log(`Fetching transactions for token ID: ${tokenId}`);
 
-          if (transactions && transactions.length > 0) {
-            setRecentTransactions({
-              accounts: transactions.map(
-                (tx: Transaction) => tx.userAddress || ""
-              ),
-              isBuys: transactions.map((tx: Transaction) => tx.type === "BUY"),
-              tokenAmounts: transactions.map(
-                (tx: Transaction) => tx.amount || "0"
-              ),
-              ethAmounts: transactions.map(
-                (tx: Transaction) => tx.amount || "0"
-              ),
-              prices: transactions.map((tx: Transaction) => tx.price || "0"),
-              timestamps: transactions.map(
-                (tx: Transaction) => tx.timestamp || new Date().toISOString()
-              ),
-              type: transactions.map((tx: Transaction) => tx.type || ""),
-              txHashes: transactions.map((tx: Transaction) => tx.txHash || ""),
-            });
+          // Use the Redux hook directly which now uses memoized selectors
+          const transactions = await fetchTokenTransactions(tokenId);
+
+          console.log("transactions hello", transactions);
+          // @ts-expect-error - We know the structure from the implementation
+          const txs = transactions?.payload?.transactions;
+          if (txs) {
+            setReduxRecentTransactions(txs);
           }
         } catch (error) {
           console.error("Error fetching transactions:", error);
@@ -671,8 +687,7 @@ export default function TokenPage() {
     };
 
     fetchData();
-  }, [tokenId]);
-
+  }, [tokenId, fetchTokenTransactions]);
   // Update the useEffect for fetching candle data
   useEffect(() => {
     let isMounted = true;
@@ -732,10 +747,15 @@ export default function TokenPage() {
           secondsVisible: false,
           borderColor: "rgba(42, 46, 57, 0.6)",
           textColor: "#d1d4dc",
+          fixLeftEdge: true,
+          fixRightEdge: true,
+          lockVisibleTimeRangeOnResize: true,
         },
         rightPriceScale: {
           borderColor: "rgba(42, 46, 57, 0.6)",
           textColor: "#d1d4dc",
+          autoScale: true,
+          mode: 1, // Logarithmic scale for better visibility of small values
         },
         crosshair: {
           mode: CrosshairMode.Normal,
@@ -743,24 +763,35 @@ export default function TokenPage() {
             color: "#758696",
             width: 1 as LineWidth,
             style: LineStyle.Dashed,
+            visible: true,
+            labelVisible: false,
           },
           horzLine: {
             color: "#758696",
             width: 1 as LineWidth,
             style: LineStyle.Dashed,
+            visible: true,
+            labelVisible: false,
           },
         },
+        handleScroll: false,
+        handleScale: false,
       };
 
       const chart = createChart(chartContainerRef.current, chartOptions);
 
       // Create series with professional styling
-      const mainSeries = chart.addSeries(LineSeries, {
+      const mainSeries = chart.addSeries(CandlestickSeries, {
         title: "Price",
         lastValueVisible: true,
         priceLineVisible: false,
         baseLineVisible: false,
-        color: "#26a69a",
+        upColor: "#26a69a",
+        downColor: "#ef5350",
+        borderUpColor: "#26a69a",
+        borderDownColor: "#ef5350",
+        wickUpColor: "#26a69a",
+        wickDownColor: "#ef5350",
       });
 
       // Limit the amount of data points to improve performance
@@ -774,9 +805,35 @@ export default function TokenPage() {
       mainSeries.setData(
         dataToShow.map((d) => ({
           time: d.time as Time,
-          value: d.close,
+          open: parseFloat(d.open.toString()) || 0.00000001,
+          high: parseFloat(d.high.toString()) || 0.00000001,
+          low: parseFloat(d.low.toString()) || 0.00000001,
+          close: parseFloat(d.close.toString()) || 0.00000001,
         }))
       );
+
+      // Set the last data point to current price if available
+      if (
+        currentPrice &&
+        parseFloat(currentPrice) > 0 &&
+        dataToShow.length > 0
+      ) {
+        const lastDataPoint = dataToShow[dataToShow.length - 1];
+        const closePrice = parseFloat(currentPrice);
+        mainSeries.update({
+          time: lastDataPoint.time as Time,
+          open: lastDataPoint.close || 0.00000001,
+          high: Math.max(
+            parseFloat(lastDataPoint.high.toString()) || 0.00000001,
+            closePrice
+          ),
+          low: Math.min(
+            parseFloat(lastDataPoint.low.toString()) || 0.00000001,
+            closePrice
+          ),
+          close: closePrice,
+        });
+      }
 
       // Add volume series
       const volumeSeries = chart.addSeries(LineSeries, {
@@ -818,18 +875,31 @@ export default function TokenPage() {
           const data = param.seriesData.get(mainSeries) as CandlestickData;
           if (data) {
             legend.innerHTML = `
-              <div style="font-size: 13px; margin: 4px 0;">
+              <div style="font-size: 13px; margin: 4px 0; background-color: rgba(13, 11, 21, 0.7); padding: 8px; border-radius: 4px;">
                 O <span style="color: #d1d4dc">${
-                  data.open?.toFixed(6) || 0
+                  parseFloat(data.open?.toString() || "0") < 0.0001
+                    ? parseFloat(data.open?.toString() || "0").toFixed(10)
+                    : parseFloat(data.open?.toString() || "0").toFixed(6)
                 }</span> 
                 H <span style="color: #d1d4dc">${
-                  data.high?.toFixed(6) || 0
+                  parseFloat(data.high?.toString() || "0") < 0.0001
+                    ? parseFloat(data.high?.toString() || "0").toFixed(10)
+                    : parseFloat(data.high?.toString() || "0").toFixed(6)
                 }</span> 
                 L <span style="color: #d1d4dc">${
-                  data.low?.toFixed(6) || 0
+                  parseFloat(data.low?.toString() || "0") < 0.0001
+                    ? parseFloat(data.low?.toString() || "0").toFixed(10)
+                    : parseFloat(data.low?.toString() || "0").toFixed(6)
                 }</span> 
-                C <span style="color: #d1d4dc">${
-                  data.close?.toFixed(6) || 0
+                C <span style="color: #26a69a">${
+                  parseFloat(currentPrice || data.close?.toString() || "0") <
+                  0.0001
+                    ? parseFloat(
+                        currentPrice || data.close?.toString() || "0"
+                      ).toFixed(10)
+                    : parseFloat(
+                        currentPrice || data.close?.toString() || "0"
+                      ).toFixed(6)
                 }</span>
               </div>
             `;
@@ -852,16 +922,64 @@ export default function TokenPage() {
       };
       window.addEventListener("resize", handleResize);
 
+      // Remove the default price scale labels that show 0.00
+      chart.applyOptions({
+        rightPriceScale: {
+          visible: false,
+        },
+      });
+
+      // Add a single clean price label
+      const priceLabel = document.createElement("div");
+      priceLabel.style.position = "absolute";
+      priceLabel.style.left = "12px";
+      priceLabel.style.top = "12px";
+      priceLabel.style.zIndex = "2";
+      priceLabel.style.fontSize = "14px";
+      priceLabel.style.fontFamily = "sans-serif";
+      priceLabel.style.backgroundColor = "rgba(13, 11, 21, 0.7)";
+      priceLabel.style.padding = "8px 12px";
+      priceLabel.style.borderRadius = "4px";
+      priceLabel.style.color = "#d1d4dc";
+
+      const formattedPrice =
+        parseFloat(currentPrice || "0") < 0.0001
+          ? parseFloat(currentPrice || "0").toFixed(10)
+          : parseFloat(currentPrice || "0").toFixed(6);
+
+      priceLabel.innerHTML = `
+        <div style="margin-top: 100px;">
+          <div style="margin-bottom: 4px;">
+            <span style="color: #26a69a; font-weight: bold; font-size: 16px;">Price: ${formattedPrice}</span>
+          </div>
+          <div style="display: flex; gap: 6px; font-size: 12px;">
+            <span style="color: #7d7d7d;">Vol:</span>
+            <span>${parseFloat(
+              dataToShow[dataToShow.length - 1]?.volume.toString() || "0"
+            ).toFixed(2)}</span>
+          </div>
+        </div>
+      `;
+
+      chartContainerRef.current.appendChild(priceLabel);
+
       // Cleanup
       return () => {
         window.removeEventListener("resize", handleResize);
         chart.remove();
+        if (chartContainerRef.current) {
+          // Remove all legends
+          const legends = chartContainerRef.current.querySelectorAll(
+            'div[style*="position: absolute"]'
+          );
+          legends.forEach((el) => el.remove());
+        }
       };
     } catch (error) {
       console.error("Chart initialization error:", error);
       return undefined;
     }
-  }, [candleData]);
+  }, [candleData, currentPrice]);
 
   // Add helper function to format duration
   const formatLockDuration = (seconds: string) => {
@@ -885,7 +1003,7 @@ export default function TokenPage() {
     return () => {
       if (chartCleanup) chartCleanup();
     };
-  }, [initializeChart, candleData]);
+  }, [candleData, initializeChart, currentPrice]);
 
   // Add resize handler with debounce to improve performance
   useEffect(() => {
@@ -1083,8 +1201,8 @@ export default function TokenPage() {
                       <div className="text-white/60 text-sm">Market Cap</div>
                       <div className="text-white font-bold text-lg">
                         {parseFloat(
-                          ethers.utils.formatEther(
-                            tokenDetails?.marketCap.toString() || "0"
+                          formatPriceValue(
+                            tokenDetails?.marketCap?.toString() || "0"
                           )
                         )?.toFixed(4)}
                       </div>
@@ -1093,8 +1211,8 @@ export default function TokenPage() {
                       <div className="text-white/60 text-sm">24h Volume</div>
                       <div className="text-white font-bold text-lg">
                         {parseFloat(
-                          ethers.utils.formatEther(
-                            tokenDetails?.volume24h.toString() || "0"
+                          formatPriceValue(
+                            tokenDetails?.volume24h?.toString() || "0"
                           )
                         )?.toFixed(4)}
                       </div>
@@ -1455,98 +1573,109 @@ export default function TokenPage() {
               </div>
 
               <div className="space-y-3">
-                {recentTransactions?.accounts.map((account, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-3 bg-black/20 rounded-xl hover:bg-black/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
+                {/* Filter transactions to only show ones for this token and network */}
+                {reduxRecentTransactions &&
+                reduxRecentTransactions.length > 0 ? (
+                  reduxRecentTransactions
+                    .filter((tx) => {
+                      // First filter by token address/ID
+                      const tokenMatch =
+                        tx.tokenAddress === tokenId || tx.tokenId === tokenId;
+
+                      // Then check network match if we have current network info
+                      const networkMatch =
+                        !currentNetwork?.chainId ||
+                        !tx.chainId ||
+                        tx.chainId === currentNetwork.chainId;
+
+                      return tokenMatch && networkMatch;
+                    })
+                    .map((tx, i) => (
                       <div
-                        className={`w-8 h-8 rounded-full ${
-                          recentTransactions?.type[i] === "BUY"
-                            ? "bg-green-500/20"
-                            : recentTransactions?.type[i] === "SELL"
-                            ? "bg-red-500/20"
-                            : "bg-purple-500/20"
-                        } flex items-center justify-center`}
+                        key={i}
+                        className="flex items-center justify-between p-3 bg-black/20 rounded-xl hover:bg-black/30 transition-colors"
                       >
-                        {recentTransactions?.type[i] === "CREATE" ? (
-                          <Rocket className="w-4 h-4 text-purple-400" />
-                        ) : recentTransactions?.type[i] === "BUY" ? (
-                          <ArrowUpRight className="w-4 h-4 text-green-400" />
-                        ) : (
-                          <ArrowDown className="w-4 h-4 text-red-400" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="text-white font-medium">
-                          {recentTransactions?.type[i] === "CREATE" ? (
-                            <>
-                              Token Created:{" "}
-                              {tokenDetails?.name || "Unknown Token"}
-                            </>
-                          ) : (
-                            <>
-                              {recentTransactions?.type[i]}{" "}
-                              {parseFloat(
-                                recentTransactions?.tokenAmounts[i] || "0"
-                              )?.toFixed(2)}{" "}
-                              {tokenDetails?.symbol}
-                            </>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-8 h-8 rounded-full ${
+                              tx.type === "BUY"
+                                ? "bg-green-500/20"
+                                : tx.type === "SELL"
+                                ? "bg-red-500/20"
+                                : "bg-purple-500/20"
+                            } flex items-center justify-center`}
+                          >
+                            {tx.type === "CREATE" ? (
+                              <Rocket className="w-4 h-4 text-purple-400" />
+                            ) : tx.type === "BUY" ? (
+                              <ArrowUpRight className="w-4 h-4 text-green-400" />
+                            ) : (
+                              <ArrowDown className="w-4 h-4 text-red-400" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="text-white font-medium">
+                              {tx.type === "CREATE" ? (
+                                <>
+                                  Token Created:{" "}
+                                  {tokenDetails?.name ||
+                                    tx.name ||
+                                    "Loading..."}
+                                </>
+                              ) : (
+                                <>
+                                  {tx.type}{" "}
+                                  {parseFloat(tx.amount || "0")?.toFixed(2)}{" "}
+                                  {tokenDetails?.symbol || tx.symbol}
+                                </>
+                              )}
+                            </div>
+                            <div className="text-white/50 text-sm flex items-center gap-2">
+                              by{" "}
+                              {tx.userAddress
+                                ? `${tx.userAddress.slice(
+                                    0,
+                                    6
+                                  )}...${tx.userAddress.slice(-4)}`
+                                : "Unknown"}
+                              {tx.txHash && (
+                                <a
+                                  href={`${
+                                    SUPPORTED_NETWORKS.find(
+                                      (network) =>
+                                        network.chainId ===
+                                        currentNetwork?.chainId
+                                    )?.blockExplorerUrl
+                                  }/tx/${tx.txHash}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[#6C5CE7] hover:underline"
+                                >
+                                  View Tx
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          {tx.type !== "CREATE" && (
+                            <div className="text-white">
+                              {parseFloat(tx.price || "0")?.toFixed(10)} tCORE
+                            </div>
                           )}
-                        </div>
-                        <div className="text-white/50 text-sm flex items-center gap-2">
-                          by{" "}
-                          {account
-                            ? `${account.slice(0, 6)}...${account.slice(-4)}`
-                            : "Unknown"}
-                          {recentTransactions?.txHashes?.[i] && (
-                            <a
-                              href={
-                                recentTransactions?.type[i] === "CREATE"
-                                  ? `${
-                                      SUPPORTED_NETWORKS.find(
-                                        (network) =>
-                                          network.chainId ===
-                                          tokenDetails?.chainId
-                                      )?.blockExplorerUrl
-                                    }/tx/${recentTransactions.txHashes[i]}`
-                                  : `${
-                                      SUPPORTED_NETWORKS.find(
-                                        (network) =>
-                                          network.chainId ===
-                                          tokenDetails?.chainId
-                                      )?.blockExplorerUrl
-                                    }/tx/${recentTransactions.txHashes[i]}`
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[#6C5CE7] hover:underline"
-                            >
-                              View Tx
-                            </a>
-                          )}
+                          <div className="text-white/50 text-xs">
+                            {getTimeAgo(
+                              tx.timestamp || new Date().toISOString()
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      {recentTransactions?.type[i] !== "CREATE" && (
-                        <div className="text-white">
-                          {parseFloat(
-                            recentTransactions?.prices[i] || "0"
-                          )?.toFixed(10)}{" "}
-                          tCORE
-                        </div>
-                      )}
-                      <div className="text-white/50 text-xs">
-                        {getTimeAgo(
-                          recentTransactions?.timestamps[i] ||
-                            new Date().toISOString()
-                        )}
-                      </div>
-                    </div>
+                    ))
+                ) : (
+                  <div className="text-center py-4 text-white/50">
+                    No transactions found for this token on the current network.
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -1752,7 +1881,7 @@ export default function TokenPage() {
                   <div className="flex items-center gap-1 text-white/60 text-sm">
                     <span>
                       1 {tokenDetails?.symbol || "..."} ≈ $
-                      {tokenDetails?.initialPrice || "Loading..."}
+                      {currentPrice || "Loading..."}
                     </span>
                   </div>
                 </div>
@@ -2093,7 +2222,7 @@ export default function TokenPage() {
                     className="mt-4 bg-[#ffae5c]"
                     onClick={() =>
                       window.open(
-                        `https://scan.test2.btcs.network/tx/${transactionStatus.hash}`,
+                        `${currentNetwork?.blockExplorerUrl}/tx/${transactionStatus.hash}`,
                         "_blank"
                       )
                     }

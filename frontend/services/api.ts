@@ -3,14 +3,18 @@ import { Transaction } from "@/lib/redux/slices/transactionsSlice";
 
 interface TokenRecord {
   address: string;
-  timestamp?: string;
-  id?: string;
-  type?: string;
-  amount?: string;
-  price?: string;
-  txHash?: string;
-  name?: string;
-  symbol?: string;
+  chainId: string;
+  chainName: string;
+  name: string;
+  symbol: string;
+  creator: string;
+  initialSupply: string;
+  maxSupply: string;
+  initialPrice: string;
+  creatorLockupPeriod: string;
+  lockLiquidity: boolean;
+  liquidityLockPeriod: string;
+  image: string;
 }
 
 // Type for token creation
@@ -63,16 +67,16 @@ class ApiService {
     }
   }
 
-  async getTokenById(tokenId: string): Promise<TokenData> {
+  async getTokenById(address: string): Promise<TokenData> {
     try {
-      const response = await fetch(`${this.baseUrl}/tokens/${tokenId}`);
+      const response = await fetch(`${this.baseUrl}/tokens/${address}`);
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
       const data = await response.json();
       return data.token;
     } catch (error) {
-      console.error(`Error fetching token ${tokenId}:`, error);
+      console.error(`Error fetching token ${address}:`, error);
       throw error;
     }
   }
@@ -129,7 +133,7 @@ class ApiService {
   async getTokenTransactions(tokenId: string): Promise<Transaction[]> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/transactions?tokenId=${tokenId}`
+        `${this.baseUrl}/transactions?tokenAddress=${tokenId}`
       );
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -196,13 +200,32 @@ export const apiService = new ApiService();
 
 // For backwards compatibility with existing code
 export const getTokenTransactions = async (tokenId: string) => {
-  const transactions = await apiService.getTokenTransactions(tokenId);
-  return { transactions };
+  try {
+    const response = await fetch(`/api/transactions?tokenAddress=${tokenId}`);
+
+    console.log(`Fetching transactions for token address: ${tokenId}`);
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+    const data = await response.json();
+
+    console.log(
+      `Received ${
+        data.transactions?.length || 0
+      } transactions for token ${tokenId}`
+    );
+
+    return { transactions: data.transactions || [] };
+  } catch (error) {
+    console.error(`Error fetching transactions for token ${tokenId}:`, error);
+    return { transactions: [] };
+  }
 };
 
 export const createTokenRecord = async (tokenData: TokenRecord) => {
   try {
-    const response = await fetch("/api/transactions ", {
+    const response = await fetch("/api/create-token ", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -36,3 +36,27 @@ export const GET = async (
     );
   }
 };
+
+export const POST = async (req: NextRequest) => {
+  try {
+    await dbConnect();
+    const { address } = await req.json();
+
+    const token = await Token.findOne({ address });
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: "Token not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, token });
+  } catch (error) {
+    console.error("Error creating token:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to create token" },
+      { status: 500 }
+    );
+  }
+};

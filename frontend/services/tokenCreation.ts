@@ -15,35 +15,35 @@ interface NetworkConfig {
 
 export const NETWORK_CONFIG: { [key: string]: NetworkConfig } = {
   // core Mainnet with proxy
-  "1116": {
-    factoryAddress: "0x472Bd08194e7AFF981FaC9990af780b328D9cE0b",
-    governanceAddress: "0x699bf4037D72107142D4600b8B2F18940e06dBB2",
-    rpcUrl: "https://rpc.coredao.org",
-  },
-  // Soneium
-  "1868": {
-    factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
-    governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
-    rpcUrl: "https://rpc.soneium.org",
-  },
+  // "1116": {
+  //   factoryAddress: "0x472Bd08194e7AFF981FaC9990af780b328D9cE0b",
+  //   governanceAddress: "0x699bf4037D72107142D4600b8B2F18940e06dBB2",
+  //   rpcUrl: "https://rpc.coredao.org",
+  // },
+  // // Soneium
+  // "1868": {
+  //   factoryAddress: "0x13F4795fFc6A5D75c09F42b06c037ffbe69D0E32",
+  //   governanceAddress: "0x49C2646ca0737Cc603599DeBa191143d94E35026",
+  //   rpcUrl: "https://rpc.soneium.org",
+  // },
   // BNB Testnet
-  // "97": {
-  //   factoryAddress: "0x7b63Cb427e32dBE0E24b818DafBA8196Dc2C74ca",
-  //   governanceAddress: "0xEf9715f165219ce6E4BA020882B4564E79f620e6",
-  //   rpcUrl: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
-  // },
-  // // Core DAO Testnet with non proxy
-  // "1114": {
-  //   factoryAddress: "0xfBFe5E3b50355bC76718E48e118c48f4167954B0",
-  //   governanceAddress: "0xc02Ced956D028F567cdd293F235F2f51955De8aB",
-  //   rpcUrl: "https://rpc.test2.btcs.network",
-  // },
-  // // Polygon Amoy Testnet with proxy
-  // "80002": {
-  //   factoryAddress: "0x36CeB484d0e74135c1D2790dfCc2B27ED8f5992B",
-  //   governanceAddress: "0x94f1d9F568f6eED939942c6ab2048B57fda46ebe",
-  //   rpcUrl: "https://rpc-amoy.polygon.technology",
-  // },
+  "97": {
+    factoryAddress: "0x7b63Cb427e32dBE0E24b818DafBA8196Dc2C74ca",
+    governanceAddress: "0xEf9715f165219ce6E4BA020882B4564E79f620e6",
+    rpcUrl: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
+  },
+  // Core DAO Testnet with non proxy
+  "1114": {
+    factoryAddress: "0xfBFe5E3b50355bC76718E48e118c48f4167954B0",
+    governanceAddress: "0xc02Ced956D028F567cdd293F235F2f51955De8aB",
+    rpcUrl: "https://rpc.test2.btcs.network",
+  },
+  // Polygon Amoy Testnet with proxy
+  "80002": {
+    factoryAddress: "0x36CeB484d0e74135c1D2790dfCc2B27ED8f5992B",
+    governanceAddress: "0x94f1d9F568f6eED939942c6ab2048B57fda46ebe",
+    rpcUrl: "https://rpc-amoy.polygon.technology",
+  },
 };
 
 const getNetworkConfig = async (): Promise<NetworkConfig> => {
@@ -155,45 +155,154 @@ export const Mint = async (
 
 export const TokenInfo = async (tokenAddress: string): Promise<TokenInfo> => {
   try {
+    // Get network config to ensure we're using the correct RPC
+    const networkConfig = await getNetworkConfig();
+
     const provider =
       ethereum != null
         ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider();
+        : new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
 
     const signer = ethereum != null ? provider.getSigner() : null;
 
     if (!signer) {
       throw new Error("No wallet connected");
     }
+
+    console.log(`TokenInfo called for address: ${tokenAddress}`);
+
     const userAddress: string = await signer.getAddress();
     const contract = new ethers.Contract(tokenAddress, ClampifyToken, signer);
-    const name = await contract.name();
-    const symbol = await contract.symbol();
-    const totalSupply = await contract.totalSupply();
-    const decimals = await contract.decimals();
-    const initialSupply = await contract.initialSupply();
-    const initialPrice = await contract.getCurrentPrice();
-    const creatorLockupPeriod = await contract.creatorLockupPeriod();
-    const marketCap = await contract.marketCap();
-    const volume24h = await contract.totalVolume();
-    const balance = await contract.balanceOf(userAddress);
+
+    // Add try/catch blocks around each call to prevent one failure from failing everything
+    let name,
+      symbol,
+      totalSupply,
+      decimals,
+      initialSupply,
+      initialPrice,
+      creatorLockupPeriod,
+      marketCap,
+      volume24h,
+      balance;
+
+    try {
+      name = await contract.name();
+    } catch (error) {
+      console.error("Failed to get name:", error);
+      name = "Clampify";
+    }
+
+    try {
+      symbol = await contract.symbol();
+    } catch (error) {
+      console.error("Failed to get symbol:", error);
+      symbol = "CLM";
+    }
+
+    try {
+      totalSupply = await contract.totalSupply();
+    } catch (error) {
+      console.error("Failed to get totalSupply:", error);
+      totalSupply = ethers.BigNumber.from(0);
+    }
+
+    try {
+      decimals = await contract.decimals();
+    } catch (error) {
+      console.error("Failed to get decimals:", error);
+      decimals = 18;
+    }
+
+    try {
+      initialSupply = await contract.initialSupply();
+    } catch (error) {
+      console.error("Failed to get initialSupply:", error);
+      initialSupply = ethers.BigNumber.from(0);
+    }
+
+    try {
+      initialPrice = await contract.getCurrentPrice();
+    } catch (error) {
+      console.error("Failed to get initialPrice:", error);
+      initialPrice = ethers.BigNumber.from(0);
+    }
+
+    try {
+      creatorLockupPeriod = await contract.creatorLockupPeriod();
+    } catch (error) {
+      console.error("Failed to get creatorLockupPeriod:", error);
+      creatorLockupPeriod = ethers.BigNumber.from(0);
+    }
+
+    try {
+      marketCap = await contract.marketCap();
+    } catch (error) {
+      console.error("Failed to get marketCap:", error);
+      marketCap = ethers.BigNumber.from(0);
+    }
+
+    try {
+      volume24h = await contract.totalVolume();
+    } catch (error) {
+      console.error("Failed to get volume24h:", error);
+      volume24h = ethers.BigNumber.from(0);
+    }
+
+    try {
+      balance = await contract.balanceOf(userAddress);
+    } catch (error) {
+      console.error("Failed to get balance:", error);
+      balance = ethers.BigNumber.from(0);
+    }
 
     return {
       name,
       symbol,
-      totalSupply: ethers.utils.formatEther(totalSupply),
+      totalSupply: formatSafely(totalSupply),
       decimals,
-      balance,
-      creatorLockupPeriod,
-      initialSupply,
-      initialPrice,
-      contractAddress: tokenAddress,
-      marketCap,
-      volume24h,
+      balance: formatSafely(balance),
+      creatorLockupPeriod: formatSafely(creatorLockupPeriod),
+      initialSupply: formatSafely(initialSupply),
+      initialPrice: formatSafely(initialPrice),
+      contractAddress: tokenAddress, // Always use the address that was requested
+      marketCap: formatSafely(marketCap),
+      volume24h: formatSafely(volume24h),
     };
   } catch (error) {
-    console.error("Detailed error:", error);
-    throw error;
+    console.error("Critical error in TokenInfo:", error);
+
+    // Return default values on error rather than throwing
+    return {
+      name: "Clampify",
+      symbol: "CLM",
+      totalSupply: "0",
+      decimals: 18,
+      balance: "0",
+      creatorLockupPeriod: "0",
+      initialSupply: "0",
+      initialPrice: "0",
+      contractAddress: tokenAddress,
+      marketCap: "0",
+      volume24h: "0",
+    };
+  }
+};
+
+// Helper function to safely format a value that might already be in decimal format
+const formatSafely = (value: string | number | ethers.BigNumber): string => {
+  if (!value) return "0";
+
+  // If it's already a string with a decimal point, return it as is
+  if (typeof value === "string" && value.includes(".")) {
+    return value;
+  }
+
+  try {
+    return ethers.utils.formatEther(value.toString());
+  } catch (error) {
+    console.error("Error formatting value:", error);
+    return "0";
   }
 };
 

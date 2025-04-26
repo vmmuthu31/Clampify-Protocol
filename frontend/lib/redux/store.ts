@@ -8,10 +8,23 @@ import logger from "redux-logger";
 import tokensReducer from "./slices/tokensSlice";
 import transactionsReducer from "./slices/transactionsSlice";
 
+// Create a custom storage that works in both client and server environments
+const createNoopStorage = () => {
+  return {
+    getItem: () => Promise.resolve(null),
+    setItem: () => Promise.resolve(),
+    removeItem: () => Promise.resolve(),
+  };
+};
+
+// Use proper storage based on environment
+const reduxStorage =
+  typeof window !== "undefined" ? storage : createNoopStorage();
+
 // Configure persist
 const persistConfig = {
   key: "root",
-  storage,
+  storage: reduxStorage,
   whitelist: ["tokens", "transactions"], // only these reducers will be persisted
 };
 
@@ -22,18 +35,23 @@ const rootReducer = combineReducers({
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-// Create store
-export const store = configureStore({
-  reducer: persistedReducer,
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: ["persist/PERSIST"],
-      },
-    }).concat(logger),
-  devTools: process.env.NODE_ENV !== "production",
-});
+// Create store with conditional middleware for server vs client
+const createStore = () => {
+  const store = configureStore({
+    reducer: persistedReducer,
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: {
+          ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
+        },
+      }).concat(typeof window !== "undefined" ? [logger] : []),
+    devTools: process.env.NODE_ENV !== "production",
+  });
 
+  return store;
+};
+
+export const store = createStore();
 export const persistor = persistStore(store);
 
 // Export types
